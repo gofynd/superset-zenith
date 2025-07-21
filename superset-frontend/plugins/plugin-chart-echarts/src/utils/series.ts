@@ -442,7 +442,7 @@ export function getLegendProps(
     show,
     type,
     selected: legendState,
-    selector: ['all', 'inverse'],
+    selector: false,
     selectorLabel: {
       fontFamily: theme.typography.families.sansSerif,
       fontSize: theme.typography.sizes.s,

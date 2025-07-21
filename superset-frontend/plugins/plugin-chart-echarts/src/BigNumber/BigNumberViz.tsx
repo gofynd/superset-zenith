@@ -193,7 +193,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     let fontSize = 0;
 
     const NO_DATA_OR_HASNT_LANDED = t(
-      'No data after filtering or data is NULL for the latest time record',
+      'NO_DATA_OR_HASNT_LANDED',
     );
     const NO_DATA = t(
       'Try applying different filters or ensuring your datasource has data',
@@ -214,7 +214,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       });
       container.remove();
 
-      return (
+      return text === 'NO_DATA_OR_HASNT_LANDED' ? null :  (
         <div
           className="subheader-line"
           style={{

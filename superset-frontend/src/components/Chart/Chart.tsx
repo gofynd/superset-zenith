@@ -164,13 +164,13 @@ const LoadingDiv = styled.div`
   transform: translate(-50%, -50%);
 `;
 
-const MessageSpan = styled.span`
-  display: block;
-  text-align: center;
-  margin: ${({ theme }) => theme.gridUnit * 4}px auto;
-  width: fit-content;
-  color: ${({ theme }) => theme.colors.grayscale.base};
-`;
+// const MessageSpan = styled.span`
+//   display: block;
+//   text-align: center;
+//   margin: ${({ theme }) => theme.gridUnit * 4}px auto;
+//   width: fit-content;
+//   color: ${({ theme }) => theme.colors.grayscale.base};
+// `;
 
 class Chart extends PureComponent<ChartProps, {}> {
   static defaultProps = defaultProps;
@@ -275,15 +275,15 @@ class Chart extends PureComponent<ChartProps, {}> {
     );
   }
 
-  renderSpinner(databaseName: string | undefined) {
-    const message = databaseName
-      ? t('Waiting on %s', databaseName)
-      : t('Waiting on database...');
+  // renderSpinner(databaseName: string | undefined) {
+    renderSpinner() {
+    // const message = databaseName
+      // ? t('Waiting on %s', databaseName)
+      // : t('Waiting on database...');
 
     return (
       <LoadingDiv>
         <Loading position="inline-centered" />
-        <MessageSpan>{message}</MessageSpan>
       </LoadingDiv>
     );
   }
@@ -311,14 +311,14 @@ class Chart extends PureComponent<ChartProps, {}> {
       height,
       chartAlert,
       chartStatus,
-      datasource,
+      // datasource,
       errorMessage,
       chartIsStale,
       queriesResponse = [],
       width,
     } = this.props;
 
-    const databaseName = datasource?.database?.name;
+    // const databaseName = datasource?.database?.name;
 
     const isLoading = chartStatus === 'loading';
 
@@ -378,7 +378,7 @@ class Chart extends PureComponent<ChartProps, {}> {
           width={width}
         >
           {isLoading
-            ? this.renderSpinner(databaseName)
+            ? this.renderSpinner()
             : this.renderChartContainer()}
         </Styles>
       </ErrorBoundary>

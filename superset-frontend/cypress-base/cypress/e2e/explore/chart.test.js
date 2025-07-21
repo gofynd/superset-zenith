@@ -148,7 +148,7 @@ describe('No Results', () => {
     cy.visitChartByParams(formData);
     cy.wait('@v1Data').its('response.statusCode').should('eq', 200);
     cy.get('div.chart-container').contains(
-      'No results were returned for this query',
+      'No data',
     );
   });
 });

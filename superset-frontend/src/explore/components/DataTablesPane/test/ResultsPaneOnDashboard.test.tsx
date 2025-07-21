@@ -99,7 +99,7 @@ describe('ResultsPaneOnDashboard', () => {
       useRedux: true,
     });
     expect(
-      await findByText('No results were returned for this query'),
+      await findByText('No data'),
     ).toBeVisible();
   });
 

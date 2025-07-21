@@ -135,6 +135,8 @@ const VerticalFilterBar: FC<VerticalBarProps> = ({
   const [isScrolling, setIsScrolling] = useState(false);
   const timeout = useRef<any>();
 
+  const isIframe = window.self !== window.top;
+
   const openFiltersBar = useCallback(
     () => toggleFiltersBar(true),
     [toggleFiltersBar],
@@ -166,7 +168,7 @@ const VerticalFilterBar: FC<VerticalBarProps> = ({
 
   const filterControls = useMemo(
     () =>
-      filterValues.length === 0 ? (
+      filterValues.length === 0 && isIframe ? null : filterValues.length === 0 ? (
         <FilterBarEmptyStateContainer>
           <EmptyState
             size="small"

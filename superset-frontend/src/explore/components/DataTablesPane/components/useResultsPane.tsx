@@ -134,7 +134,7 @@ export const useResultsPane = ({
   }
 
   if (resultResp.length === 0) {
-    const title = t('No results were returned for this query');
+    const title = t('No data');
     return Array(queryCount).fill(
       <EmptyState image="document.svg" title={title} />,
     );

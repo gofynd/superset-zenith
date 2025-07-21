@@ -110,7 +110,7 @@ describe('ChartHolder', () => {
     renderWrapper();
 
     expect(
-      screen.getByText('No results were returned for this query'),
+      screen.getByText('No data'),
     ).toBeVisible();
     expect(
       screen.queryByText(

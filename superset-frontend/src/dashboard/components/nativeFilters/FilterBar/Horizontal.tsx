@@ -72,6 +72,8 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
   isInitialized,
   onSelectionChange,
 }) => {
+  const isIframe = window.self !== window.top;
+
   const dataMask = useSelector<RootState, DataMaskStateWithId>(
     state => state.dataMask,
   );
@@ -91,6 +93,10 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
   );
 
   const hasFilters = filterValues.length > 0 || selectedCrossFilters.length > 0;
+
+  if (isInitialized && isIframe && !hasFilters) {
+    return null;
+  }
 
   return (
     <HorizontalBar {...getFilterBarTestId()}>
