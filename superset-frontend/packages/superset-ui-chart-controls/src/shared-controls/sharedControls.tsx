@@ -51,6 +51,7 @@ import {
   formatSelectOptions,
   displayTimeRelatedControls,
   getColorControlsProps,
+  getColorControlsProps,
   D3_FORMAT_OPTIONS,
   D3_FORMAT_DOCS,
   D3_TIME_FORMAT_OPTIONS,
@@ -335,6 +336,20 @@ const color_scheme: SharedControlConfig<'ColorSchemeControl'> = {
   mapStateToProps: state => getColorControlsProps(state),
 };
 
+const time_shift_color: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Match time shift color with original series'),
+  default: true,
+  renderTrigger: true,
+  description: t(
+    'When unchecked, colors from the selected color scheme will be used for time shifted series',
+  ),
+  visibility: ({ controls }) =>
+    Boolean(
+      controls?.time_compare?.value && !isEmpty(controls?.time_compare?.value),
+    ),
+};
+
 const truncate_metric: SharedControlConfig<'CheckboxControl'> = {
   type: 'CheckboxControl',
   label: t('Truncate Metric'),
@@ -404,6 +419,7 @@ export default {
   x_axis_time_format,
   adhoc_filters: dndAdhocFilterControl,
   color_scheme,
+  time_shift_color,
   series_columns: dndColumnsControl,
   series_limit,
   series_limit_metric: dndSortByControl,
