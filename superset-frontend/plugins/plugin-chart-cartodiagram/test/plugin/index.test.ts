@@ -16,26 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-declare module 'dom-to-pdf' {
-  interface Image {
-    type: string;
-    quality: number;
-  }
 
-<<<<<<<< HEAD:superset-frontend/src/types/dom-to-pdf.d.ts
-  interface Options {
-    margin: number;
-    filename: string;
-    image: Image;
-    html2canvas: object;
-    excludeClassNames?: string[];
-  }
-
-  function domToPdf(elementToPrint: Element, options?: Options): Promise<any>;
-
-  export default domToPdf;
-}
-========
 import CartodiagramPlugin from '../../src/CartodiagramPlugin';
 
 describe('CartodiagramPlugin', () => {
@@ -43,4 +24,3 @@ describe('CartodiagramPlugin', () => {
     expect(CartodiagramPlugin).toBeDefined();
   });
 });
->>>>>>>> tags/5.0.0:superset-frontend/plugins/plugin-chart-cartodiagram/test/plugin/index.test.ts

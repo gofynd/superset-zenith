@@ -47,6 +47,7 @@ import { DashboardPageIdContext } from 'src/dashboard/containers/DashboardPage';
 const extensionsRegistry = getExtensionsRegistry();
 
 type SliceHeaderProps = SliceHeaderControlsProps & {
+  innerRef?: string;
   updateSliceName?: (arg0: string) => void;
   editMode?: boolean;
   annotationQuery?: object;
@@ -158,6 +159,7 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
     {
       forceRefresh = () => ({}),
       updateSliceName = () => ({}),
+      innerRef = null,
       toggleExpandSlice = () => ({}),
       logExploreChart = () => ({}),
       logEvent,

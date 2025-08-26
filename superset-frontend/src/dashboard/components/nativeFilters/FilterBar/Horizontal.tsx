@@ -20,6 +20,7 @@
 import { FC, memo, useMemo } from 'react';
 import { DataMaskStateWithId, styled, t } from '@superset-ui/core';
 import Loading from 'src/components/Loading';
+import Icons from 'src/components/Icons';
 import { RootState } from 'src/dashboard/types';
 import { useChartLayoutItems } from 'src/dashboard/util/useChartLayoutItems';
 import { useChartIds } from 'src/dashboard/util/charts/useChartIds';
@@ -28,12 +29,12 @@ import FilterControls from './FilterControls/FilterControls';
 import { useChartsVerboseMaps, getFilterBarTestId } from './utils';
 import { HorizontalBarProps } from './types';
 import FilterBarSettings from './FilterBarSettings';
+import FilterConfigurationLink from './FilterConfigurationLink';
 import crossFiltersSelector from './CrossFilters/selectors';
 
 const HorizontalBar = styled.div`
   ${({ theme }) => `
-    padding: ${theme.gridUnit * 3}px ${theme.gridUnit * 2}px ${
-      theme.gridUnit * 3
+    padding: ${theme.gridUnit * 3}px ${theme.gridUnit * 2}px ${theme.gridUnit * 3
     }px ${theme.gridUnit * 4}px;
     background: ${theme.colors.grayscale.light5};
     box-shadow: inset 0px -2px 2px -1px ${theme.colors.grayscale.light2};
@@ -65,9 +66,36 @@ const FilterBarEmptyStateContainer = styled.div`
   `}
 `;
 
+const FiltersLinkContainer = styled.div<{ hasFilters: boolean }>`
+  ${({ theme, hasFilters }) => `
+    height: 24px;
+    display: flex;
+    align-items: center;
+    padding: 0 ${theme.gridUnit * 4}px 0 ${theme.gridUnit * 4}px;
+    border-right: ${
+      hasFilters ? `1px solid ${theme.colors.grayscale.light2}` : 0
+    };
+
+    button {
+      display: flex;
+      align-items: center;
+      > .anticon {
+        height: 24px;
+        padding-right: ${theme.gridUnit}px;
+      }
+      > .anticon + span, > .anticon {
+          margin-right: 0;
+          margin-left: 0;
+        }
+    }
+  `}
+`;
+
 const HorizontalFilterBar: FC<HorizontalBarProps> = ({
+  canEdit,
   actions,
   dataMaskSelected,
+  dashboardId,
   filterValues,
   isInitialized,
   onSelectionChange,
@@ -127,31 +155,31 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
           </>
         )} */}
 
-          <>
-            <FilterBarSettings />
-            {canEdit && (
-              <FiltersLinkContainer hasFilters={hasFilters}>
-                <FilterConfigurationLink
-                  dashboardId={dashboardId}
-                  createNewOnOpen={filterValues.length === 0}
-                >
-                  <Icons.PlusSmall /> {t('Add/Edit Filters')}
-                </FilterConfigurationLink>
-              </FiltersLinkContainer>
-            )}
-            {!hasFilters && (
-              <FilterBarEmptyStateContainer data-test="horizontal-filterbar-empty">
-                {t('No filters are currently added to this dashboard.')}
-              </FilterBarEmptyStateContainer>
-            )}
-            {hasFilters && (
-              <FilterControls
-                dataMaskSelected={dataMaskSelected}
-                onFilterSelectionChange={onSelectionChange}
-              />
-            )}
-            {actions}
-          </>
+        <>
+          <FilterBarSettings />
+          {canEdit && (
+            <FiltersLinkContainer hasFilters={hasFilters}>
+              <FilterConfigurationLink
+                dashboardId={dashboardId}
+                createNewOnOpen={filterValues.length === 0}
+              >
+                <Icons.PlusSmall /> {t('Add/Edit Filters')}
+              </FilterConfigurationLink>
+            </FiltersLinkContainer>
+          )}
+          {!hasFilters && (
+            <FilterBarEmptyStateContainer data-test="horizontal-filterbar-empty">
+              {t('No filters are currently added to this dashboard.')}
+            </FilterBarEmptyStateContainer>
+          )}
+          {hasFilters && (
+            <FilterControls
+              dataMaskSelected={dataMaskSelected}
+              onFilterSelectionChange={onSelectionChange}
+            />
+          )}
+          {actions}
+        </>
 
       </HorizontalBarContent>
     </HorizontalBar>

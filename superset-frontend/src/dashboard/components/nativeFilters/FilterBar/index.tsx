@@ -295,11 +295,10 @@ const FilterBar: FC<FiltersBarProps> = ({
       <ActionButtons
         filterBarOrientation={orientation}
         width={verticalConfig?.width}
-        onApply={handleApply}
+        {...({ onApply: handleApply, onClearAll: handleClearAll } as any)}
         onClearAll={handleClearAll}
         dataMaskSelected={dataMaskSelected}
         dataMaskApplied={dataMaskApplied}
-        isApplyDisabled={isApplyDisabled}
       />
     ),
     [
@@ -309,7 +308,6 @@ const FilterBar: FC<FiltersBarProps> = ({
       handleClearAll,
       dataMaskSelected,
       dataMaskAppliedText,
-      isApplyDisabled,
     ],
   );
 

@@ -1,36 +1,31 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+/* eslint-disable import/no-duplicates */
 import { supersetTheme } from '@superset-ui/core';
-import { Tooltip as AntdTooltip } from 'antd-v5';
-import { TooltipProps, TooltipPlacement } from 'antd-v5/lib/tooltip';
+import { Tooltip as AntdTooltip } from 'antd';
+import type { TooltipProps as AntdTooltipProps } from 'antd/es/tooltip';
+import type { TooltipPlacement } from 'antd/es/tooltip';
 
-export { TooltipProps, TooltipPlacement };
+/**
+ * Extend AntD's TooltipProps by intersecting with our extra props.
+ * This works because AntdTooltipProps is a union type.
+ */
+export type TooltipProps = AntdTooltipProps & {
+  overlayStyle?: React.CSSProperties;
+  arrow?: boolean | { pointAtCenter?: boolean };
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (visible: boolean) => void;
+};
+
+export type { TooltipPlacement };
 
 export const Tooltip = ({ overlayStyle, ...props }: TooltipProps) => (
-  <>
-    <AntdTooltip
-      styles={{
-        body: { overflow: 'hidden', textOverflow: 'ellipsis' },
-        root: overlayStyle ?? {},
-      }}
-      color={`${supersetTheme.colors.grayscale.dark2}e6`}
-      {...props}
-    />
-  </>
+  <AntdTooltip
+    overlayInnerStyle={{
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+    }}
+    overlayStyle={overlayStyle}
+    color={`${supersetTheme.colors.grayscale.dark2}e6`}
+    {...props}
+  />
 );

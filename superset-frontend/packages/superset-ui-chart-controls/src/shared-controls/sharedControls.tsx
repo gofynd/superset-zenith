@@ -51,7 +51,6 @@ import {
   formatSelectOptions,
   displayTimeRelatedControls,
   getColorControlsProps,
-  getColorControlsProps,
   D3_FORMAT_OPTIONS,
   D3_FORMAT_DOCS,
   D3_TIME_FORMAT_OPTIONS,

@@ -16,29 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { render, screen } from 'spec/helpers/testing-library';
-import Slider from '.';
 
-<<<<<<<< HEAD:superset-frontend/src/components/Slider/Slider.test.tsx
-const mockedProps = {
-  defaultValue: 90,
-  tooltip: {
-    open: true,
-  },
-};
-
-test('should render', () => {
-  const { container } = render(<Slider {...mockedProps} />);
-  expect(container).toBeInTheDocument();
-});
-
-test('should render with default value on tooltip', () => {
-  render(<Slider {...mockedProps} />);
-  expect(
-    screen.getAllByText(`${mockedProps.defaultValue}`)[0],
-  ).toBeInTheDocument();
-});
-========
 declare module '*.png' {
   const value: any;
   export default value;
@@ -48,4 +26,3 @@ declare module '*.gif' {
   const value: any;
   export default value;
 }
->>>>>>>> tags/5.0.0:superset-frontend/plugins/plugin-chart-cartodiagram/types/external.d.ts

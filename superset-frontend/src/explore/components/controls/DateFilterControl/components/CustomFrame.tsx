@@ -116,7 +116,6 @@ export function CustomFrame(props: FrameComponentProps) {
     return <Loading position="inline-centered" />;
   }
 
-
   // Helper functions for timezone-aware date handling
   const convertToTimezone = (datetime: string): Moment => {
     const converted = moment.tz(datetime, timezone);
@@ -151,9 +150,14 @@ export function CustomFrame(props: FrameComponentProps) {
               <Row>
                 <DatePicker
                   showTime
-                  defaultValue={convertToTimezone(sinceDatetime)}
+                  defaultValue={
+                    convertToTimezone(sinceDatetime) as unknown as Dayjs
+                  }
                   onChange={(datetime: Dayjs) =>
-                    onChange('sinceDatetime', convertToTimezone(DAYJS_FORMAT))
+                    onChange(
+                      'sinceDatetime',
+                      convertToTimezone(DAYJS_FORMAT) as unknown as string,
+                    )
                   }
                   allowClear={false}
                   getPopupContainer={(triggerNode: HTMLElement) =>
@@ -210,9 +214,14 @@ export function CustomFrame(props: FrameComponentProps) {
               <Row>
                 <DatePicker
                   showTime
-                  defaultValue={convertToTimezone(untilDatetime)}
+                  defaultValue={
+                    convertToTimezone(untilDatetime) as unknown as Dayjs
+                  }
                   onChange={(datetime: Dayjs) =>
-                    onChange('untilDatetime', convertToTimezone(DAYJS_FORMAT))
+                    onChange(
+                      'untilDatetime',
+                      convertToTimezone(DAYJS_FORMAT) as unknown as string,
+                    )
                   }
                   allowClear={false}
                   getPopupContainer={(triggerNode: HTMLElement) =>
@@ -270,9 +279,14 @@ export function CustomFrame(props: FrameComponentProps) {
                 <Col>
                   <DatePicker
                     showTime
-                    defaultValue={convertToTimezone(anchorValue)}
+                    defaultValue={
+                      convertToTimezone(anchorValue) as unknown as Dayjs
+                    }
                     onChange={(datetime: Dayjs) =>
-                      onChange('anchorValue', convertToTimezone(DAYJS_FORMAT))
+                      onChange(
+                        'anchorValue',
+                        convertToTimezone(DAYJS_FORMAT) as unknown as string,
+                      )
                     }
                     allowClear={false}
                     className="control-anchor-to-datetime"
