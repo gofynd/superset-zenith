@@ -166,7 +166,7 @@ const handleMouseDown = (e: SyntheticEvent) => {
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
   title = t('No results'),
-  description = t(''),
+  // description = t(''),
   image = 'empty.svg',
   buttonText,
   buttonAction,
@@ -183,11 +183,11 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       `}
     >
       {title && <Title size={size}>{title}</Title>}
-      {description && (
+      {/* {description && (
         <Description size={size} className="ant-empty-description">
           {description}
         </Description>
-      )}
+      )} */}
       {buttonText && buttonAction && (
         <ActionButton
           buttonStyle="primary"
