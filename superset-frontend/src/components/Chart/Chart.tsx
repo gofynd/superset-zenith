@@ -275,10 +275,8 @@ class Chart extends PureComponent<ChartProps, {}> {
     );
   }
 
-  renderSpinner(databaseName: string | undefined) {
-    const message = databaseName
-      ? t('Waiting on %s', databaseName)
-      : t('Waiting on database...');
+  renderSpinner() {
+    const message = t('Waiting on database...');
 
     return (
       <LoadingDiv>
@@ -311,14 +309,11 @@ class Chart extends PureComponent<ChartProps, {}> {
       height,
       chartAlert,
       chartStatus,
-      datasource,
       errorMessage,
       chartIsStale,
       queriesResponse = [],
       width,
     } = this.props;
-
-    const databaseName = datasource?.database?.name;
 
     const isLoading = chartStatus === 'loading';
 
@@ -377,9 +372,7 @@ class Chart extends PureComponent<ChartProps, {}> {
           height={height}
           width={width}
         >
-          {isLoading
-            ? this.renderSpinner(databaseName)
-            : this.renderChartContainer()}
+          {isLoading ? this.renderSpinner() : this.renderChartContainer()}
         </Styles>
       </ErrorBoundary>
     );
