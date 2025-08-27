@@ -31,6 +31,7 @@ import {
 } from '@superset-ui/core';
 import { PLACEHOLDER_DATASOURCE } from 'src/dashboard/constants';
 import Loading from 'src/components/Loading';
+import ChartShimmer from 'src/components/Chart/ChartShimmer';
 import { EmptyState } from 'src/components/EmptyState';
 import ErrorBoundary from 'src/components/ErrorBoundary';
 import { Logger, LOG_ACTIONS_RENDER_CHART } from 'src/logger/LogUtils';
@@ -280,8 +281,9 @@ class Chart extends PureComponent<ChartProps, {}> {
 
     return (
       <LoadingDiv>
-        <Loading position="inline-centered" />
-        <MessageSpan>{message}</MessageSpan>
+        {/* <Loading position="inline-centered" /> */}
+        {/* <MessageSpan>{message}</MessageSpan> */}
+        <ChartShimmer height={this.props.height} />
       </LoadingDiv>
     );
   }
