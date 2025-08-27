@@ -258,7 +258,7 @@ class Chart extends PureComponent<ChartProps, {}> {
           data-test="chart-container"
           height={height}
         >
-          <Loading />
+          <ChartShimmer height={height} />
         </Styles>
       );
     }
@@ -300,7 +300,7 @@ class Chart extends PureComponent<ChartProps, {}> {
             data-test={this.props.vizType}
           />
         ) : (
-          <Loading />
+          <ChartShimmer height={this.props.height} />
         )}
       </div>
     );
