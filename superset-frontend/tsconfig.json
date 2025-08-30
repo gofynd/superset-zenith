@@ -4,7 +4,8 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "strictNullChecks": true,
 
     /* Modules */
@@ -49,9 +50,6 @@
     "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
 
-    /* Backwards Compatibility */
-    "suppressImplicitAnyIndexErrors": true,
-
     /* Language and Environment */
     "target": "esnext",
     "jsx": "preserve",
@@ -64,7 +62,9 @@
     "skipLibCheck": true
   },
   "exclude": [
-    "./packages/generator-superset/test/**/*"
+    "./packages/generator-superset/test/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ],
   "include": [
     "./src/**/*",

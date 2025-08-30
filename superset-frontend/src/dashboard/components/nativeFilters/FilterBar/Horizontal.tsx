@@ -17,18 +17,13 @@
  * under the License.
  */
 
-import { FC, memo } from 'react';
-import {
-  DataMaskStateWithId,
-  FeatureFlag,
-  isFeatureEnabled,
-  JsonObject,
-  styled,
-  t,
-} from '@superset-ui/core';
-import Icons from 'src/components/Icons';
+import { FC, memo, useMemo } from 'react';
+import { DataMaskStateWithId, styled, t } from '@superset-ui/core';
 import Loading from 'src/components/Loading';
-import { DashboardLayout, RootState } from 'src/dashboard/types';
+import Icons from 'src/components/Icons';
+import { RootState } from 'src/dashboard/types';
+import { useChartLayoutItems } from 'src/dashboard/util/useChartLayoutItems';
+import { useChartIds } from 'src/dashboard/util/charts/useChartIds';
 import { useSelector } from 'react-redux';
 import FilterControls from './FilterControls/FilterControls';
 import { useChartsVerboseMaps, getFilterBarTestId } from './utils';
@@ -39,8 +34,7 @@ import crossFiltersSelector from './CrossFilters/selectors';
 
 const HorizontalBar = styled.div`
   ${({ theme }) => `
-    padding: ${theme.gridUnit * 3}px ${theme.gridUnit * 2}px ${
-      theme.gridUnit * 3
+    padding: ${theme.gridUnit * 3}px ${theme.gridUnit * 2}px ${theme.gridUnit * 3
     }px ${theme.gridUnit * 4}px;
     background: ${theme.colors.grayscale.light5};
     box-shadow: inset 0px -2px 2px -1px ${theme.colors.grayscale.light2};
@@ -68,6 +62,7 @@ const FilterBarEmptyStateContainer = styled.div`
     font-weight: ${theme.typography.weights.bold};
     color: ${theme.colors.grayscale.base};
     font-size: ${theme.typography.sizes.s}px;
+    padding-left: ${theme.gridUnit * 2}px;
   `}
 `;
 
@@ -97,10 +92,10 @@ const FiltersLinkContainer = styled.div<{ hasFilters: boolean }>`
 `;
 
 const HorizontalFilterBar: FC<HorizontalBarProps> = ({
-  actions,
   canEdit,
-  dashboardId,
+  actions,
   dataMaskSelected,
+  dashboardId,
   filterValues,
   isInitialized,
   onSelectionChange,
@@ -116,25 +111,21 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
   const dataMask = useSelector<RootState, DataMaskStateWithId>(
     state => state.dataMask,
   );
-  const chartConfiguration = useSelector<RootState, JsonObject>(
-    state => state.dashboardInfo.metadata?.chart_configuration,
-  );
-  const dashboardLayout = useSelector<RootState, DashboardLayout>(
-    state => state.dashboardLayout.present,
-  );
-  const isCrossFiltersEnabled = isFeatureEnabled(
-    FeatureFlag.DashboardCrossFilters,
-  );
+  const chartIds = useChartIds();
+  const chartLayoutItems = useChartLayoutItems();
   const verboseMaps = useChartsVerboseMaps();
 
-  const selectedCrossFilters = isCrossFiltersEnabled
-    ? crossFiltersSelector({
+  const selectedCrossFilters = useMemo(
+    () =>
+      crossFiltersSelector({
         dataMask,
-        chartConfiguration,
-        dashboardLayout,
+        chartIds,
+        chartLayoutItems,
         verboseMaps,
-      })
-    : [];
+      }),
+    [chartIds, chartLayoutItems, dataMask, verboseMaps],
+  );
+
   const hasFilters = filterValues.length > 0 || selectedCrossFilters.length > 0;
 
   if (isIframe && !hasFilters) {
@@ -149,16 +140,6 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
         ) : (
           <>
             <FilterBarSettings />
-            {canEdit && (
-              <FiltersLinkContainer hasFilters={hasFilters}>
-                <FilterConfigurationLink
-                  dashboardId={dashboardId}
-                  createNewOnOpen={filterValues.length === 0}
-                >
-                  <Icons.PlusSmall /> {t('Add/Edit Filters')}
-                </FilterConfigurationLink>
-              </FiltersLinkContainer>
-            )}
             {!hasFilters && (
               <FilterBarEmptyStateContainer data-test="horizontal-filterbar-empty">
                 {t('No filters are currently added to this dashboard.')}
@@ -174,31 +155,31 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
           </>
         )} */}
 
-          <>
-            <FilterBarSettings />
-            {canEdit && (
-              <FiltersLinkContainer hasFilters={hasFilters}>
-                <FilterConfigurationLink
-                  dashboardId={dashboardId}
-                  createNewOnOpen={filterValues.length === 0}
-                >
-                  <Icons.PlusSmall /> {t('Add/Edit Filters')}
-                </FilterConfigurationLink>
-              </FiltersLinkContainer>
-            )}
-            {!hasFilters && (
-              <FilterBarEmptyStateContainer data-test="horizontal-filterbar-empty">
-                {t('No filters are currently added to this dashboard.')}
-              </FilterBarEmptyStateContainer>
-            )}
-            {hasFilters && (
-              <FilterControls
-                dataMaskSelected={dataMaskSelected}
-                onFilterSelectionChange={onSelectionChange}
-              />
-            )}
-            {actions}
-          </>
+        <>
+          <FilterBarSettings />
+          {canEdit && (
+            <FiltersLinkContainer hasFilters={hasFilters}>
+              <FilterConfigurationLink
+                dashboardId={dashboardId}
+                createNewOnOpen={filterValues.length === 0}
+              >
+                <Icons.PlusSmall /> {t('Add/Edit Filters')}
+              </FilterConfigurationLink>
+            </FiltersLinkContainer>
+          )}
+          {!hasFilters && (
+            <FilterBarEmptyStateContainer data-test="horizontal-filterbar-empty">
+              {t('No filters are currently added to this dashboard.')}
+            </FilterBarEmptyStateContainer>
+          )}
+          {hasFilters && (
+            <FilterControls
+              dataMaskSelected={dataMaskSelected}
+              onFilterSelectionChange={onSelectionChange}
+            />
+          )}
+          {actions}
+        </>
 
       </HorizontalBarContent>
     </HorizontalBar>
