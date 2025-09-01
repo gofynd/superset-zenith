@@ -18,7 +18,6 @@
  */
 /* eslint no-undef: 'error' */
 /* eslint no-param-reassign: ["error", { "props": false }] */
-import moment from 'moment';
 import {
   FeatureFlag,
   isDefined,
@@ -43,7 +42,7 @@ import { allowCrossDomain as domainShardingEnabled } from 'src/utils/hostNamesCo
 import { updateDataMask } from 'src/dataMask/actions';
 import { waitForAsyncData } from 'src/middleware/asyncEvent';
 import { safeStringify } from 'src/utils/safeStringify';
-import { convertFormDataForAPI, convertAnnotationFormDataForAPI } from './timezoneChartActions';
+import { extendedDayjs } from 'src/utils/dates';
 
 export const CHART_UPDATE_STARTED = 'CHART_UPDATE_STARTED';
 export function chartUpdateStarted(queryController, latestQueryFormData, key) {
@@ -250,7 +249,7 @@ export async function getChartDataRequest({
 export function runAnnotationQuery({
   annotation,
   timeout,
-  formData = null,
+  formData,
   key,
   isDashboardRequest = false,
   force = false,
@@ -265,10 +264,6 @@ export function runAnnotationQuery({
       ...(formData || charts[sliceKey].latestQueryFormData),
     };
 
-    // Convert annotation and form data for timezone-aware API calls
-    const { annotation: convertedAnnotation, formData: convertedFd } =
-      convertAnnotationFormDataForAPI(annotation, fd);
-
     if (!annotation.sourceType) {
       return Promise.resolve();
     }
@@ -276,42 +271,42 @@ export function runAnnotationQuery({
     // In the original formData the `granularity` attribute represents the time grain (eg
     // `P1D`), but in the request payload it corresponds to the name of the column where
     // the time grain should be applied (eg, `Date`), so we need to move things around.
-    convertedFd.time_grain_sqla = convertedFd.time_grain_sqla || convertedFd.granularity;
-    convertedFd.granularity = convertedFd.granularity_sqla;
+    fd.time_grain_sqla = fd.time_grain_sqla || fd.granularity;
+    fd.granularity = fd.granularity_sqla;
 
-    const overridesKeys = Object.keys(convertedAnnotation.overrides || {});
+    const overridesKeys = Object.keys(annotation.overrides);
     if (overridesKeys.includes('since') || overridesKeys.includes('until')) {
-      convertedAnnotation.overrides = {
-        ...convertedAnnotation.overrides,
+      annotation.overrides = {
+        ...annotation.overrides,
         time_range: null,
       };
     }
-    const sliceFormData = Object.keys(convertedAnnotation.overrides || {}).reduce(
+    const sliceFormData = Object.keys(annotation.overrides).reduce(
       (d, k) => ({
         ...d,
-        [k]: convertedAnnotation.overrides[k] || convertedFd[k],
+        [k]: annotation.overrides[k] || fd[k],
       }),
       {},
     );
 
-    if (!isDashboardRequest && convertedFd) {
-      const hasExtraFilters = convertedFd.extra_filters && convertedFd.extra_filters.length > 0;
+    if (!isDashboardRequest && fd) {
+      const hasExtraFilters = fd.extra_filters && fd.extra_filters.length > 0;
       sliceFormData.extra_filters = hasExtraFilters
-        ? convertedFd.extra_filters
+        ? fd.extra_filters
         : undefined;
     }
 
-    const url = getAnnotationJsonUrl(convertedAnnotation.value, force);
+    const url = getAnnotationJsonUrl(annotation.value, force);
     const controller = new AbortController();
     const { signal } = controller;
 
-    dispatch(annotationQueryStarted(convertedAnnotation, controller, sliceKey));
+    dispatch(annotationQueryStarted(annotation, controller, sliceKey));
 
-    const annotationIndex = convertedFd?.annotation_layers?.findIndex(
-      it => it.name === convertedAnnotation.name,
+    const annotationIndex = fd?.annotation_layers?.findIndex(
+      it => it.name === annotation.name,
     );
     if (annotationIndex >= 0) {
-      convertedFd.annotation_layers[annotationIndex].overrides = sliceFormData;
+      fd.annotation_layers[annotationIndex].overrides = sliceFormData;
     }
 
     return SupersetClient.post({
@@ -320,7 +315,7 @@ export function runAnnotationQuery({
       timeout: queryTimeout * 1000,
       headers: { 'Content-Type': 'application/json' },
       jsonPayload: buildV1ChartDataPayload({
-        formData: convertedFd,
+        formData: fd,
         force,
         resultFormat: 'json',
         resultType: 'full',
@@ -459,7 +454,9 @@ export function exploreJSON(
                 formData.extra_filters && formData.extra_filters.length > 0,
               viz_type: formData.viz_type,
               data_age: resultItem.is_cached
-                ? moment(new Date()).diff(moment.utc(resultItem.cached_dttm))
+                ? extendedDayjs(new Date()).diff(
+                    extendedDayjs.utc(resultItem.cached_dttm),
+                  )
                 : null,
             }),
           ),

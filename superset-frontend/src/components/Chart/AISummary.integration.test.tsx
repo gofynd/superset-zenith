@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -30,7 +31,7 @@ const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 // Mock SuperChart
 jest.mock('@superset-ui/core', () => ({
   ...jest.requireActual('@superset-ui/core'),
-  SuperChart: ({ formData }) => (
+  SuperChart: ({ formData }: { formData: any }) => (
     <div data-test="mock-super-chart">{JSON.stringify(formData)}</div>
   ),
   isFeatureEnabled: jest.fn(),
@@ -64,7 +65,8 @@ const baseProps = {
   height: 400,
   width: 600,
   title: 'Sales Performance Dashboard',
-  description: 'A comprehensive analysis of sales performance trends across different regions and time periods',
+  description:
+    'A comprehensive analysis of sales performance trends across different regions and time periods',
   queriesResponse: [
     {
       data: [
@@ -81,7 +83,8 @@ const mockSuccessResponse = {
   json: async () => ({
     data: {
       result: {
-        insight: 'This line chart displays sales performance over the last 90 days for North America, showing a positive growth trend with sales increasing from $10,000 to $12,000.',
+        insight:
+          'This line chart displays sales performance over the last 90 days for North America, showing a positive growth trend with sales increasing from $10,000 to $12,000.',
       },
     },
   }),
@@ -93,7 +96,7 @@ describe('AI Summary Integration Tests', () => {
     mockFetch.mockClear();
 
     // Enable AI summary feature flag
-    mockIsFeatureEnabled.mockImplementation((flag) => {
+    mockIsFeatureEnabled.mockImplementation((flag: any) => {
       if (flag === FeatureFlag.AiSummary) return true;
       return false;
     });
@@ -115,9 +118,11 @@ describe('AI Summary Integration Tests', () => {
     // Wait for the AI summary to be generated and displayed
     await waitFor(
       () => {
-        expect(screen.getByText(/This line chart displays sales performance/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/This line chart displays sales performance/),
+        ).toBeInTheDocument();
       },
-      { timeout: 5000 }
+      { timeout: 5000 },
     );
 
     // Verify the API was called with correct payload
@@ -138,7 +143,8 @@ describe('AI Summary Integration Tests', () => {
               { date: '2024-01-03', sales: 11500, region: 'North America' },
             ],
             title: 'Sales Performance Dashboard',
-            description: 'A comprehensive analysis of sales performance trends across different regions and time periods',
+            description:
+              'A comprehensive analysis of sales performance trends across different regions and time periods',
             currency_code: 'USD',
             timezone: 'America/New_York',
           },
@@ -148,7 +154,9 @@ describe('AI Summary Integration Tests', () => {
     );
 
     // Verify the AI summary is displayed with proper styling
-    const aiSummary = screen.getByText(/This line chart displays sales performance/);
+    const aiSummary = screen.getByText(
+      /This line chart displays sales performance/,
+    );
     expect(aiSummary).toBeInTheDocument();
 
     // Verify AI icon is present
@@ -159,7 +167,7 @@ describe('AI Summary Integration Tests', () => {
     mockFetch.mockResolvedValueOnce(mockSuccessResponse as any);
 
     const propsWithoutDescription = { ...baseProps };
-    delete propsWithoutDescription.description;
+    delete (propsWithoutDescription as any).description;
 
     render(
       <ThemeProvider theme={supersetTheme}>
@@ -230,7 +238,9 @@ describe('AI Summary Integration Tests', () => {
     });
 
     // AI summary should not be displayed on error
-    expect(screen.queryByText(/This line chart displays/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/This line chart displays/),
+    ).not.toBeInTheDocument();
   });
 
   it('should handle large datasets by limiting to 200 rows', async () => {
@@ -260,7 +270,8 @@ describe('AI Summary Integration Tests', () => {
 
     // Verify only 200 rows were sent to API
     const call = mockFetch.mock.calls[0];
-    const payload = JSON.parse(call[1].body);
+    const payloadStr = (call?.[1]?.body as unknown as any) ?? {};
+    const payload = JSON.parse(payloadStr);
     expect(payload.chart_data.dataSample).toHaveLength(200);
   });
 
@@ -296,7 +307,9 @@ describe('AI Summary Integration Tests', () => {
     // Verify the new description was sent
     const secondCall = mockFetch.mock.calls[1];
     const payload = JSON.parse(secondCall[1].body);
-    expect(payload.chart_data.description).toBe('Updated description with new insights about the data');
+    expect(payload.chart_data.description).toBe(
+      'Updated description with new insights about the data',
+    );
   });
 
   it('should include all URL parameters in API call', async () => {
@@ -305,7 +318,8 @@ describe('AI Summary Integration Tests', () => {
     // Update window location with more parameters
     Object.defineProperty(window, 'location', {
       value: {
-        search: '?currency_code=EUR&timezone=Europe/London&country_code=GB&country=United Kingdom',
+        search:
+          '?currency_code=EUR&timezone=Europe/London&country_code=GB&country=United Kingdom',
       },
       writable: true,
     });
