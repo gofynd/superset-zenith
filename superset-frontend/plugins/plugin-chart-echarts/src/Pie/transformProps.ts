@@ -21,6 +21,7 @@ import {
   getColumnLabel,
   getMetricLabel,
   getNumberFormatter,
+  getSequentialSchemeRegistry,
   getTimeFormatter,
   NumberFormats,
   t,
@@ -52,6 +53,61 @@ import { getDefaultTooltip } from '../utils/tooltip';
 import { Refs } from '../types';
 
 const percentFormatter = getNumberFormatter(NumberFormats.PERCENT_2_POINT);
+
+/**
+ * Creates a hierarchical color mapping function based on slice values
+ * Maps min value to lightest color, max value to darkest color
+ */
+function createHierarchicalColorMapping(
+  data: any[],
+  metricLabel: string,
+  colorScheme?: string,
+) {
+  // Extract all values and find min/max
+  const values = data
+    .map(datum => {
+      const value = datum[metricLabel];
+      return typeof value === 'number' ? value : convertInteger(value);
+    })
+    .filter(v => typeof v === 'number') as number[];
+
+  if (values.length === 0) {
+    // Fallback to sequential if no valid values
+    return CategoricalColorNamespace.getScale(colorScheme);
+  }
+
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+
+  // Get sequential color scheme
+  const sequentialRegistry = getSequentialSchemeRegistry();
+  const sequentialScheme =
+    sequentialRegistry.get(colorScheme) || sequentialRegistry.get();
+  const colors = sequentialScheme?.colors || ['#light', '#dark'];
+
+  // Create color interpolation function
+  return (name: string, sliceId?: number, value?: number) => {
+    if (typeof value !== 'number') {
+      // Fallback for non-numeric values
+      return colors[0] || '#cccccc';
+    }
+
+    if (minValue === maxValue) {
+      // All values are equal, use middle color
+      const middleIndex = Math.floor(colors.length / 2);
+      return colors[middleIndex] || colors[0];
+    }
+
+    // Normalize value to [0, 1] range
+    const normalizedValue = (value - minValue) / (maxValue - minValue);
+
+    // Map to color index (0 = lightest, length-1 = darkest)
+    const colorIndex = Math.floor(normalizedValue * (colors.length - 1));
+    const clampedIndex = Math.max(0, Math.min(colors.length - 1, colorIndex));
+
+    return colors[clampedIndex];
+  };
+}
 
 export function parseParams({
   params,
@@ -138,6 +194,8 @@ export default function transformProps(
 
   const {
     colorScheme,
+    linearColorScheme,
+    colorOrderingMode = 'sequential',
     donut,
     groupby,
     innerRadius,
@@ -191,7 +249,16 @@ export default function transformProps(
   }, {});
 
   const { setDataMask = () => {}, onContextMenu } = hooks;
-  const colorFn = CategoricalColorNamespace.getScale(colorScheme as string);
+
+  // Create color function based on ordering mode
+  const effectiveColorScheme =
+    colorOrderingMode === 'hierarchical' ? linearColorScheme : colorScheme;
+
+  const colorFn =
+    colorOrderingMode === 'hierarchical'
+      ? createHierarchicalColorMapping(data, metricLabel, effectiveColorScheme)
+      : CategoricalColorNamespace.getScale(effectiveColorScheme as string);
+
   const numberFormatter = getValueFormatter(
     metric,
     currencyFormats,
@@ -222,7 +289,10 @@ export default function transformProps(
       value,
       name,
       itemStyle: {
-        color: colorFn(name, sliceId),
+        color:
+          colorOrderingMode === 'hierarchical'
+            ? colorFn(name, sliceId, convertInteger(value))
+            : colorFn(name, sliceId),
         opacity: isFiltered
           ? OpacityEnum.SemiTransparent
           : OpacityEnum.NonTransparent,

@@ -41,6 +41,7 @@ const {
   numberFormat,
   showLabels,
   roseType,
+  colorOrderingMode,
 } = DEFAULT_FORM_DATA;
 
 const config: ControlPanelConfig = {
@@ -68,7 +69,43 @@ const config: ControlPanelConfig = {
       label: t('Chart Options'),
       expanded: true,
       controlSetRows: [
-        ['color_scheme'],
+        [
+          {
+            name: 'color_scheme',
+            config: {
+              ...sharedControls.color_scheme,
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.color_ordering_mode?.value !== 'hierarchical',
+            },
+          },
+          {
+            name: 'linear_color_scheme',
+            config: {
+              ...sharedControls.linear_color_scheme,
+              label: t('Color Scheme'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                controls?.color_ordering_mode?.value === 'hierarchical',
+            },
+          },
+        ],
+        [
+          {
+            name: 'color_ordering_mode',
+            config: {
+              type: 'SelectControl',
+              label: t('Color Ordering'),
+              default: colorOrderingMode,
+              renderTrigger: true,
+              choices: [
+                ['sequential', t('Sequential (by index)')],
+                ['hierarchical', t('Hierarchical (by value)')],
+              ],
+              description: t(
+                'How to assign colors to pie slices. Sequential uses categorical colors by slice order, Hierarchical maps slice values to a color ramp (light=min, dark=max).',
+              ),
+            },
+          },
+        ],
         [
           {
             name: 'show_labels_threshold',

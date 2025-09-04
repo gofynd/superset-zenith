@@ -31,6 +31,8 @@ import { DEFAULT_LEGEND_FORM_DATA } from '../constants';
 export type EchartsPieFormData = QueryFormData &
   LegendFormData & {
     colorScheme?: string;
+    linearColorScheme?: string;
+    colorOrderingMode?: 'sequential' | 'hierarchical';
     currentOwnValue?: string[] | null;
     donut: boolean;
     defaultValue?: string[] | null;
@@ -82,6 +84,7 @@ export const DEFAULT_FORM_DATA: EchartsPieFormData = {
   showLabelsThreshold: 5,
   dateFormat: 'smart_date',
   roseType: null,
+  colorOrderingMode: 'sequential',
 };
 
 export type PieChartTransformedProps =
