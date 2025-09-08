@@ -19,7 +19,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { render, screen } from 'spec/helpers/testing-library';
-import { FeatureFlag, VizType } from '@superset-ui/core';
+import { FeatureFlag, VizType, isFeatureEnabled } from '@superset-ui/core';
 import mockState from 'spec/fixtures/mockState';
 import SliceHeaderControls, { SliceHeaderControlsProps } from '.';
 
@@ -261,6 +261,28 @@ test('Should "Force refresh"', () => {
   expect(props.forceRefresh).toHaveBeenCalledTimes(1);
   expect(props.forceRefresh).toHaveBeenCalledWith(371, 26);
   expect(props.addSuccessToast).toHaveBeenCalledTimes(1);
+});
+
+test('Should hide "Force refresh" when feature flag is disabled', () => {
+  // Mock the feature flag to be disabled
+  jest
+    .spyOn(require('@superset-ui/core'), 'isFeatureEnabled')
+    .mockReturnValue(false);
+
+  const props = createProps();
+  renderWrapper(props);
+
+  // Open the dropdown menu
+  userEvent.click(screen.getByRole('button', { name: 'More Options' }));
+
+  // Verify Force refresh option is not present
+  expect(screen.queryByText('Force refresh')).not.toBeInTheDocument();
+
+  // Verify other menu items are still present
+  expect(screen.getByText('Enter fullscreen')).toBeInTheDocument();
+
+  // Restore the mock
+  jest.restoreAllMocks();
 });
 
 test('Should "Enter fullscreen"', () => {

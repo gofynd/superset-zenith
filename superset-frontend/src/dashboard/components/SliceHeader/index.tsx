@@ -22,7 +22,7 @@ import {
   useContext,
   useEffect,
   useRef,
-  useState
+  useState,
 } from 'react';
 import {
   css,
@@ -30,6 +30,8 @@ import {
   styled,
   t,
   keyframes,
+  getNumberFormatter,
+  NumberFormats,
 } from '@superset-ui/core';
 import { useUiConfig } from 'src/components/UiConfigContext';
 import { Tooltip } from 'src/components/Tooltip';
@@ -43,6 +45,14 @@ import Icons from 'src/components/Icons';
 import { RootState } from 'src/dashboard/types';
 import { getSliceHeaderTooltip } from 'src/dashboard/util/getSliceHeaderTooltip';
 import { DashboardPageIdContext } from 'src/dashboard/containers/DashboardPage';
+
+// Inline type definition to avoid import issues
+interface BigNumberComparisonData {
+  percentageChange: number;
+  comparisonIndicator: 'positive' | 'negative' | 'neutral';
+  previousPeriodValue: number;
+  currentValue: number;
+}
 
 const extensionsRegistry = getExtensionsRegistry();
 
@@ -58,6 +68,7 @@ type SliceHeaderProps = SliceHeaderControlsProps & {
   formData: object;
   width: number;
   height: number;
+  bigNumberComparisonData?: BigNumberComparisonData | null;
 };
 
 const annotationsLoading = t('Annotation layers are still loading.');
@@ -67,6 +78,65 @@ const CrossFilterIcon = styled(Icons.ApartmentOutlined)`
     cursor: default;
     color: ${theme.colors.primary.base};
     line-height: 1.8;
+  `}
+`;
+
+const ComparisonIndicator = styled.div<{
+  indicatorColor: string;
+}>`
+  ${({ theme, indicatorColor }) => `
+    display: inline-flex !important;
+    align-items: center;
+    gap: ${theme.gridUnit / 2}px;
+    font-size: ${theme.typography.sizes.s}px;
+    font-weight: ${theme.typography.weights.medium};
+    color: ${indicatorColor} !important;
+    cursor: help;
+    white-space: nowrap;
+    position: relative;
+    
+    /* Aggressively remove ALL possible borders and backgrounds */
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    
+    /* Override specific gray border that's being applied */
+    border: 0px solid transparent !important;
+    
+    /* Target any child elements that might have borders */
+    * {
+      border: none !important;
+      background: none !important;
+      box-shadow: none !important;
+    }
+    
+    /* Target the specific class to ensure override */
+    &.superset-comparison-indicator-no-border {
+      border: 0 !important;
+      background: transparent !important;
+      background-color: transparent !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    
+    /* Prevent tooltip-induced layout shifts */
+    &.ant-tooltip-open {
+      display: inline-flex !important;
+      position: relative !important;
+    }
   `}
 `;
 
@@ -190,6 +260,7 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
       formData,
       width,
       height,
+      bigNumberComparisonData,
     },
     ref,
   ) => {
@@ -227,25 +298,114 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
 
     const exploreUrl = `/explore/?dashboard_page_id=${dashboardPageId}&slice_id=${slice.slice_id}`;
 
-  if (chartStatus === 'loading') {
-    return (
-      <>
-        <ChartHeaderStyles data-test="slice-header" ref={innerRef}>
-          <div className="header-title" ref={headerRef}>
-            <div
-              css={theme => css`
-                width: 60%;
-                min-width: 160px;
-              `}
-            >
-              {/* <Skeleton.Input active size="small" /> */}
-              <HeaderBar />
+    // Render comparison indicator for BigNumber charts
+    const renderComparisonIndicator = () => {
+      // console.group('🎯 SliceHeader renderComparisonIndicator - DEBUG');
+      // console.log('📊 BigNumber Comparison Data:', {
+      //   bigNumberComparisonData,
+      //   hasBigNumberComparisonData: !!bigNumberComparisonData,
+      //   sliceVizType: slice?.viz_type,
+      //   chartStatus,
+      //   editMode,
+      // });
+
+      if (!bigNumberComparisonData) {
+        // console.log('❌ No comparison data available - not rendering indicator');
+        // console.groupEnd();
+        return null;
+      }
+
+      const { percentageChange, comparisonIndicator } = bigNumberComparisonData;
+      // console.log('✅ Rendering comparison indicator:', {
+      //   percentageChange,
+      //   comparisonIndicator,
+      //   percentageChangeType: typeof percentageChange,
+      //   comparisonIndicatorType: typeof comparisonIndicator,
+      // });
+      const formatPercentChange = getNumberFormatter(
+        NumberFormats.PERCENT_SIGNED_1_POINT,
+      );
+
+      let indicatorColor: string;
+      let arrowIcon: string;
+
+      switch (comparisonIndicator) {
+        case 'positive':
+          indicatorColor = '#28a745'; // green
+          arrowIcon = '↗';
+          break;
+        case 'negative':
+          indicatorColor = '#dc3545'; // red
+          arrowIcon = '↘';
+          break;
+        case 'neutral':
+          indicatorColor = '#ffc107'; // orange
+          arrowIcon = '−';
+          break;
+        default:
+          return null;
+      }
+
+      const tooltipText = t('Period-over-period comparison');
+      let formattedPercentage: string;
+      if (Number.isNaN(percentageChange) || percentageChange === undefined) {
+        formattedPercentage = '0%';
+      } else if (percentageChange === 0) {
+        // For zero percentage, don't show any sign
+        formattedPercentage = '0%';
+      } else {
+        formattedPercentage = formatPercentChange(percentageChange);
+      }
+
+      // console.log('🎨 Creating comparison indicator element:', {
+      //   indicatorColor,
+      //   arrowIcon,
+      //   formattedPercentage,
+      //   tooltipText,
+      // });
+      // console.groupEnd();
+
+      return (
+        <Tooltip title={tooltipText} placement="top">
+          <ComparisonIndicator
+            indicatorColor={indicatorColor}
+            className="superset-comparison-indicator-no-border"
+            style={{
+              border: 'none !important',
+              background: 'transparent !important',
+              backgroundColor: 'transparent !important',
+              padding: '0 !important',
+              boxShadow: 'none !important',
+              position: 'relative !important' as any,
+              display: 'inline-flex !important',
+            }}
+          >
+            <span>{arrowIcon}</span>
+            <span>{formattedPercentage}</span>
+          </ComparisonIndicator>
+        </Tooltip>
+      );
+    };
+
+    if (chartStatus === 'loading') {
+      return (
+        <>
+          <ChartHeaderStyles data-test="slice-header" ref={innerRef}>
+            <div className="header-title" ref={headerRef}>
+              <div
+                css={theme => css`
+                  width: 60%;
+                  min-width: 160px;
+                `}
+              >
+                {/* <Skeleton.Input active size="small" /> */}
+                <HeaderBar />
+              </div>
             </div>
-          </div>
-        </ChartHeaderStyles>
-      </>
-    );
-  }
+          </ChartHeaderStyles>
+        </>
+      );
+    }
     return (
       <ChartHeaderStyles data-test="slice-header" ref={ref}>
         <div className="header-title" ref={headerRef}>
@@ -263,45 +423,45 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
               url={canExplore ? exploreUrl : undefined}
             />
           </Tooltip>
-        <div
-          css={theme => css`
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: ${theme.gridUnit * 1.5}px;
-            margin-top: ${theme.gridUnit / 2}px;
-            margin-left: ${theme.gridUnit * 1.5}px;
-            transform: scale(0.95);
-          `}
-        >
-          <h3
+          <div
             css={theme => css`
-              margin: 0;
-              font-size: ${theme.typography.sizes.m}px;
               display: flex;
               align-items: center;
-              gap: ${theme.gridUnit}px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              line-height: 0;
+              justify-content: space-between;
+              gap: ${theme.gridUnit * 1.5}px;
+              margin-top: ${theme.gridUnit / 2}px;
+              margin-left: ${theme.gridUnit * 1.5}px;
+              transform: scale(0.95);
             `}
           >
-            {slice.description?.trim() && (
-              <Tooltip title={slice.description}>
-                <Icons.InfoCircleOutlined
-                  style={{
-                    fontSize: '14px',
-                    color: '#999',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    lineHeight: '0 !important',
-                  }}
-                />
-              </Tooltip>
-            )}
-          </h3>
-        </div>
+            <h3
+              css={theme => css`
+                margin: 0;
+                font-size: ${theme.typography.sizes.m}px;
+                display: flex;
+                align-items: center;
+                gap: ${theme.gridUnit}px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 0;
+              `}
+            >
+              {slice.description?.trim() && (
+                <Tooltip title={slice.description}>
+                  <Icons.InfoCircleOutlined
+                    style={{
+                      fontSize: '14px',
+                      color: '#999',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      lineHeight: '0 !important',
+                    }}
+                  />
+                </Tooltip>
+              )}
+            </h3>
+          </div>
           {!!Object.values(annotationQuery).length && (
             <Tooltip
               id="annotations-loading-tooltip"
@@ -338,6 +498,7 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
                   dashboardId={dashboardId}
                 />
               )}
+              {renderComparisonIndicator()}
               {crossFilterValue && (
                 <Tooltip
                   placement="top"

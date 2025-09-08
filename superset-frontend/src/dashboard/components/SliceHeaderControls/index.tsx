@@ -184,6 +184,10 @@ const SliceHeaderControls = (
       ?.behaviors?.includes(Behavior.InteractiveChart);
   const canExplore = props.supersetCanExplore;
   const { canDrillToDetail, canViewQuery, canViewTable } = usePermissions();
+  const isForceRefreshEnabled = isFeatureEnabled(
+    FeatureFlag.EnableChartForceRefresh,
+  );
+
   const refreshChart = () => {
     if (props.updatedDttm) {
       props.forceRefresh(props.slice.slice_id, props.dashboardId);
@@ -199,8 +203,10 @@ const SliceHeaderControls = (
   }) => {
     switch (key) {
       case MenuKeys.ForceRefresh:
-        refreshChart();
-        props.addSuccessToast(t('Data refreshed'));
+        if (isForceRefreshEnabled) {
+          refreshChart();
+          props.addSuccessToast(t('Data refreshed'));
+        }
         break;
       case MenuKeys.ToggleChartDescription:
         // eslint-disable-next-line no-unused-expressions
@@ -355,17 +361,19 @@ const SliceHeaderControls = (
       forceSubMenuRender
       {...openKeysProps}
     >
-      <Menu.Item
-        key={MenuKeys.ForceRefresh}
-        disabled={props.chartStatus === 'loading'}
-        style={{ height: 'auto', lineHeight: 'initial' }}
-        data-test="refresh-chart-menu-item"
-      >
-        {t('Force refresh')}
-        <RefreshTooltip data-test="dashboard-slice-refresh-tooltip">
-          {refreshTooltip}
-        </RefreshTooltip>
-      </Menu.Item>
+      {isForceRefreshEnabled && (
+        <Menu.Item
+          key={MenuKeys.ForceRefresh}
+          disabled={props.chartStatus === 'loading'}
+          style={{ height: 'auto', lineHeight: 'initial' }}
+          data-test="refresh-chart-menu-item"
+        >
+          {t('Force refresh')}
+          <RefreshTooltip data-test="dashboard-slice-refresh-tooltip">
+            {refreshTooltip}
+          </RefreshTooltip>
+        </Menu.Item>
+      )}
 
       <Menu.Item key={MenuKeys.Fullscreen}>{fullscreenLabel}</Menu.Item>
 
