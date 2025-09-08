@@ -161,7 +161,7 @@ const LoadingDiv = styled.div`
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 80%;
+  width: 100%;
   transform: translate(-50%, -50%);
 `;
 
