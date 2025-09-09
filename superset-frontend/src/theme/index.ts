@@ -108,6 +108,9 @@ const baseConfig: ThemeConfig = {
       paddingLG: supersetTheme.gridUnit * 6,
       fontWeightStrong: supersetTheme.typography.weights.medium,
       colorBgContainer: supersetTheme.colors.grayscale.light4,
+      borderRadiusLG: supersetTheme.borderRadius,
+      borderRadius: supersetTheme.borderRadius,
+      borderRadiusSM: supersetTheme.borderRadius,
     },
     DatePicker: {
       colorBgContainer: supersetTheme.colors.grayscale.light5,

@@ -36,6 +36,8 @@ const listViewCardTheme = {
   components: {
     Card: {
       colorBgContainer: supersetTheme.colors.grayscale.light5,
+      borderRadiusLG: supersetTheme.borderRadius,
+      borderRadius: supersetTheme.borderRadius,
     },
   },
 };
