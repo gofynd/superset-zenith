@@ -82,7 +82,8 @@ const StyledMenu = styled(AntdMenu)`
     }
     &.antd5-menu-vertical,
     &.ant-dropdown-menu {
-      min-width: 200px;
+      min-width: 160px;
+      max-width: 220px;
       border-radius: ${theme.borderRadius}px;
       box-shadow:
         0 3px 6px -4px ${addAlpha(theme.colors.grayscale.dark2, 0.12)},
@@ -91,6 +92,7 @@ const StyledMenu = styled(AntdMenu)`
       border: 1px solid ${theme.colors.grayscale.light2};
       background-color: ${theme.colors.grayscale.light5};
       overflow: hidden;
+      padding: ${theme.gridUnit}px 0;
       
       /* Fix for submenu arrow positioning */
       .antd5-menu-submenu-arrow {
@@ -105,14 +107,15 @@ const StyledMenu = styled(AntdMenu)`
         color: ${theme.colors.grayscale.base};
         font-weight: ${theme.typography.weights.bold};
         font-size: ${theme.typography.sizes.s}px;
-        padding: ${theme.gridUnit * 2}px ${theme.gridUnit * 4}px ${theme.gridUnit}px;
+        padding: ${theme.gridUnit * 1.5}px ${theme.gridUnit * 3}px ${theme.gridUnit}px;
         line-height: 1.4;
+        margin-bottom: ${theme.gridUnit / 2}px;
       }
       
       /* Enhanced menu item styling */
       .antd5-menu-item {
-        padding: ${theme.gridUnit * 1.5}px ${theme.gridUnit * 4}px;
-        margin: 0;
+        padding: ${theme.gridUnit * 1.25}px ${theme.gridUnit * 3}px;
+        margin: 0 0 ${theme.gridUnit / 2}px 0;
         line-height: 1.4;
         
         &:hover {
@@ -131,7 +134,7 @@ const StyledMenu = styled(AntdMenu)`
       
       /* Fix divider styling */
       .antd5-menu-item-divider {
-        margin: ${theme.gridUnit}px 0;
+        margin: ${theme.gridUnit / 2}px 0;
         background-color: ${theme.colors.grayscale.light2};
         height: 1px;
       }

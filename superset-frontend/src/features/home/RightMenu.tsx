@@ -131,7 +131,8 @@ const StyledSubMenu = styled(SubMenu)`
   /* Improve dropdown menu appearance */
   .ant-dropdown-menu,
   .antd5-menu-vertical {
-    min-width: 200px;
+    min-width: 160px;
+    max-width: 220px;
     border-radius: ${({ theme }) => theme.borderRadius}px;
     box-shadow:
       0 3px 6px -4px ${({ theme }) => theme.colors.grayscale.dark2}20,
@@ -145,15 +146,17 @@ const StyledSubMenu = styled(SubMenu)`
     color: ${({ theme }) => theme.colors.grayscale.base};
     font-weight: ${({ theme }) => theme.typography.weights.bold};
     font-size: ${({ theme }) => theme.typography.sizes.s}px;
-    padding: ${({ theme }) => theme.gridUnit * 2}px
-      ${({ theme }) => theme.gridUnit * 4}px ${({ theme }) => theme.gridUnit}px;
+    padding: ${({ theme }) => theme.gridUnit * 1.5}px
+      ${({ theme }) => theme.gridUnit * 3}px ${({ theme }) => theme.gridUnit}px;
+    margin-bottom: ${({ theme }) => theme.gridUnit / 2}px;
   }
 
   /* Improve menu item styling */
   .antd5-menu-item {
-    padding: ${({ theme }) => theme.gridUnit * 1.5}px
-      ${({ theme }) => theme.gridUnit * 4}px;
+    padding: ${({ theme }) => theme.gridUnit * 1.25}px
+      ${({ theme }) => theme.gridUnit * 3}px;
     line-height: 1.4;
+    margin: 0 0 ${({ theme }) => theme.gridUnit / 2}px 0;
 
     a {
       color: ${({ theme }) => theme.colors.grayscale.dark1};
@@ -171,8 +174,14 @@ const StyledSubMenu = styled(SubMenu)`
 
   /* Fix divider styling */
   .antd5-menu-item-divider {
-    margin: ${({ theme }) => theme.gridUnit}px 0;
+    margin: ${({ theme }) => theme.gridUnit / 2}px 0;
     background-color: ${({ theme }) => theme.colors.grayscale.light2};
+    height: 1px;
+  }
+
+  /* Overall dropdown padding */
+  .ant-dropdown-menu-root {
+    padding: ${({ theme }) => theme.gridUnit}px 0;
   }
 `;
 

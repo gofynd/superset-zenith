@@ -120,24 +120,27 @@ export const GlobalStyles = () => (
 
         .ant-dropdown-menu,
         .antd5-menu-vertical {
-          min-width: 200px;
+          min-width: 160px;
+          max-width: 220px;
           border-radius: ${theme.borderRadius}px;
           background-color: ${theme.colors.grayscale.light5};
           border: 1px solid ${theme.colors.grayscale.light2};
           overflow: hidden;
+          padding: ${theme.gridUnit}px 0;
 
           .antd5-menu-item-group-title {
             color: ${theme.colors.grayscale.base};
             font-weight: ${theme.typography.weights.bold};
             font-size: ${theme.typography.sizes.s}px;
-            padding: ${theme.gridUnit * 2}px ${theme.gridUnit * 4}px
+            padding: ${theme.gridUnit * 1.5}px ${theme.gridUnit * 3}px
               ${theme.gridUnit}px;
             line-height: 1.4;
+            margin-bottom: ${theme.gridUnit / 2}px;
           }
 
           .antd5-menu-item {
-            padding: ${theme.gridUnit * 1.5}px ${theme.gridUnit * 4}px;
-            margin: 0;
+            padding: ${theme.gridUnit * 1.25}px ${theme.gridUnit * 3}px;
+            margin: 0 0 ${theme.gridUnit / 2}px 0;
             line-height: 1.4;
 
             &:hover {
@@ -155,7 +158,7 @@ export const GlobalStyles = () => (
           }
 
           .antd5-menu-item-divider {
-            margin: ${theme.gridUnit}px 0;
+            margin: ${theme.gridUnit / 2}px 0;
             background-color: ${theme.colors.grayscale.light2};
             height: 1px;
           }
