@@ -82,12 +82,59 @@ const StyledMenu = styled(AntdMenu)`
     }
     &.antd5-menu-vertical,
     &.ant-dropdown-menu {
+      min-width: 200px;
+      border-radius: ${theme.borderRadius}px;
       box-shadow:
         0 3px 6px -4px ${addAlpha(theme.colors.grayscale.dark2, 0.12)},
-        0 6px 16px 0
-      ${addAlpha(theme.colors.grayscale.dark2, 0.08)},
-        0 9px 28px 8px
-      ${addAlpha(theme.colors.grayscale.dark2, 0.05)};
+        0 6px 16px 0 ${addAlpha(theme.colors.grayscale.dark2, 0.08)},
+        0 9px 28px 8px ${addAlpha(theme.colors.grayscale.dark2, 0.05)};
+      border: 1px solid ${theme.colors.grayscale.light2};
+      background-color: ${theme.colors.grayscale.light5};
+      overflow: hidden;
+      
+      /* Fix for submenu arrow positioning */
+      .antd5-menu-submenu-arrow {
+        position: absolute;
+        right: ${theme.gridUnit * 2}px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      
+      /* Improve menu item group styling */
+      .antd5-menu-item-group-title {
+        color: ${theme.colors.grayscale.base};
+        font-weight: ${theme.typography.weights.bold};
+        font-size: ${theme.typography.sizes.s}px;
+        padding: ${theme.gridUnit * 2}px ${theme.gridUnit * 4}px ${theme.gridUnit}px;
+        line-height: 1.4;
+      }
+      
+      /* Enhanced menu item styling */
+      .antd5-menu-item {
+        padding: ${theme.gridUnit * 1.5}px ${theme.gridUnit * 4}px;
+        margin: 0;
+        line-height: 1.4;
+        
+        &:hover {
+          background-color: ${theme.colors.primary.light5};
+        }
+        
+        a {
+          color: ${theme.colors.grayscale.dark1};
+          text-decoration: none;
+          
+          &:hover {
+            color: ${theme.colors.primary.base};
+          }
+        }
+      }
+      
+      /* Fix divider styling */
+      .antd5-menu-item-divider {
+        margin: ${theme.gridUnit}px 0;
+        background-color: ${theme.colors.grayscale.light2};
+        height: 1px;
+      }
     }
     `}
 `;
@@ -133,6 +180,10 @@ const StyledSubMenu = styled(AntdMenu.SubMenu)`
   .antd5-menu-submenu-title {
     display: flex;
     flex-direction: row-reverse;
+    align-items: center;
+    padding: ${({ theme }) => theme.gridUnit * 2}px
+      ${({ theme }) => theme.gridUnit * 4}px;
+
     &:after {
       content: '';
       position: absolute;
@@ -144,11 +195,31 @@ const StyledSubMenu = styled(AntdMenu.SubMenu)`
       transform: translateX(-50%);
       transition: all ${({ theme }) => theme.transitionTiming}s;
     }
+
+    /* Fix icon alignment and size */
+    .anticon {
+      margin-left: ${({ theme }) => theme.gridUnit}px;
+      font-size: ${({ theme }) => theme.typography.sizes.s}px;
+    }
   }
 
   .ant-dropdown-menu-submenu-arrow:before,
   .ant-dropdown-menu-submenu-arrow:after {
     content: none !important;
+  }
+
+  /* Ensure proper dropdown positioning */
+  &.antd5-menu-submenu-horizontal {
+    .antd5-menu-submenu-popup {
+      top: 100% !important;
+      border-radius: ${({ theme }) => theme.borderRadius}px;
+      box-shadow:
+        0 3px 6px -4px ${({ theme }) => addAlpha(theme.colors.grayscale.dark2, 0.12)},
+        0 6px 16px 0
+          ${({ theme }) => addAlpha(theme.colors.grayscale.dark2, 0.08)},
+        0 9px 28px 8px
+          ${({ theme }) => addAlpha(theme.colors.grayscale.dark2, 0.05)};
+    }
   }
 `;
 

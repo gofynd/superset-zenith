@@ -67,13 +67,13 @@ export function getBigNumberComparisonData(
 
   const metric = formData?.metric || 'value';
   const metricName = getMetricLabel(metric);
-  
+
   console.log('🎯 Metric Analysis:', {
     metric,
     metricName,
     metricType: typeof metric,
   });
-  
+
   // Check if this is a BigNumber chart with time comparison
   const vizType = formData?.viz_type;
   console.log('📋 Chart Type Check:', {
@@ -82,7 +82,9 @@ export function getBigNumberComparisonData(
   });
 
   if (!vizType || !vizType.includes('big_number')) {
-    console.log('❌ Not a BigNumber chart - skipping comparison data extraction');
+    console.log(
+      '❌ Not a BigNumber chart - skipping comparison data extraction',
+    );
     console.groupEnd();
     return null;
   }
@@ -105,10 +107,15 @@ export function getBigNumberComparisonData(
   console.log('⏰ Time Comparison Analysis:', {
     timeCompare,
     hasTimeOffsetColumns,
-    timeCompareSource: formData.time_compare ? 'formData.time_compare' : 
-                     (formData.extra_form_data?.custom_form_data as any)?.time_compare ? 'custom_form_data' :
-                     (formData.extra_form_data as any)?.time_compare ? 'extra_form_data' :
-                     hasTimeOffsetColumns ? 'forced_inherit' : 'none',
+    timeCompareSource: formData.time_compare
+      ? 'formData.time_compare'
+      : (formData.extra_form_data?.custom_form_data as any)?.time_compare
+        ? 'custom_form_data'
+        : (formData.extra_form_data as any)?.time_compare
+          ? 'extra_form_data'
+          : hasTimeOffsetColumns
+            ? 'forced_inherit'
+            : 'none',
   });
 
   if (!timeCompare || timeCompare === 'custom') {
@@ -139,9 +146,10 @@ export function getBigNumberComparisonData(
     if (col.includes('__') && col !== metricName) {
       const offsetCol = col;
       const rawValue = data[0][offsetCol];
-      
+
       if (rawValue !== null && rawValue !== undefined) {
-        previousPeriodValue = typeof rawValue === 'number' ? rawValue : parseFloat(rawValue);
+        previousPeriodValue =
+          typeof rawValue === 'number' ? rawValue : parseFloat(rawValue);
         break;
       }
     }
@@ -170,8 +178,9 @@ export function getBigNumberComparisonData(
     percentageChange = -1; // -100% change (complete loss)
     comparisonIndicator = 'negative';
   } else {
-    percentageChange = (currentValue - previousPeriodValue) / Math.abs(previousPeriodValue);
-    
+    percentageChange =
+      (currentValue - previousPeriodValue) / Math.abs(previousPeriodValue);
+
     if (percentageChange > 0) {
       comparisonIndicator = 'positive';
     } else if (percentageChange < 0) {

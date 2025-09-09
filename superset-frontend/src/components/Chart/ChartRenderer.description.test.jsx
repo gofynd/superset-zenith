@@ -18,9 +18,8 @@
  */
 
 import { render, screen, waitFor } from 'spec/helpers/testing-library';
-import { FeatureFlag } from '@superset-ui/core';
+import { FeatureFlag, supersetTheme } from '@superset-ui/core';
 import { ThemeProvider } from '@emotion/react';
-import { supersetTheme } from '@superset-ui/core';
 import ChartRenderer from './ChartRenderer';
 
 // Mock dependencies
@@ -37,17 +36,19 @@ jest.mock('./ChartContextMenu/ChartContextMenu', () => () => (
 ));
 
 // Mock AISummaryBox to verify props
-jest.mock('./AISummaryBox', () => {
-  return function MockAISummaryBox(props) {
-    return (
-      <div data-test="mock-ai-summary-box">
-        <div data-test="ai-title">{props.title}</div>
-        <div data-test="ai-description">{props.description}</div>
-        <div data-test="ai-viztype">{props.vizType}</div>
-      </div>
-    );
-  };
-});
+jest.mock(
+  './AISummaryBox',
+  () =>
+    function MockAISummaryBox(props) {
+      return (
+        <div data-test="mock-ai-summary-box">
+          <div data-test="ai-title">{props.title}</div>
+          <div data-test="ai-description">{props.description}</div>
+          <div data-test="ai-viztype">{props.vizType}</div>
+        </div>
+      );
+    },
+);
 
 const mockIsFeatureEnabled = require('@superset-ui/core').isFeatureEnabled;
 
@@ -74,7 +75,7 @@ const baseProps = {
 
 const renderChartRenderer = (props = {}) => {
   // Enable AI summary feature flag
-  mockIsFeatureEnabled.mockImplementation((flag) => {
+  mockIsFeatureEnabled.mockImplementation(flag => {
     if (flag === FeatureFlag.AiSummary) return true;
     return false;
   });
@@ -102,8 +103,12 @@ describe('ChartRenderer - Description Integration', () => {
       expect(screen.getByTestId('mock-ai-summary-box')).toBeInTheDocument();
     });
 
-    expect(screen.getByTestId('ai-description')).toHaveTextContent('Test Chart Description');
-    expect(screen.getByTestId('ai-title')).toHaveTextContent('Test Chart Title');
+    expect(screen.getByTestId('ai-description')).toHaveTextContent(
+      'Test Chart Description',
+    );
+    expect(screen.getByTestId('ai-title')).toHaveTextContent(
+      'Test Chart Title',
+    );
     expect(screen.getByTestId('ai-viztype')).toHaveTextContent('line');
   });
 
@@ -144,7 +149,9 @@ describe('ChartRenderer - Description Integration', () => {
     renderChartRenderer({ title: 'Custom Chart Title' });
 
     await waitFor(() => {
-      expect(screen.getByTestId('ai-title')).toHaveTextContent('Custom Chart Title');
+      expect(screen.getByTestId('ai-title')).toHaveTextContent(
+        'Custom Chart Title',
+      );
     });
   });
 
@@ -185,7 +192,9 @@ describe('ChartRenderer - Description Integration', () => {
     renderChartRenderer({ description: longDescription });
 
     await waitFor(() => {
-      expect(screen.getByTestId('ai-description')).toHaveTextContent(longDescription);
+      expect(screen.getByTestId('ai-description')).toHaveTextContent(
+        longDescription,
+      );
     });
   });
 
@@ -195,7 +204,9 @@ describe('ChartRenderer - Description Integration', () => {
     renderChartRenderer({ description: specialDescription });
 
     await waitFor(() => {
-      expect(screen.getByTestId('ai-description')).toHaveTextContent(specialDescription);
+      expect(screen.getByTestId('ai-description')).toHaveTextContent(
+        specialDescription,
+      );
     });
   });
 });

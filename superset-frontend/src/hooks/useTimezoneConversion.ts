@@ -25,18 +25,18 @@ import { useTimezone } from 'src/components/TimezoneContext';
  * Provides utilities to convert dates between timezone and UTC for API calls
  */
 export function useTimezoneConversion() {
-  const { timezone, convertToUTC, convertFromUTC, formatDate, formatDateTime } = useTimezone();
+  const { timezone, convertToUTC, convertFromUTC, formatDate, formatDateTime } =
+    useTimezone();
 
   /**
    * Convert date range filters to UTC for API calls
    * This should be used when sending date filters to the backend
    */
-  const convertDateRangeToUTC = (dateRange: [string, string]): [string, string] => {
+  const convertDateRangeToUTC = (
+    dateRange: [string, string],
+  ): [string, string] => {
     const [start, end] = dateRange;
-    return [
-      convertToUTC(start).toISOString(),
-      convertToUTC(end).toISOString(),
-    ];
+    return [convertToUTC(start).toISOString(), convertToUTC(end).toISOString()];
   };
 
   /**
@@ -65,7 +65,7 @@ export function useTimezoneConversion() {
         if (Array.isArray(converted[field])) {
           // Handle date range arrays
           converted[field] = converted[field].map((date: any) =>
-            typeof date === 'string' ? convertToUTC(date).toISOString() : date
+            typeof date === 'string' ? convertToUTC(date).toISOString() : date,
           );
         } else if (typeof converted[field] === 'string') {
           // Handle single date strings
@@ -140,16 +140,18 @@ export function useTimezoneConversion() {
   /**
    * Format a date for display in the current timezone
    */
-  const formatDateForDisplay = (date: moment.MomentInput, format?: string): string => {
-    return formatDate(date, format);
-  };
+  const formatDateForDisplay = (
+    date: moment.MomentInput,
+    format?: string,
+  ): string => formatDate(date, format);
 
   /**
    * Format a datetime for display in the current timezone
    */
-  const formatDateTimeForDisplay = (date: moment.MomentInput, format?: string): string => {
-    return formatDateTime(date, format);
-  };
+  const formatDateTimeForDisplay = (
+    date: moment.MomentInput,
+    format?: string,
+  ): string => formatDateTime(date, format);
 
   /**
    * Get timezone info for debugging/logging

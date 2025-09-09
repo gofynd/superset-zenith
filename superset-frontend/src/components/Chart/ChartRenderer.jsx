@@ -396,33 +396,35 @@ class ChartRenderer extends Component {
             {...drillToDetailProps}
           />
           {showAISummary && (
-              <div
-                style={{
-                  marginTop: vizType === 'country_map' ? 0 : 8,
-                  marginBottom: vizType === 'country_map' ? 0 : 12,
-                }}
-            >
-            <AISummaryBox
-              chartDomId={`chart-id-${chartId}`}
-              vizType={vizType}
-              title={this.props.title}
-              description={this.props.description}
-              queriesData={this.mutableQueriesResponse}
-              timeRange={formData?.time_range}
-              filters={formData?.adhoc_filters}
-              onHeightChange={h => {
-                const prev = this.state.aiBoxHeight || 0;
-                const threshold = 4; // ignore tiny changes to avoid jitter
-                if (Math.abs((h || 0) - prev) > threshold) {
-                  if (this.aiHeightUpdateId)
-                    window.cancelAnimationFrame(this.aiHeightUpdateId);
-                  this.aiHeightUpdateId = window.requestAnimationFrame(() => {
-                    if (this.state.aiBoxHeight !== h)
-                      this.setState({ aiBoxHeight: h });
-                  });
-                }
+            <div
+              style={{
+                marginTop: vizType === 'country_map' ? 0 : 8,
+                marginBottom: vizType === 'country_map' ? 0 : 12,
               }}
-            />
+            >
+              <AISummaryBox
+                chartDomId={`chart-id-${chartId}`}
+                vizType={vizType}
+                title={this.props.title}
+                description={this.props.description}
+                queriesData={this.mutableQueriesResponse}
+                timeRange={formData?.time_range}
+                filters={formData?.adhoc_filters}
+                onHeightChange={h => {
+                  const prev = this.state.aiBoxHeight || 0;
+                  const threshold = 4; // ignore tiny changes to avoid jitter
+                  if (Math.abs((h || 0) - prev) > threshold) {
+                    if (this.aiHeightUpdateId) {
+                      window.cancelAnimationFrame(this.aiHeightUpdateId);
+                    }
+                    this.aiHeightUpdateId = window.requestAnimationFrame(() => {
+                      if (this.state.aiBoxHeight !== h) {
+                        this.setState({ aiBoxHeight: h });
+                      }
+                    });
+                  }
+                }}
+              />
             </div>
           )}
         </div>

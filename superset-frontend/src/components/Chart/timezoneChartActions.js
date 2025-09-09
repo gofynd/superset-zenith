@@ -69,7 +69,6 @@ export function convertFormDataForAPI(formData) {
       ],
     });
 
-
     return result;
   } catch (error) {
     console.error('❌ [TIMEZONE CONVERSION ERROR]:', error);
@@ -122,7 +121,9 @@ export function convertAnnotationFormDataForAPI(annotation, formData) {
     // Convert annotation overrides
     const convertedAnnotation = { ...annotation };
     if (annotation.overrides) {
-      convertedAnnotation.overrides = convertRequestDatesToUTC(annotation.overrides);
+      convertedAnnotation.overrides = convertRequestDatesToUTC(
+        annotation.overrides,
+      );
     }
 
     // Convert form data
@@ -133,7 +134,10 @@ export function convertAnnotationFormDataForAPI(annotation, formData) {
       formData: convertedFormData,
     };
   } catch (error) {
-    console.warn('[Timezone] Failed to convert annotation form data dates to UTC:', error);
+    console.warn(
+      '[Timezone] Failed to convert annotation form data dates to UTC:',
+      error,
+    );
     return { annotation, formData };
   }
 }

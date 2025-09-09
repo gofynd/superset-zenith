@@ -59,7 +59,9 @@ export default {
               type: 'HiddenControl',
               label: t('URL parameters'),
               hidden: true,
-              description: t('Extra parameters for use in jinja templated queries'),
+              description: t(
+                'Extra parameters for use in jinja templated queries',
+              ),
             },
           },
         ],

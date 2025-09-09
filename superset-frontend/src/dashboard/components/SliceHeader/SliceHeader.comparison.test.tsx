@@ -112,7 +112,10 @@ const defaultProps = {
   exportFullXLSX: jest.fn(),
 };
 
-const renderSliceHeader = (props = {}, comparisonData?: BigNumberComparisonData | null) => {
+const renderSliceHeader = (
+  props = {},
+  comparisonData?: BigNumberComparisonData | null,
+) => {
   const finalProps = {
     ...defaultProps,
     ...props,
@@ -126,7 +129,7 @@ const renderSliceHeader = (props = {}, comparisonData?: BigNumberComparisonData 
           <SliceHeader {...finalProps} />
         </ThemeProvider>
       </Router>
-    </Provider>
+    </Provider>,
   );
 };
 
@@ -134,7 +137,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
   describe('Comparison indicator rendering', () => {
     it('should not render comparison indicator when no comparison data provided', () => {
       renderSliceHeader();
-      
+
       // Should not find any comparison indicator elements
       expect(screen.queryByText('↗')).not.toBeInTheDocument();
       expect(screen.queryByText('↘')).not.toBeInTheDocument();
@@ -150,7 +153,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       expect(screen.getByText('↗')).toBeInTheDocument();
       expect(screen.getByText('25.0%')).toBeInTheDocument();
     });
@@ -164,7 +167,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       expect(screen.getByText('↘')).toBeInTheDocument();
       expect(screen.getByText('-35.8%')).toBeInTheDocument();
     });
@@ -178,7 +181,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       expect(screen.getByText('−')).toBeInTheDocument();
       expect(screen.getByText('0.0%')).toBeInTheDocument();
     });
@@ -192,7 +195,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       expect(screen.getByText('↗')).toBeInTheDocument();
       expect(screen.getByText('0%')).toBeInTheDocument();
     });
@@ -206,7 +209,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       expect(screen.getByText('↘')).toBeInTheDocument();
       expect(screen.getByText('0%')).toBeInTheDocument();
     });
@@ -222,9 +225,12 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       const indicator = screen.getByText('↗').closest('[title]');
-      expect(indicator).toHaveAttribute('title', 'Period-over-period comparison');
+      expect(indicator).toHaveAttribute(
+        'title',
+        'Period-over-period comparison',
+      );
     });
   });
 
@@ -238,11 +244,11 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       // Should have the comparison indicator
       expect(screen.getByText('↗')).toBeInTheDocument();
       expect(screen.getByText('15.0%')).toBeInTheDocument();
-      
+
       // Should also have the slice name
       expect(screen.getByText('Test BigNumber Chart')).toBeInTheDocument();
     });
@@ -256,7 +262,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({ editMode: true }, comparisonData);
-      
+
       // Should not render comparison indicator in edit mode
       expect(screen.queryByText('↗')).not.toBeInTheDocument();
       expect(screen.queryByText('25.0%')).not.toBeInTheDocument();
@@ -273,7 +279,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({ chartStatus: 'loading' }, comparisonData);
-      
+
       // Should not render comparison indicator during loading
       expect(screen.queryByText('↗')).not.toBeInTheDocument();
       expect(screen.queryByText('25.0%')).not.toBeInTheDocument();
@@ -290,7 +296,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       expect(screen.getByText('↗')).toBeInTheDocument();
       expect(screen.getByText('1050.0%')).toBeInTheDocument();
     });
@@ -304,7 +310,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       expect(screen.getByText('↗')).toBeInTheDocument();
       expect(screen.getByText('0.1%')).toBeInTheDocument();
     });
@@ -318,7 +324,7 @@ describe('SliceHeader BigNumber Comparison Integration', () => {
       };
 
       renderSliceHeader({}, comparisonData);
-      
+
       // Should not render any comparison indicator for invalid indicator
       expect(screen.queryByText('↗')).not.toBeInTheDocument();
       expect(screen.queryByText('↘')).not.toBeInTheDocument();

@@ -43,19 +43,24 @@ afterAll(() => {
 // Mock the utility function
 const mockGetBigNumberComparisonData = jest.spyOn(
   getBigNumberComparisonDataModule,
-  'getBigNumberComparisonData'
+  'getBigNumberComparisonData',
 );
 
 // Mock ChartContainer to avoid complex rendering
-jest.mock('src/components/Chart/ChartContainer', () => {
-  return function MockChartContainer() {
-    return <div data-test="chart-container">Chart Container</div>;
-  };
-});
+jest.mock(
+  'src/components/Chart/ChartContainer',
+  () =>
+    function MockChartContainer() {
+      return <div data-test="chart-container">Chart Container</div>;
+    },
+);
 
 // Mock SliceHeader to verify props are passed correctly
 const MockSliceHeader = jest.fn(({ bigNumberComparisonData }) => (
-  <div data-test="slice-header" data-comparison={JSON.stringify(bigNumberComparisonData)}>
+  <div
+    data-test="slice-header"
+    data-comparison={JSON.stringify(bigNumberComparisonData)}
+  >
     Slice Header
   </div>
 ));
@@ -126,7 +131,7 @@ const defaultProps = {
 
 const renderChart = (props = {}) => {
   const finalProps = { ...defaultProps, ...props };
-  
+
   return render(
     <Provider store={mockStore}>
       <Router>
@@ -134,7 +139,7 @@ const renderChart = (props = {}) => {
           <Chart {...finalProps} />
         </ThemeProvider>
       </Router>
-    </Provider>
+    </Provider>,
   );
 };
 
@@ -153,7 +158,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
         },
       ];
       const formData = { viz_type: 'big_number_total', metric: 'Gross Sale' };
-      
+
       mockGetBigNumberComparisonData.mockReturnValue({
         percentageChange: 0.25,
         comparisonIndicator: 'positive',
@@ -168,7 +173,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
 
       expect(mockGetBigNumberComparisonData).toHaveBeenCalledWith(
         queriesResponse,
-        formData
+        formData,
       );
     });
 
@@ -188,7 +193,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
         expect.objectContaining({
           bigNumberComparisonData: comparisonData,
         }),
-        {}
+        {},
       );
     });
 
@@ -201,7 +206,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
         expect.objectContaining({
           bigNumberComparisonData: null,
         }),
-        {}
+        {},
       );
     });
   });
@@ -209,18 +214,18 @@ describe('Chart Component BigNumber Comparison Integration', () => {
   describe('Different chart types', () => {
     it('should extract comparison data for big_number_total charts', () => {
       const formData = { viz_type: 'big_number_total' };
-      
+
       renderChart({ formData });
 
       expect(mockGetBigNumberComparisonData).toHaveBeenCalledWith(
         expect.any(Array),
-        formData
+        formData,
       );
     });
 
     it('should extract comparison data for big_number charts', () => {
       const formData = { viz_type: 'big_number' };
-      
+
       renderChart({
         formData,
         slice: { ...defaultProps.slice, viz_type: 'big_number' },
@@ -228,13 +233,13 @@ describe('Chart Component BigNumber Comparison Integration', () => {
 
       expect(mockGetBigNumberComparisonData).toHaveBeenCalledWith(
         expect.any(Array),
-        formData
+        formData,
       );
     });
 
     it('should still call extraction function for non-BigNumber charts', () => {
       const formData = { viz_type: 'table' };
-      
+
       renderChart({
         formData,
         slice: { ...defaultProps.slice, viz_type: 'table' },
@@ -243,7 +248,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
       // Function should still be called, but will return null internally
       expect(mockGetBigNumberComparisonData).toHaveBeenCalledWith(
         expect.any(Array),
-        formData
+        formData,
       );
     });
   });
@@ -282,12 +287,12 @@ describe('Chart Component BigNumber Comparison Integration', () => {
 
       // Should not throw and should render without comparison data
       expect(() => renderChart()).not.toThrow();
-      
+
       expect(MockSliceHeader).toHaveBeenCalledWith(
         expect.objectContaining({
           bigNumberComparisonData: undefined, // Will be undefined due to error
         }),
-        {}
+        {},
       );
     });
 
@@ -298,7 +303,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
 
       expect(mockGetBigNumberComparisonData).toHaveBeenCalledWith(
         undefined,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -307,7 +312,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
 
       expect(mockGetBigNumberComparisonData).toHaveBeenCalledWith(
         expect.any(Array),
-        undefined
+        undefined,
       );
     });
   });
@@ -321,7 +326,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
 
     it('should call getBigNumberComparisonData on every render (no memoization)', () => {
       const { rerender } = renderChart();
-      
+
       // Re-render with same props
       rerender(
         <Provider store={mockStore}>
@@ -330,7 +335,7 @@ describe('Chart Component BigNumber Comparison Integration', () => {
               <Chart {...defaultProps} />
             </ThemeProvider>
           </Router>
-        </Provider>
+        </Provider>,
       );
 
       // Should be called twice (once for each render)

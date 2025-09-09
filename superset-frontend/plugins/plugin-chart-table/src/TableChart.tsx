@@ -989,9 +989,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                 `}
               >
                 {t('Summary')}
-                <Tooltip
-                  overlay={'Shows total aggregation'}
-                >
+                <Tooltip overlay="Shows total aggregation">
                   <InfoCircleOutlined />
                 </Tooltip>
               </div>

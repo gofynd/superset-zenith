@@ -405,7 +405,7 @@ describe('BigNumberViz with Time Comparison', () => {
       // Should display 0% instead of NaN
       expect(screen.getByText('0%')).toBeInTheDocument();
       expect(screen.getByText('−')).toBeInTheDocument(); // Neutral arrow
-      
+
       const indicator = screen.getByText('−').closest('div');
       expect(indicator).toHaveStyle({ color: '#ffc107' }); // Amber color
     });
@@ -436,7 +436,7 @@ describe('BigNumberViz with Time Comparison', () => {
       };
 
       const { rerender } = render(<BigNumberViz {...inheritProps} />);
-      
+
       const indicator = screen.getByText('↗').closest('div');
       expect(indicator).toHaveAttribute('title', 'Compared to previous period');
 
@@ -447,18 +447,22 @@ describe('BigNumberViz with Time Comparison', () => {
           percentageChange={0.1}
           comparisonIndicator="positive"
           comparisonPeriodText="inherit"
-          formData={{
-            since: '2024-01-01T00:00:00',
-            until: '2024-01-07T23:59:59',
-            time_range: 'Last 7 days',
-          } as any}
+          formData={
+            {
+              since: '2024-01-01T00:00:00',
+              until: '2024-01-07T23:59:59',
+              time_range: 'Last 7 days',
+            } as any
+          }
         />,
       );
 
       const inheritIndicator = screen.getByText('↗').closest('div');
       expect(inheritIndicator?.getAttribute('title')).toContain('Compared to');
       expect(inheritIndicator?.getAttribute('title')).toContain('2023'); // Previous year dates
-      expect(inheritIndicator?.getAttribute('title')).not.toContain('vs current'); // Should not contain vs current
+      expect(inheritIndicator?.getAttribute('title')).not.toContain(
+        'vs current',
+      ); // Should not contain vs current
 
       // Test with specific time period
       rerender(
@@ -484,7 +488,10 @@ describe('BigNumberViz with Time Comparison', () => {
       );
 
       const customIndicator = screen.getByText('↗').closest('div');
-      expect(customIndicator).toHaveAttribute('title', 'Compared to custom date range');
+      expect(customIndicator).toHaveAttribute(
+        'title',
+        'Compared to custom date range',
+      );
     });
 
     it('should maintain proper spacing and typography', () => {

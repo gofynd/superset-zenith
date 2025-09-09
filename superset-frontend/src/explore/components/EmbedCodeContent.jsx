@@ -67,7 +67,10 @@ const EmbedCodeContent = ({ formData, addDangerToast }) => {
 
   const html = useMemo(() => {
     if (!url) return '';
-    const timezoneParam = timezone !== 'UTC' ? `&${URL_PARAMS.timezone.name}=${encodeURIComponent(timezone)}` : '';
+    const timezoneParam =
+      timezone !== 'UTC'
+        ? `&${URL_PARAMS.timezone.name}=${encodeURIComponent(timezone)}`
+        : '';
     const srcLink = `${url}?${URL_PARAMS.standalone.name}=1&height=${height}${timezoneParam}`;
     return (
       '<iframe\n' +

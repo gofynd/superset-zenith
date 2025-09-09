@@ -17,7 +17,12 @@
  * under the License.
  */
 
-import { render, screen, waitFor, fireEvent } from 'spec/helpers/testing-library';
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+} from 'spec/helpers/testing-library';
 import { ThemeProvider } from '@emotion/react';
 import { supersetTheme } from '@superset-ui/core';
 import AISummaryBox from './AISummaryBox';
@@ -32,9 +37,10 @@ jest.mock('../../utils/aiSummary', () => ({
 const mockGenerateSummary = aiSummary.generateSummary as jest.MockedFunction<
   typeof aiSummary.generateSummary
 >;
-const mockExtractRawDataSample = aiSummary.extractRawDataSample as jest.MockedFunction<
-  typeof aiSummary.extractRawDataSample
->;
+const mockExtractRawDataSample =
+  aiSummary.extractRawDataSample as jest.MockedFunction<
+    typeof aiSummary.extractRawDataSample
+  >;
 
 const defaultProps = {
   chartDomId: 'chart-id-123',
@@ -54,13 +60,12 @@ const defaultProps = {
   filters: { region: 'North America' },
 };
 
-const renderComponent = (props = {}) => {
-  return render(
+const renderComponent = (props = {}) =>
+  render(
     <ThemeProvider theme={supersetTheme}>
       <AISummaryBox {...defaultProps} {...props} />
     </ThemeProvider>,
   );
-};
 
 describe('AISummaryBox', () => {
   beforeEach(() => {
@@ -81,7 +86,8 @@ describe('AISummaryBox', () => {
   });
 
   it('should call generateSummary with title and description', async () => {
-    const mockSummary = 'This chart shows strong sales growth over the first quarter.';
+    const mockSummary =
+      'This chart shows strong sales growth over the first quarter.';
     mockGenerateSummary.mockResolvedValue(mockSummary);
 
     renderComponent();
@@ -110,7 +116,8 @@ describe('AISummaryBox', () => {
   });
 
   it('should display AI summary when successful', async () => {
-    const mockSummary = 'This chart shows strong sales growth over the first quarter.';
+    const mockSummary =
+      'This chart shows strong sales growth over the first quarter.';
     mockGenerateSummary.mockResolvedValue(mockSummary);
 
     renderComponent();
@@ -231,7 +238,8 @@ describe('AISummaryBox', () => {
   });
 
   it('should handle long summaries with expand/collapse', async () => {
-    const longSummary = 'This is a very long summary that should be truncated. '.repeat(20);
+    const longSummary =
+      'This is a very long summary that should be truncated. '.repeat(20);
     mockGenerateSummary.mockResolvedValue(longSummary);
 
     renderComponent();

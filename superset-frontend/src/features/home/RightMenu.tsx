@@ -113,6 +113,67 @@ const StyledSubMenu = styled(SubMenu)`
       color: ${({ theme }) => theme.colors.primary.base};
     }
   }
+
+  /* Enhanced dropdown styling for better appearance */
+  .antd5-menu-submenu-title {
+    display: flex;
+    align-items: center;
+    padding: ${({ theme }) => theme.gridUnit * 2}px
+      ${({ theme }) => theme.gridUnit * 4}px;
+
+    /* Fix icon alignment and size */
+    .anticon {
+      margin-left: ${({ theme }) => theme.gridUnit}px;
+      font-size: ${({ theme }) => theme.typography.sizes.s}px;
+    }
+  }
+
+  /* Improve dropdown menu appearance */
+  .ant-dropdown-menu,
+  .antd5-menu-vertical {
+    min-width: 200px;
+    border-radius: ${({ theme }) => theme.borderRadius}px;
+    box-shadow:
+      0 3px 6px -4px ${({ theme }) => theme.colors.grayscale.dark2}20,
+      0 6px 16px 0 ${({ theme }) => theme.colors.grayscale.dark2}14,
+      0 9px 28px 8px ${({ theme }) => theme.colors.grayscale.dark2}0d;
+    border: 1px solid ${({ theme }) => theme.colors.grayscale.light2};
+  }
+
+  /* Fix menu item group styling */
+  .antd5-menu-item-group-title {
+    color: ${({ theme }) => theme.colors.grayscale.base};
+    font-weight: ${({ theme }) => theme.typography.weights.bold};
+    font-size: ${({ theme }) => theme.typography.sizes.s}px;
+    padding: ${({ theme }) => theme.gridUnit * 2}px
+      ${({ theme }) => theme.gridUnit * 4}px ${({ theme }) => theme.gridUnit}px;
+  }
+
+  /* Improve menu item styling */
+  .antd5-menu-item {
+    padding: ${({ theme }) => theme.gridUnit * 1.5}px
+      ${({ theme }) => theme.gridUnit * 4}px;
+    line-height: 1.4;
+
+    a {
+      color: ${({ theme }) => theme.colors.grayscale.dark1};
+      text-decoration: none;
+
+      &:hover {
+        color: ${({ theme }) => theme.colors.primary.base};
+      }
+    }
+
+    &:hover {
+      background-color: ${({ theme }) => theme.colors.primary.light5};
+    }
+  }
+
+  /* Fix divider styling */
+  .antd5-menu-item-divider {
+    margin: ${({ theme }) => theme.gridUnit}px 0;
+    background-color: ${({ theme }) => theme.colors.grayscale.light2};
+  }
 `;
 
 const RightMenu = ({
@@ -473,10 +534,7 @@ const RightMenu = ({
             })}
           </StyledSubMenu>
         )}
-        <StyledSubMenu
-          title={t('Settings')}
-          icon={<Icons.TriangleDown iconSize="xl" />}
-        >
+        <StyledSubMenu title={t('Settings')} icon={<Icons.TriangleDown />}>
           {settings?.map?.((section, index) => [
             <Menu.ItemGroup key={`${section.label}`} title={section.label}>
               {section?.childs?.map?.(child => {
