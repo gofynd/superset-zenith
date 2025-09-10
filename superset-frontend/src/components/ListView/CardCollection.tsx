@@ -34,7 +34,7 @@ const CardContainer = styled.div<{ showThumbnails?: boolean }>`
   ${({ theme, showThumbnails }) => `
     display: grid;
     grid-gap: ${theme.gridUnit * 12}px ${theme.gridUnit * 4}px;
-    grid-template-columns: repeat(auto-fit, 300px);
+    grid-template-columns: repeat(auto-fit, 250px); // NOTE: changed from 300px to 250px
     margin-top: ${theme.gridUnit * -6}px;
     padding: ${
       showThumbnails
