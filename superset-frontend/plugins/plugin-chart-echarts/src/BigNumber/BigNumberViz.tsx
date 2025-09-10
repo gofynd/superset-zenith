@@ -26,7 +26,6 @@ import {
   BRAND_COLOR,
   styled,
   BinaryQueryObjectFilterClause,
-  getCurrencySymbol,
 } from '@superset-ui/core';
 import Echart from '../components/Echart';
 import { BigNumberVizProps } from './types';
@@ -58,6 +57,91 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     subheaderFontSize: PROPORTION.SUBHEADER,
     timeRangeFixed: false,
   };
+
+  componentDidMount() {
+    // Comprehensive debug logging for component mounting
+    console.group('🎯 BigNumberViz componentDidMount - DATA ARRIVAL CHECK');
+    console.log('📦 All Props Received:', {
+      allPropKeys: Object.keys(this.props),
+      propsCount: Object.keys(this.props).length,
+    });
+
+    console.log('🔢 Big Number Data:', {
+      bigNumber: this.props.bigNumber,
+      bigNumberType: typeof this.props.bigNumber,
+      hasBigNumber:
+        this.props.bigNumber !== undefined && this.props.bigNumber !== null,
+    });
+
+    console.log('📊 Comparison Data Arrival Check:', {
+      percentageChange: this.props.percentageChange,
+      percentageChangeType: typeof this.props.percentageChange,
+      hasPercentageChange: this.props.percentageChange !== undefined,
+      comparisonIndicator: this.props.comparisonIndicator,
+      comparisonIndicatorType: typeof this.props.comparisonIndicator,
+      hasComparisonIndicator: this.props.comparisonIndicator !== undefined,
+      previousPeriodValue: (this.props as any).previousPeriodValue,
+      hasPreviousPeriodValue:
+        (this.props as any).previousPeriodValue !== undefined,
+    });
+
+    console.log('📋 Form Data Check:', {
+      hasFormData: !!this.props.formData,
+      formDataKeys: this.props.formData ? Object.keys(this.props.formData) : [],
+      timeCompare: this.props.formData?.time_compare,
+      extraFormData: this.props.formData?.extra_form_data,
+      extraFormDataKeys: this.props.formData?.extra_form_data
+        ? Object.keys(this.props.formData.extra_form_data)
+        : [],
+      extraTimeCompare: (this.props.formData?.extra_form_data as any)
+        ?.time_compare,
+      customFormData: this.props.formData?.extra_form_data?.custom_form_data,
+      customTimeCompare: (
+        this.props.formData?.extra_form_data?.custom_form_data as any
+      )?.time_compare,
+    });
+
+    console.log('🎯 Comparison Ready Status:', {
+      hasAllRequiredData:
+        this.props.percentageChange !== undefined &&
+        this.props.comparisonIndicator !== undefined,
+      shouldRenderIndicator:
+        this.props.percentageChange !== undefined &&
+        this.props.comparisonIndicator !== undefined,
+      missingData: {
+        percentageChange: this.props.percentageChange === undefined,
+        comparisonIndicator: this.props.comparisonIndicator === undefined,
+      },
+    });
+
+    console.groupEnd();
+  }
+
+  componentDidUpdate(prevProps: BigNumberVizProps) {
+    // Log when props change to track updates
+    const currentComparison = {
+      percentageChange: this.props.percentageChange,
+      comparisonIndicator: this.props.comparisonIndicator,
+    };
+
+    const prevComparison = {
+      percentageChange: prevProps.percentageChange,
+      comparisonIndicator: prevProps.comparisonIndicator,
+    };
+
+    if (JSON.stringify(currentComparison) !== JSON.stringify(prevComparison)) {
+      console.group('🔄 BigNumberViz componentDidUpdate - PROPS CHANGED');
+      console.log('Previous comparison props:', prevComparison);
+      console.log('New comparison props:', currentComparison);
+      console.log('Change detected:', {
+        percentageChangeChanged:
+          this.props.percentageChange !== prevProps.percentageChange,
+        comparisonIndicatorChanged:
+          this.props.comparisonIndicator !== prevProps.comparisonIndicator,
+      });
+      console.groupEnd();
+    }
+  }
 
   getClassName() {
     const { className, showTrendLine, bigNumberFallback } = this.props;
@@ -289,7 +373,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       const allTextHeight = height - chartHeight;
 
       return (
-        <div className={className}>
+        <div className={className} style={{ position: 'relative' }}>
           <div className="text-container" style={{ height: allTextHeight }}>
             {this.renderFallbackWarning()}
             {this.renderKicker(
@@ -312,7 +396,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     }
 
     return (
-      <div className={className} style={{ height }}>
+      <div className={className} style={{ height, position: 'relative' }}>
         {this.renderFallbackWarning()}
         {this.renderKicker((kickerFontSize || 0) * height)}
         {this.renderHeader(Math.ceil(headerFontSize * height))}
@@ -375,6 +459,24 @@ export default styled(BigNumberVis)`
       .header-line,
       .subheader-line {
         opacity: ${theme.opacity.mediumHeavy};
+      }
+    }
+
+    .comparison-indicator {
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      &:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
       }
     }
   `}

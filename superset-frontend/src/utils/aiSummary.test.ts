@@ -185,7 +185,8 @@ describe('aiSummary utilities', () => {
 
     it('should include URL query parameters', async () => {
       mockFetch.mockResolvedValueOnce(mockSuccessResponse as any);
-      window.location.search = '?currency_code=USD&timezone=UTC&country_code=US&country=United States';
+      window.location.search =
+        '?currency_code=USD&timezone=UTC&country_code=US&country=United States';
 
       const input: ChartSummaryInput = {
         vizType: 'pie',
@@ -227,7 +228,9 @@ describe('aiSummary utilities', () => {
         description: 'This should fail',
       };
 
-      await expect(generateSummary(input)).rejects.toThrow('AI endpoint error 500');
+      await expect(generateSummary(input)).rejects.toThrow(
+        'AI endpoint error 500',
+      );
     });
 
     it('should handle invalid response format', async () => {
@@ -241,7 +244,9 @@ describe('aiSummary utilities', () => {
         title: 'Invalid Response Test',
       };
 
-      await expect(generateSummary(input)).rejects.toThrow('Invalid AI response');
+      await expect(generateSummary(input)).rejects.toThrow(
+        'Invalid AI response',
+      );
     });
 
     it('should respect timeout option', async () => {
@@ -249,7 +254,9 @@ describe('aiSummary utilities', () => {
         signal: { aborted: false },
         abort: jest.fn(),
       };
-      jest.spyOn(global, 'AbortController').mockImplementation(() => mockAbortController as any);
+      jest
+        .spyOn(global, 'AbortController')
+        .mockImplementation(() => mockAbortController as any);
       jest.spyOn(global, 'setTimeout').mockImplementation((callback, delay) => {
         if (delay === 5000) {
           // Call the abort function immediately for testing

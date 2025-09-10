@@ -24,7 +24,9 @@ import {
   D3_TIME_FORMAT_OPTIONS,
   getStandardizedControls,
   temporalColumnMixin,
+  sections,
 } from '@superset-ui/chart-controls';
+
 import { headerFontSize, subheaderFontSize } from '../sharedControls';
 
 const config: ControlPanelConfig = {
@@ -58,7 +60,9 @@ const config: ControlPanelConfig = {
               type: 'HiddenControl',
               label: t('URL parameters'),
               hidden: true,
-              description: t('Extra parameters for use in jinja templated queries'),
+              description: t(
+                'Extra parameters for use in jinja templated queries',
+              ),
             },
           },
         ],
@@ -76,6 +80,7 @@ const config: ControlPanelConfig = {
         ['adhoc_filters'],
       ],
     },
+    sections.timeComparisonControls({ multi: false }),
     {
       label: t('Options'),
       tabOverride: 'data',

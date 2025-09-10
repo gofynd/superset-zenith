@@ -46,7 +46,7 @@ import {
   loadingCardCount,
   mq,
 } from 'src/views/CRUD/utils';
-import { Switch } from 'src/components/Switch';
+import { Radio, RadioChangeEvent } from 'src/components/Radio';
 import getBootstrapData from 'src/utils/getBootstrapData';
 import { TableTab } from 'src/views/CRUD/types';
 import SubMenu, { SubMenuProps } from 'src/features/home/SubMenu';
@@ -124,14 +124,48 @@ const WelcomeContainer = styled.div`
 
 const WelcomeNav = styled.div`
   ${({ theme }) => `
-    .switch {
+    .thumbnail-radio-group {
       display: flex;
       flex-direction: row;
+      align-items: center;
       margin: ${theme.gridUnit * 4}px;
-      span {
+      
+      .antd5-radio-group {
+        display: flex;
+        align-items: center;
+        
+        .antd5-radio-wrapper {
+          margin-right: ${theme.gridUnit * 3}px;
+          font-size: ${theme.typography.sizes.s}px;
+          color: ${theme.colors.grayscale.dark1};
+          
+          &:last-child {
+            margin-right: 0;
+          }
+          
+          .antd5-radio {
+            margin-right: ${theme.gridUnit}px;
+          }
+          
+          span:not(.antd5-radio) {
+            font-size: ${theme.typography.sizes.s}px;
+            color: ${theme.colors.grayscale.dark1};
+          }
+        }
+        
+        .antd5-radio-wrapper-checked {
+          color: ${theme.colors.primary.base};
+          font-weight: ${theme.typography.weights.medium};
+        }
+      }
+      
+      .radio-group-label {
         display: block;
-        margin: ${theme.gridUnit}px;
+        margin: 0 ${theme.gridUnit * 2}px 0 0;
         line-height: ${theme.gridUnit * 3.5}px;
+        font-size: ${theme.typography.sizes.s}px;
+        color: ${theme.colors.grayscale.dark1};
+        font-weight: ${theme.typography.weights.medium};
       }
     }
   `}
@@ -298,9 +332,10 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
     });
   }, [otherTabFilters]);
 
-  const handleToggle = () => {
-    setChecked(!checked);
-    dangerouslySetItemDoNotUse(id, { thumbnails: !checked });
+  const handleThumbnailChange = (e: RadioChangeEvent) => {
+    const newValue = e.target.value === 'on';
+    setChecked(newValue);
+    dangerouslySetItemDoNotUse(id, { thumbnails: newValue });
   };
 
   useEffect(() => {
@@ -336,13 +371,20 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
       {
         name: (
           <WelcomeNav>
-            <div className="switch">
-              <Switch checked={checked} onClick={handleToggle} />
-              <span>{t('Thumbnails')}</span>
+            <div className="thumbnail-radio-group">
+              <span className="radio-group-label">{t('View:')}</span>
+              <Radio.Group
+                value={checked ? 'on' : 'off'}
+                onChange={handleThumbnailChange}
+                size="small"
+              >
+                <Radio value="on">{t('Thumbnails')}</Radio>
+                <Radio value="off">{t('List')}</Radio>
+              </Radio.Group>
             </div>
           </WelcomeNav>
         ),
-        onClick: handleToggle,
+        onClick: undefined,
         buttonStyle: 'link',
       },
     ];

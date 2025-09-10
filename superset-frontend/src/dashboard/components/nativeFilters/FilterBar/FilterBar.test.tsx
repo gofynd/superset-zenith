@@ -194,8 +194,6 @@ describe('FilterBar', () => {
     expect(screen.getByText('Clear all')).toBeInTheDocument();
   });
 
-
-
   it('should render the collapse icon', () => {
     renderWrapper();
     expect(screen.getByRole('img', { name: 'collapse' })).toBeInTheDocument();

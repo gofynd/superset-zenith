@@ -19,9 +19,8 @@
  */
 
 import { render, screen, waitFor } from 'spec/helpers/testing-library';
-import { FeatureFlag } from '@superset-ui/core';
+import { FeatureFlag, supersetTheme } from '@superset-ui/core';
 import { ThemeProvider } from '@emotion/react';
-import { supersetTheme } from '@superset-ui/core';
 import ChartRenderer from './ChartRenderer';
 
 // Mock fetch globally

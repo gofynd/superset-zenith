@@ -17,10 +17,19 @@
  * under the License.
  */
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import moment from 'moment-timezone';
 import { URL_PARAMS } from 'src/constants';
-import { getCurrentTimezone as getCurrentTimezoneUtil, isValidTimezone } from 'src/utils/dateUtils';
+import {
+  getCurrentTimezone as getCurrentTimezoneUtil,
+  isValidTimezone,
+} from 'src/utils/dateUtils';
 
 interface TimezoneContextType {
   timezone: string;
@@ -31,7 +40,9 @@ interface TimezoneContextType {
   convertFromUTC: (utcDate: moment.MomentInput) => moment.Moment;
 }
 
-const TimezoneContext = createContext<TimezoneContextType | undefined>(undefined);
+const TimezoneContext = createContext<TimezoneContextType | undefined>(
+  undefined,
+);
 
 const DEFAULT_TIMEZONE = 'Asia/Kolkata';
 const DEFAULT_DATE_FORMAT = 'YYYY-MM-DD';
@@ -50,9 +61,13 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
 
   // Function to update timezone
   const setTimezone = (newTimezone: string) => {
-    const targetTz = isValidTimezone(newTimezone) ? newTimezone : DEFAULT_TIMEZONE;
+    const targetTz = isValidTimezone(newTimezone)
+      ? newTimezone
+      : DEFAULT_TIMEZONE;
     if (!isValidTimezone(newTimezone)) {
-      console.warn(`Invalid timezone: ${newTimezone}. Falling back to default: ${DEFAULT_TIMEZONE}`);
+      console.warn(
+        `Invalid timezone: ${newTimezone}. Falling back to default: ${DEFAULT_TIMEZONE}`,
+      );
     }
     // Sync URL param so UI always reflects URL or default
     try {
@@ -67,27 +82,25 @@ export function TimezoneProvider({ children }: TimezoneProviderProps) {
   };
 
   // Function to format date in the current timezone
-  const formatDate = (date: moment.MomentInput, format = DEFAULT_DATE_FORMAT): string => {
-    return moment.tz(date, timezone).format(format);
-  };
+  const formatDate = (
+    date: moment.MomentInput,
+    format = DEFAULT_DATE_FORMAT,
+  ): string => moment.tz(date, timezone).format(format);
 
   // Function to format datetime in the current timezone
-  const formatDateTime = (date: moment.MomentInput, format = DEFAULT_DATETIME_FORMAT): string => {
-    return moment.tz(date, timezone).format(format);
-  };
+  const formatDateTime = (
+    date: moment.MomentInput,
+    format = DEFAULT_DATETIME_FORMAT,
+  ): string => moment.tz(date, timezone).format(format);
 
   // Convert a date from current timezone to UTC for API calls
-  const convertToUTC = (date: moment.MomentInput): moment.Moment => {
+  const convertToUTC = (date: moment.MomentInput): moment.Moment =>
     // First parse the date in the current timezone, then convert to UTC
-    return moment.tz(date, timezone).utc();
-  };
-
+    moment.tz(date, timezone).utc();
   // Convert a UTC date to the current timezone for display
-  const convertFromUTC = (utcDate: moment.MomentInput): moment.Moment => {
+  const convertFromUTC = (utcDate: moment.MomentInput): moment.Moment =>
     // Parse as UTC, then convert to current timezone
-    return moment.utc(utcDate).tz(timezone);
-  };
-
+    moment.utc(utcDate).tz(timezone);
   // Watch for URL parameter changes to always reflect URL or default
   useEffect(() => {
     const handlePopState = () => {

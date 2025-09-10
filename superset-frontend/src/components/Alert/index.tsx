@@ -19,10 +19,40 @@
 import { PropsWithChildren } from 'react';
 import { Alert as AntdAlert } from 'antd-v5';
 import { AlertProps as AntdAlertProps } from 'antd-v5/lib/alert';
+import { styled } from '@superset-ui/core';
 
 export type AlertProps = PropsWithChildren<
   Omit<AntdAlertProps, 'children'> & { roomBelow?: boolean }
 >;
+
+const StyledAlert = styled(AntdAlert)<{ type?: string }>`
+  ${({ type }) =>
+    type === 'error' &&
+    `
+    background: #FFF2EC !important;
+    border: 1px solid #FFA000 !important;
+    color: #7F3F21 !important;
+    font-size: 14px !important;
+    
+    .antd5-alert-message {
+      color: #7F3F21 !important;
+      font-size: 14px !important;
+    }
+    
+    .antd5-alert-description {
+      color: #7F3F21 !important;
+      font-size: 14px !important;
+    }
+    
+    .antd5-alert-icon {
+      color: #FFA000 !important;
+    }
+    
+    .antd5-alert-close-icon {
+      color: #7F3F21 !important;
+    }
+  `}
+`;
 
 export default function Alert(props: AlertProps) {
   const {
@@ -35,7 +65,7 @@ export default function Alert(props: AlertProps) {
   } = props;
 
   return (
-    <AntdAlert
+    <StyledAlert
       role="alert"
       aria-live={type === 'error' ? 'assertive' : 'polite'}
       type={type}

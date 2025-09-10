@@ -43,30 +43,32 @@ describe('TimezoneContext', () => {
     render(
       <TimezoneProvider>
         <TestComponent />
-      </TimezoneProvider>
+      </TimezoneProvider>,
     );
 
     const timezoneElement = screen.getByTestId('timezone');
-    expect(timezoneElement).toBeTruthy();
-    expect(timezoneElement.textContent).toBe('UTC');
+    expect(timezoneElement).toBeInTheDocument();
+    expect(timezoneElement).toHaveTextContent('UTC');
   });
 
   it('should format dates correctly', () => {
     render(
       <TimezoneProvider>
         <TestComponent />
-      </TimezoneProvider>
+      </TimezoneProvider>,
     );
 
     const formattedDate = screen.getByTestId('formatted-date');
     const formattedDateTime = screen.getByTestId('formatted-datetime');
 
-    expect(formattedDate).toBeTruthy();
-    expect(formattedDateTime).toBeTruthy();
+    expect(formattedDate).toBeInTheDocument();
+    expect(formattedDateTime).toBeInTheDocument();
 
     // Check that the formatted values contain expected patterns
-    expect(formattedDate.textContent).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(formattedDateTime.textContent).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    expect(formattedDate).toHaveTextContent(/^\d{4}-\d{2}-\d{2}$/);
+    expect(formattedDateTime).toHaveTextContent(
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
+    );
   });
 
   it('should throw error when useTimezone is used outside provider', () => {

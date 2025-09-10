@@ -147,8 +147,6 @@ describe('No Results', () => {
 
     cy.visitChartByParams(formData);
     cy.wait('@v1Data').its('response.statusCode').should('eq', 200);
-    cy.get('div.chart-container').contains(
-      'No data',
-    );
+    cy.get('div.chart-container').contains('No data');
   });
 });

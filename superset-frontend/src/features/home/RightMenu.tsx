@@ -60,7 +60,7 @@ const extensionsRegistry = getExtensionsRegistry();
 
 const versionInfoStyles = (theme: SupersetTheme) => css`
   padding: ${theme.gridUnit * 1.5}px ${theme.gridUnit * 4}px
-    ${theme.gridUnit * 4}px ${theme.gridUnit * 7}px;
+    ${theme.gridUnit * 1.5}px ${theme.gridUnit * 4}px;
   color: ${theme.colors.grayscale.base};
   font-size: ${theme.typography.sizes.xs}px;
   white-space: nowrap;
@@ -111,6 +111,103 @@ const StyledSubMenu = styled(SubMenu)`
   &.antd5-menu-submenu-active {
     .antd5-menu-title-content {
       color: ${({ theme }) => theme.colors.primary.base};
+    }
+  }
+
+  /* Enhanced dropdown styling for better appearance */
+  .antd5-menu-submenu-title {
+    display: flex;
+    align-items: center;
+    padding: ${({ theme }) => theme.gridUnit * 2}px
+      ${({ theme }) => theme.gridUnit * 4}px;
+
+    /* Fix icon alignment and size */
+    .anticon {
+      margin-left: ${({ theme }) => theme.gridUnit}px;
+      font-size: ${({ theme }) => theme.typography.sizes.s}px;
+    }
+  }
+
+  /* Improve dropdown menu appearance */
+  .ant-dropdown-menu,
+  .antd5-menu-vertical {
+    min-width: 180px;
+    max-width: 250px;
+    border-radius: ${({ theme }) => theme.borderRadius}px;
+    box-shadow:
+      0 3px 6px -4px ${({ theme }) => theme.colors.grayscale.dark2}20,
+      0 6px 16px 0 ${({ theme }) => theme.colors.grayscale.dark2}14,
+      0 9px 28px 8px ${({ theme }) => theme.colors.grayscale.dark2}0d;
+    border: 1px solid ${({ theme }) => theme.colors.grayscale.light2};
+    padding: ${({ theme }) => theme.gridUnit * 2}px 0;
+  }
+
+  /* Fix menu item group styling - match menu item padding */
+  .antd5-menu-item-group-title {
+    color: ${({ theme }) => theme.colors.grayscale.base};
+    font-weight: ${({ theme }) => theme.typography.weights.bold};
+    font-size: ${({ theme }) => theme.typography.sizes.s}px;
+    padding: ${({ theme }) => theme.gridUnit * 1.5}px
+      ${({ theme }) => theme.gridUnit * 4}px ${({ theme }) => theme.gridUnit}px;
+    margin-bottom: ${({ theme }) => theme.gridUnit / 2}px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Improve menu item styling */
+  .antd5-menu-item {
+    padding: ${({ theme }) => theme.gridUnit * 1.5}px
+      ${({ theme }) => theme.gridUnit * 4}px;
+    line-height: 1.5;
+    margin: 0 ${({ theme }) => theme.gridUnit}px
+      ${({ theme }) => theme.gridUnit / 2}px;
+    border-radius: ${({ theme }) => theme.borderRadius / 2}px;
+
+    a {
+      color: ${({ theme }) => theme.colors.grayscale.dark1};
+      text-decoration: none;
+      display: block;
+      padding: ${({ theme }) => theme.gridUnit / 2}px 0;
+
+      &:hover {
+        color: ${({ theme }) => theme.colors.primary.base};
+      }
+    }
+
+    &:hover {
+      background-color: ${({ theme }) => theme.colors.primary.light5};
+    }
+  }
+
+  /* Special styling for submenu items within groups */
+  .antd5-menu-item-group-list .antd5-menu-item {
+    padding-left: ${({ theme }) => theme.gridUnit * 6}px;
+    font-size: ${({ theme }) => theme.typography.sizes.s}px;
+  }
+
+  /* Fix divider styling */
+  .antd5-menu-item-divider {
+    margin: ${({ theme }) => theme.gridUnit}px
+      ${({ theme }) => theme.gridUnit}px;
+    background-color: ${({ theme }) => theme.colors.grayscale.light2};
+    height: 1px;
+  }
+
+  /* Fix alignment issues for menu groups */
+  .antd5-menu-item-group {
+    margin-bottom: ${({ theme }) => theme.gridUnit}px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  /* Add proper spacing for the about section */
+  .about-section {
+    margin-bottom: ${({ theme }) => theme.gridUnit * 2}px;
+
+    div:last-child {
+      margin-bottom: ${({ theme }) => theme.gridUnit * 2}px;
     }
   }
 `;
@@ -473,10 +570,7 @@ const RightMenu = ({
             })}
           </StyledSubMenu>
         )}
-        <StyledSubMenu
-          title={t('Settings')}
-          icon={<Icons.TriangleDown iconSize="xl" />}
-        >
+        <StyledSubMenu title={t('Settings')} icon={<Icons.TriangleDown />}>
           {settings?.map?.((section, index) => [
             <Menu.ItemGroup key={`${section.label}`} title={section.label}>
               {section?.childs?.map?.(child => {
