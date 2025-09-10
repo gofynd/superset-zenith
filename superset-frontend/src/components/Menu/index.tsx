@@ -155,6 +155,7 @@ const StyledNav = styled(AntdMenu)`
     border-bottom: 2px solid transparent;
     padding: ${({ theme }) => theme.gridUnit * 2}px
       ${({ theme }) => theme.gridUnit * 4}px;
+    font-size: 14px;
     &:hover {
       background-color: ${({ theme }) => theme.colors.primary.light5};
       border-bottom: 2px solid transparent;
@@ -162,6 +163,9 @@ const StyledNav = styled(AntdMenu)`
         opacity: 1;
         width: 100%;
       }
+    }
+    a {
+      font-size: 14px;
     }
   }
   &.antd5-menu-horizontal > .antd5-menu-item-selected {
@@ -186,6 +190,7 @@ const StyledSubMenu = styled(AntdMenu.SubMenu)`
     align-items: center;
     padding: ${({ theme }) => theme.gridUnit * 2}px
       ${({ theme }) => theme.gridUnit * 4}px;
+    font-size: 14px;
 
     &:after {
       content: '';
