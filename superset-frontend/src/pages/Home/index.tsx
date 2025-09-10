@@ -127,11 +127,19 @@ const WelcomeNav = styled.div`
     .switch {
       display: flex;
       flex-direction: row;
+      align-items: center;
       margin: ${theme.gridUnit * 4}px;
+      
+      .antd5-switch {
+        margin-right: ${theme.gridUnit * 2}px;
+      }
+      
       span {
         display: block;
-        margin: ${theme.gridUnit}px;
+        margin: 0;
         line-height: ${theme.gridUnit * 3.5}px;
+        font-size: ${theme.typography.sizes.s}px;
+        color: ${theme.colors.grayscale.dark1};
       }
     }
   `}

@@ -23,7 +23,7 @@ import {
   D3_FORMAT_DOCS,
   getStandardizedControls,
 } from '@superset-ui/chart-controls';
-import { countryOptions } from './countries';
+import { sortedCountryOptions } from './countries';
 
 const config: ControlPanelConfig = {
   controlPanelSections: [
@@ -38,7 +38,7 @@ const config: ControlPanelConfig = {
               type: 'SelectControl',
               label: t('Country'),
               default: null,
-              choices: countryOptions,
+              choices: sortedCountryOptions,
               description: t('Which country to plot the map for?'),
               validators: [validateNonEmpty],
             },

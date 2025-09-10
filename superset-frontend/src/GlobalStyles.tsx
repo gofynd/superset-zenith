@@ -164,6 +164,29 @@ export const GlobalStyles = () => (
           }
         }
       }
+
+      /* Fix Switch component styling */
+      .antd5-switch {
+        &.antd5-switch-checked {
+          background-color: ${theme.colors.primary.base};
+        }
+
+        &.antd5-switch-checked:hover:not(.antd5-switch-disabled) {
+          background-color: ${theme.colors.primary.dark1};
+        }
+
+        .antd5-switch-handle {
+          background-color: ${theme.colors.grayscale.light5};
+        }
+
+        &:not(.antd5-switch-checked) {
+          background-color: ${theme.colors.grayscale.light2};
+        }
+
+        &:not(.antd5-switch-checked):hover:not(.antd5-switch-disabled) {
+          background-color: ${theme.colors.grayscale.light1};
+        }
+      }
     `}
   />
 );
