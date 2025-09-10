@@ -60,7 +60,7 @@ const extensionsRegistry = getExtensionsRegistry();
 
 const versionInfoStyles = (theme: SupersetTheme) => css`
   padding: ${theme.gridUnit * 1.5}px ${theme.gridUnit * 4}px
-    ${theme.gridUnit * 4}px ${theme.gridUnit * 7}px;
+    ${theme.gridUnit * 1.5}px ${theme.gridUnit * 4}px;
   color: ${theme.colors.grayscale.base};
   font-size: ${theme.typography.sizes.xs}px;
   white-space: nowrap;
@@ -142,15 +142,14 @@ const StyledSubMenu = styled(SubMenu)`
     padding: ${({ theme }) => theme.gridUnit * 2}px 0;
   }
 
-  /* Fix menu item group styling */
+  /* Fix menu item group styling - match menu item padding */
   .antd5-menu-item-group-title {
     color: ${({ theme }) => theme.colors.grayscale.base};
     font-weight: ${({ theme }) => theme.typography.weights.bold};
     font-size: ${({ theme }) => theme.typography.sizes.s}px;
-    padding: ${({ theme }) => theme.gridUnit * 2}px
-      ${({ theme }) => theme.gridUnit * 4}px
-      ${({ theme }) => theme.gridUnit * 1.5}px;
-    margin-bottom: ${({ theme }) => theme.gridUnit}px;
+    padding: ${({ theme }) => theme.gridUnit * 1.5}px
+      ${({ theme }) => theme.gridUnit * 4}px ${({ theme }) => theme.gridUnit}px;
+    margin-bottom: ${({ theme }) => theme.gridUnit / 2}px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -200,6 +199,15 @@ const StyledSubMenu = styled(SubMenu)`
 
     &:last-child {
       margin-bottom: 0;
+    }
+  }
+
+  /* Add proper spacing for the about section */
+  .about-section {
+    margin-bottom: ${({ theme }) => theme.gridUnit * 2}px;
+
+    div:last-child {
+      margin-bottom: ${({ theme }) => theme.gridUnit * 2}px;
     }
   }
 `;
