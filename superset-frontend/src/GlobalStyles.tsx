@@ -131,6 +131,69 @@ export const GlobalStyles = () => (
         line-height: 1.5em !important;
       }
 
+      // Custom styling for dropdown menus to match 4.1.3 styling
+      .antd5-menu-submenu-popup,
+      .antd5-menu-submenu.antd5-menu-submenu-popup {
+        border-radius: ${theme.borderRadius}px !important;
+        background: ${theme.colors.grayscale.light5} !important;
+        box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12),
+          0 6px 16px 0 rgba(0, 0, 0, 0.08),
+          0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+        padding-top: ${theme.gridUnit}px !important;
+
+        .antd5-menu,
+        .antd5-menu-sub {
+          background: ${theme.colors.grayscale.light5} !important;
+          border-radius: ${theme.borderRadius}px !important;
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          color: #333 !important;
+
+          .antd5-menu-item-group-title {
+            color: ${theme.colors.grayscale.dark1} !important;
+            font-size: 14px !important;
+            font-weight: ${theme.typography.weights.bold} !important;
+            padding: ${theme.gridUnit * 2}px ${theme.gridUnit * 3}px !important;
+          }
+
+          .antd5-menu-item {
+            color: ${theme.colors.grayscale.dark2} !important;
+            font-size: 14px !important;
+            line-height: 1.4 !important;
+            padding: ${theme.gridUnit}px ${theme.gridUnit * 3}px !important;
+            margin: 0 !important;
+
+            &:hover {
+              background-color: ${theme.colors.primary.light5} !important;
+            }
+
+            a {
+              color: inherit !important;
+              text-decoration: none !important;
+            }
+
+            .antd5-menu-title-content {
+              color: inherit !important;
+            }
+          }
+
+          .antd5-menu-item-divider {
+            background-color: ${theme.colors.grayscale.light2} !important;
+            margin: ${theme.gridUnit}px 0 !important;
+          }
+
+          .about-section {
+            padding: ${theme.gridUnit}px ${theme.gridUnit * 3}px !important;
+            
+            .css-5hj9bq {
+              color: ${theme.colors.grayscale.dark2} !important;
+              font-size: 14px !important;
+              line-height: 1.4 !important;
+            }
+          }
+        }
+      }
+
       // Custom styling for error alerts to match design system
       .antd5-alert-error {
         // background-color: var(--novus-bg-alt) !important;
