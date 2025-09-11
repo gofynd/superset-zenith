@@ -24,6 +24,25 @@ import 'react-js-cron/dist/styles.css';
 export const GlobalStyles = () => (
   <Global
     styles={theme => css`
+      :root {
+        --novus-primary: ${theme.colors.primary.base};
+        --novus-accent: ${theme.colors.success.base};
+        --novus-secondary: ${theme.colors.secondary?.base ||
+        theme.colors.primary.dark1};
+        --novus-info: ${theme.colors.info.base};
+        --novus-lavender: ${theme.colors.primary.light2};
+        --novus-sky: ${theme.colors.info.light1};
+        --novus-text: ${theme.colors.text.label};
+        --novus-bg: ${theme.colors.grayscale.light5};
+        --novus-bg-alt: ${theme.colors.grayscale.light4};
+        --novus-surface: ${theme.colors.grayscale.light3};
+        --novus-border: ${theme.colors.grayscale.light2};
+        --fds-neutrals-grey-40: ${theme.colors.grayscale.light2};
+        --fds-text-subdued-1: ${theme.colors.text.help};
+        --fds-navi-20: ${theme.colors.primary.light4};
+        --fds-navi-50: ${theme.colors.primary.base};
+      }
+
       h1,
       h2,
       h3,
@@ -111,6 +130,48 @@ export const GlobalStyles = () => (
       .ant-dropdown-menu-submenu-title,
       .ant-dropdown-menu-item {
         line-height: 1.5em !important;
+      }
+
+      // Custom styling for error alerts to match design system
+      .antd5-alert-error {
+        background-color: var(--novus-bg-alt) !important;
+        border: 1px solid var(--novus-border) !important;
+        border-radius: ${theme.borderRadius}px !important;
+
+        .antd5-alert-icon {
+          color: var(--novus-primary) !important;
+
+          svg {
+            background-color: var(--novus-primary);
+            border-radius: 50%;
+            color: var(--novus-bg) !important;
+            padding: 2px;
+          }
+        }
+
+        .antd5-alert-message {
+          color: var(--novus-text) !important;
+          font-size: 14px !important;
+          margin: 0 !important;
+
+          strong {
+            color: var(--novus-text) !important;
+            font-weight: ${theme.typography.weights.bold} !important;
+          }
+        }
+
+        .antd5-alert-description {
+          color: var(--fds-text-subdued-1) !important;
+          font-size: 14px !important;
+        }
+
+        .antd5-alert-close-icon {
+          color: var(--fds-text-subdued-1) !important;
+
+          &:hover {
+            color: var(--novus-text) !important;
+          }
+        }
       }
     `}
   />
