@@ -23,7 +23,9 @@ import {
   D3_TIME_FORMAT_OPTIONS,
   Dataset,
   getStandardizedControls,
+  sections,
 } from '@superset-ui/chart-controls';
+
 import { headerFontSize, subheaderFontSize } from '../sharedControls';
 
 export default {
@@ -32,6 +34,11 @@ export default {
       controlSetRows: [
         ['datasource'],
         ['viz_type'],
+        ['enable_ai_insights'],
+        ['show_fullscreen_menu', 'show_data_menu'],
+        ['enable_export_csv', 'enable_export_excel'],
+        ['enable_export_full_csv', 'enable_export_full_excel'],
+        ['enable_download_image'],
         [
           {
             name: 'slice_id',
@@ -70,6 +77,7 @@ export default {
       expanded: true,
       controlSetRows: [['metric'], ['adhoc_filters']],
     },
+    sections.timeComparisonControls({ multi: false }),
     {
       label: t('Display settings'),
       expanded: true,

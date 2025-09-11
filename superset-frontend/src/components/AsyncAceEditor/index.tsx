@@ -298,7 +298,11 @@ export const TextAreaEditor = AsyncAceEditor([
   'theme/textmate',
 ]);
 
-export const CssEditor = AsyncAceEditor(['mode/css', 'theme/github']);
+export const CssEditor = AsyncAceEditor([
+  'mode/css',
+  'theme/github',
+  'ext/searchbox',
+]);
 
 export const JsonEditor = AsyncAceEditor(['mode/json', 'theme/github']);
 

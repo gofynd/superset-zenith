@@ -184,6 +184,25 @@ const SliceHeaderControls = (
       ?.behaviors?.includes(Behavior.InteractiveChart);
   const canExplore = props.supersetCanExplore;
   const { canDrillToDetail, canViewQuery, canViewTable } = usePermissions();
+  const isForceRefreshEnabled = isFeatureEnabled(
+    FeatureFlag.EnableChartForceRefresh,
+  );
+
+  // Helper to check if any download options are enabled
+  const hasDownloadOptions = () => {
+    const formData = props.formData;
+    return (
+      formData?.enable_export_csv !== false ||
+      formData?.enable_export_excel !== false ||
+      (formData?.enable_export_full_csv !== false &&
+        isFeatureEnabled(FeatureFlag.AllowFullCsvExport) &&
+        isTable) ||
+      (formData?.enable_export_full_excel !== false &&
+        isFeatureEnabled(FeatureFlag.AllowFullCsvExport) &&
+        isTable) ||
+      formData?.enable_download_image !== false
+    );
+  };
   const refreshChart = () => {
     if (props.updatedDttm) {
       props.forceRefresh(props.slice.slice_id, props.dashboardId);
@@ -199,8 +218,10 @@ const SliceHeaderControls = (
   }) => {
     switch (key) {
       case MenuKeys.ForceRefresh:
-        refreshChart();
-        props.addSuccessToast(t('Data refreshed'));
+        if (isForceRefreshEnabled) {
+          refreshChart();
+          props.addSuccessToast(t('Data refreshed'));
+        }
         break;
       case MenuKeys.ToggleChartDescription:
         // eslint-disable-next-line no-unused-expressions
@@ -355,21 +376,26 @@ const SliceHeaderControls = (
       forceSubMenuRender
       {...openKeysProps}
     >
-      <Menu.Item
-        key={MenuKeys.ForceRefresh}
-        disabled={props.chartStatus === 'loading'}
-        style={{ height: 'auto', lineHeight: 'initial' }}
-        data-test="refresh-chart-menu-item"
-      >
-        {t('Force refresh')}
-        <RefreshTooltip data-test="dashboard-slice-refresh-tooltip">
-          {refreshTooltip}
-        </RefreshTooltip>
-      </Menu.Item>
+      {isForceRefreshEnabled && (
+        <Menu.Item
+          key={MenuKeys.ForceRefresh}
+          disabled={props.chartStatus === 'loading'}
+          style={{ height: 'auto', lineHeight: 'initial' }}
+          data-test="refresh-chart-menu-item"
+        >
+          {t('Force refresh')}
+          <RefreshTooltip data-test="dashboard-slice-refresh-tooltip">
+            {refreshTooltip}
+          </RefreshTooltip>
+        </Menu.Item>
+      )}
 
-      <Menu.Item key={MenuKeys.Fullscreen}>{fullscreenLabel}</Menu.Item>
+      {props.formData?.show_fullscreen_menu !== false && (
+        <Menu.Item key={MenuKeys.Fullscreen}>{fullscreenLabel}</Menu.Item>
+      )}
 
-      <Menu.Divider />
+      {(isForceRefreshEnabled ||
+        props.formData?.show_fullscreen_menu !== false) && <Menu.Divider />}
 
       {/* {slice.description && (
         <Menu.Item key={MenuKeys.ToggleChartDescription}>
@@ -414,29 +440,30 @@ const SliceHeaderControls = (
         </Menu.Item>
       )}
 
-      {(canExplore || canViewTable) && (
-        <Menu.Item key={MenuKeys.ViewResults}>
-          <ViewResultsModalTrigger
-            canExplore={props.supersetCanExplore}
-            exploreUrl={props.exploreUrl}
-            triggerNode={
-              <div data-test="view-query-menu-item">{t('View as table')}</div>
-            }
-            modalRef={resultsMenuRef}
-            modalTitle={t('Chart Data: %s', slice.slice_name)}
-            modalBody={
-              <ResultsPaneOnDashboard
-                queryFormData={props.formData}
-                queryForce={false}
-                dataSize={20}
-                isRequest
-                isVisible
-                canDownload={!!props.supersetCanCSV}
-              />
-            }
-          />
-        </Menu.Item>
-      )}
+      {(canExplore || canViewTable) &&
+        props.formData?.show_data_menu !== false && (
+          <Menu.Item key={MenuKeys.ViewResults}>
+            <ViewResultsModalTrigger
+              canExplore={props.supersetCanExplore}
+              exploreUrl={props.exploreUrl}
+              triggerNode={
+                <div data-test="view-query-menu-item">{t('View as table')}</div>
+              }
+              modalRef={resultsMenuRef}
+              modalTitle={t('Chart Data: %s', slice.slice_name)}
+              modalBody={
+                <ResultsPaneOnDashboard
+                  queryFormData={props.formData}
+                  queryForce={false}
+                  dataSize={20}
+                  isRequest
+                  isVisible
+                  canDownload={!!props.supersetCanCSV}
+                />
+              }
+            />
+          </Menu.Item>
+        )}
 
       {isFeatureEnabled(FeatureFlag.DrillToDetail) && canDrillToDetail && (
         <DrillDetailMenuItems
@@ -466,15 +493,21 @@ const SliceHeaderControls = (
         />
       )}
 
-      {props.supersetCanCSV && (
-        <Menu.SubMenu title={t('Download')} key={MenuKeys.Download}>
-          <Menu.Item
-            key={MenuKeys.ExportCsv}
-            icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
-          >
-            {t('Export to .CSV')}
-          </Menu.Item>
-          {isPivotTable && (
+      {props.supersetCanCSV && hasDownloadOptions() && (
+        <Menu.SubMenu
+          title={t('Download')}
+          key={MenuKeys.Download}
+          onTitleMouseEnter={() => setOpenKeys(undefined)}
+        >
+          {props.formData?.enable_export_csv !== false && (
+            <Menu.Item
+              key={MenuKeys.ExportCsv}
+              icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
+            >
+              {t('Export to .CSV')}
+            </Menu.Item>
+          )}
+          {isPivotTable && props.formData?.enable_export_csv !== false && (
             <Menu.Item
               key={MenuKeys.ExportPivotCsv}
               icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
@@ -482,38 +515,46 @@ const SliceHeaderControls = (
               {t('Export to Pivoted .CSV')}
             </Menu.Item>
           )}
-          <Menu.Item
-            key={MenuKeys.ExportXlsx}
-            icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
-          >
-            {t('Export to Excel')}
-          </Menu.Item>
+          {props.formData?.enable_export_excel !== false && (
+            <Menu.Item
+              key={MenuKeys.ExportXlsx}
+              icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
+            >
+              {t('Export to Excel')}
+            </Menu.Item>
+          )}
 
           {isFeatureEnabled(FeatureFlag.AllowFullCsvExport) &&
             props.supersetCanCSV &&
             isTable && (
               <>
-                <Menu.Item
-                  key={MenuKeys.ExportFullCsv}
-                  icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
-                >
-                  {t('Export to full .CSV')}
-                </Menu.Item>
-                <Menu.Item
-                  key={MenuKeys.ExportFullXlsx}
-                  icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
-                >
-                  {t('Export to full Excel')}
-                </Menu.Item>
+                {props.formData?.enable_export_full_csv !== false && (
+                  <Menu.Item
+                    key={MenuKeys.ExportFullCsv}
+                    icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
+                  >
+                    {t('Export to full .CSV')}
+                  </Menu.Item>
+                )}
+                {props.formData?.enable_export_full_excel !== false && (
+                  <Menu.Item
+                    key={MenuKeys.ExportFullXlsx}
+                    icon={<Icons.FileOutlined css={dropdownIconsStyles} />}
+                  >
+                    {t('Export to full Excel')}
+                  </Menu.Item>
+                )}
               </>
             )}
 
-          <Menu.Item
-            key={MenuKeys.DownloadAsImage}
-            icon={<Icons.FileImageOutlined css={dropdownIconsStyles} />}
-          >
-            {t('Download as image')}
-          </Menu.Item>
+          {props.formData?.enable_download_image !== false && (
+            <Menu.Item
+              key={MenuKeys.DownloadAsImage}
+              icon={<Icons.FileImageOutlined css={dropdownIconsStyles} />}
+            >
+              {t('Download as image')}
+            </Menu.Item>
+          )}
         </Menu.SubMenu>
       )}
     </Menu>

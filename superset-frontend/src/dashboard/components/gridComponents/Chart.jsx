@@ -58,6 +58,8 @@ import {
 } from '../../util/activeDashboardFilters';
 import getFormDataWithExtraFilters from '../../util/charts/getFormDataWithExtraFilters';
 import { PLACEHOLDER_DATASOURCE } from '../../constants';
+import { getMetricLabel } from '@superset-ui/core';
+// import { getBigNumberComparisonData } from '../../util/getBigNumberComparisonData';
 
 const propTypes = {
   id: PropTypes.number.isRequired,
@@ -428,6 +430,158 @@ const Chart = props => {
     // eslint-disable-next-line camelcase
     queriesResponse?.map(({ cached_dttm }) => cached_dttm) || [];
 
+  // Extract comparison data for BigNumber charts (inline implementation)
+  console.group('📊 Chart Component - BigNumber Comparison Data Extraction');
+  console.log('🔍 Input data for comparison extraction:', {
+    sliceVizType: slice?.viz_type,
+    hasQueriesResponse: !!queriesResponse,
+    queriesResponseLength: queriesResponse?.length || 0,
+    hasFormData: !!formData,
+    formDataVizType: formData?.viz_type,
+    chartStatus,
+  });
+
+  let bigNumberComparisonData = null;
+
+  // Simplified inline comparison data extraction
+  if (
+    queriesResponse &&
+    queriesResponse.length > 0 &&
+    formData &&
+    queriesResponse[0]
+  ) {
+    const queryResult = queriesResponse[0];
+    const { data = [], colnames = [] } = queryResult;
+    const vizType = formData?.viz_type;
+
+    if (data && data.length > 0 && vizType && vizType.includes('big_number')) {
+      // Check for time offset columns
+      const hasTimeOffsetColumns =
+        colnames &&
+        colnames.length > 0 &&
+        colnames.some(col => col.includes('__') && col !== formData.metric);
+
+      if (hasTimeOffsetColumns) {
+        // Use EXACT same logic as BigNumber transformProps
+        const metric = formData.metric || 'value';
+        const metricName = getMetricLabel(metric);
+
+        // Use parseMetricValue like BigNumber transformProps does
+        const parseMetricValue = metricValue => {
+          if (typeof metricValue === 'string') {
+            // Handle string dates/numbers
+            const parsed = parseFloat(metricValue);
+            return isNaN(parsed) ? null : parsed;
+          }
+          return metricValue;
+        };
+
+        // Extract current value EXACTLY like BigNumber transformProps (line 64)
+        const currentValue =
+          !data || data.length === 0 || !data[0]
+            ? null
+            : parseMetricValue(data[0][metricName]);
+
+        console.log('🔧 Chart.jsx - Metric Resolution:', {
+          rawMetric: formData.metric,
+          rawMetricType: typeof formData.metric,
+          resolvedMetricName: metricName,
+          currentValue,
+          currentValueType: typeof currentValue,
+          availableColumns: colnames,
+          firstRowData: data[0],
+          allDataKeys: data[0] ? Object.keys(data[0]) : [],
+          dataKeyValues: data[0] ? Object.entries(data[0]) : [],
+        });
+
+        // Find previous period value EXACTLY like BigNumber transformProps does
+        let previousPeriodValue = null;
+        if (data[0]) {
+          for (const col of colnames) {
+            if (col.includes('__') && col !== metricName) {
+              const rawValue = data[0][col];
+              console.log('🔍 Checking time offset column:', {
+                col,
+                rawValue,
+                rawValueType: typeof rawValue,
+                isNull: rawValue === null,
+                isUndefined: rawValue === undefined,
+              });
+              if (rawValue !== null && rawValue !== undefined) {
+                // Use parseMetricValue like BigNumber transformProps does (line 236)
+                previousPeriodValue = parseMetricValue(rawValue);
+                console.log(
+                  '✅ Found previousPeriodValue:',
+                  previousPeriodValue,
+                );
+                break;
+              }
+            }
+          }
+        }
+
+        console.log('📊 Values before calculation:', {
+          currentValue,
+          previousPeriodValue,
+          currentValueValid: currentValue !== null && !isNaN(currentValue),
+          previousValueValid:
+            previousPeriodValue !== null && !isNaN(previousPeriodValue),
+        });
+
+        if (previousPeriodValue !== null && !isNaN(previousPeriodValue)) {
+          let percentageChange = 0;
+          let comparisonIndicator = 'neutral';
+
+          if (previousPeriodValue === 0) {
+            if (currentValue === null || currentValue === 0) {
+              percentageChange = 0;
+              comparisonIndicator = 'neutral';
+            } else {
+              percentageChange = currentValue > 0 ? 1 : -1;
+              comparisonIndicator = currentValue > 0 ? 'positive' : 'negative';
+            }
+          } else if (currentValue === null || currentValue === 0) {
+            percentageChange = -1; // -100% change (complete loss)
+            comparisonIndicator = 'negative';
+          } else if (!isNaN(currentValue)) {
+            percentageChange =
+              (currentValue - previousPeriodValue) /
+              Math.abs(previousPeriodValue);
+            comparisonIndicator =
+              percentageChange > 0
+                ? 'positive'
+                : percentageChange < 0
+                  ? 'negative'
+                  : 'neutral';
+          }
+
+          console.log('🧮 Chart.jsx - Final calculation:', {
+            currentValue,
+            previousPeriodValue,
+            difference: (currentValue || 0) - previousPeriodValue,
+            percentageChange,
+            comparisonIndicator,
+            isNaN: isNaN(percentageChange),
+          });
+
+          bigNumberComparisonData = {
+            percentageChange,
+            comparisonIndicator,
+            previousPeriodValue,
+            currentValue: currentValue || 0, // Use 0 if currentValue is null
+          };
+        }
+      }
+    }
+  }
+
+  console.log('📈 Comparison data extraction result:', {
+    bigNumberComparisonData,
+    hasBigNumberComparisonData: !!bigNumberComparisonData,
+    willPassToSliceHeader: true,
+  });
+  console.groupEnd();
+
   return (
     <SliceContainer
       className="chart-slice"
@@ -471,6 +625,7 @@ const Chart = props => {
         formData={formData}
         width={width}
         height={getHeaderHeight()}
+        bigNumberComparisonData={bigNumberComparisonData}
       />
 
       {/*
@@ -529,8 +684,8 @@ const Chart = props => {
           datasetsStatus={datasetsStatus}
           isInView={props.isInView}
           emitCrossFilters={emitCrossFilters}
-            description={slice.description}
-            title={slice.slice_name}
+          description={slice.description}
+          title={slice.slice_name}
         />
       </ChartWrapper>
     </SliceContainer>

@@ -35,6 +35,7 @@ const propTypes = {
   name: PropTypes.string,
   onChange: PropTypes.func,
   initialValue: PropTypes.string,
+  value: PropTypes.string,
   height: PropTypes.number,
   minLines: PropTypes.number,
   maxLines: PropTypes.number,
@@ -65,6 +66,7 @@ const propTypes = {
 const defaultProps = {
   onChange: () => {},
   initialValue: '',
+  value: undefined,
   height: 250,
   minLines: 3,
   maxLines: 10,
@@ -108,7 +110,14 @@ class TextAreaControl extends Component {
             minLines={minLines}
             maxLines={inModal ? 1000 : this.props.maxLines}
             editorProps={{ $blockScrolling: true }}
-            defaultValue={this.props.initialValue}
+            // defaultValue={this.props.initialValue}
+            // value={this.props.value !== undefined ? this.props.value : this.props.initialValue}
+            // NOTE: Check this out if value or default value is used
+            value={
+              this.props.value !== undefined
+                ? this.props.value
+                : this.props.initialValue
+            }
             readOnly={this.props.readOnly}
             key={this.props.name}
             {...this.props}
@@ -128,7 +137,13 @@ class TextAreaControl extends Component {
         <TextArea
           placeholder={t('textarea')}
           onChange={this.onControlChange.bind(this)}
-          defaultValue={this.props.initialValue}
+          // defaultValue={this.props.initialValue}
+          // value={this.props.value !== undefined ? this.props.value : this.props.initialValue}
+          value={
+            this.props.value !== undefined
+              ? this.props.value
+              : this.props.initialValue
+          }
           disabled={this.props.readOnly}
           style={{ height: this.props.height }}
         />
@@ -160,8 +175,7 @@ class TextAreaControl extends Component {
             modalTitle={controlHeader}
             triggerNode={
               <Button buttonSize="small" className="m-t-5">
-                {t('Edit')} <strong>{this.props.language}</strong>{' '}
-                {t('in modal')}
+                <span>{t('Edit in Modal')}</span>
               </Button>
             }
             modalBody={this.renderModalBody(true)}

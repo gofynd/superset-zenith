@@ -371,6 +371,94 @@ const enable_ai_insights: SharedControlConfig<'CheckboxControl'> = {
   renderTrigger: true,
 };
 
+const ai_custom_system_prompt: SharedControlConfig<'TextAreaControl'> = {
+  type: 'TextAreaControl',
+  label: t('Custom system prompt'),
+  default: '',
+  description: t(
+    'Custom instructions for AI summary generation (max 4000 characters)',
+  ),
+  renderTrigger: true,
+  visibility: ({ controls }) => Boolean(controls?.enable_ai_insights?.value),
+  placeholder: t(
+    'Enter custom instructions to guide AI analysis (e.g., "Focus on trends and key insights", "Highlight anomalies", "Compare with previous periods"). Max 4000 characters.',
+  ),
+  textAreaStyles: {
+    maxLength: 4000,
+    rows: 4,
+  },
+};
+
+const show_fullscreen_menu: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Show Enter full screen'),
+  default: true,
+  description: t(
+    'Show the "Enter full screen" option in the chart menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
+const show_data_menu: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable Show data'),
+  default: true,
+  description: t(
+    'Show the "View as table" option in the chart menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
+const enable_export_csv: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable Export to .CSV'),
+  default: true,
+  description: t(
+    'Show the "Export to .CSV" option in the download menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
+const enable_export_excel: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable Export to Excel'),
+  default: true,
+  description: t(
+    'Show the "Export to Excel" option in the download menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
+const enable_export_full_csv: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable Export to Full .CSV'),
+  default: true,
+  description: t(
+    'Show the "Export to full .CSV" option in the download menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
+const enable_export_full_excel: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable Export to Full Excel'),
+  default: true,
+  description: t(
+    'Show the "Export to full Excel" option in the download menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
+const enable_download_image: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable Download as Image'),
+  default: true,
+  description: t(
+    'Show the "Download as image" option in the download menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
 const temporal_columns_lookup: SharedControlConfig<'HiddenControl'> = {
   type: 'HiddenControl',
   initialValue: (control: ControlState, state: ControlPanelState | null) =>
@@ -430,4 +518,12 @@ export default {
   currency_format,
   sort_by_metric,
   enable_ai_insights,
+  ai_custom_system_prompt,
+  show_fullscreen_menu,
+  show_data_menu,
+  enable_export_csv,
+  enable_export_excel,
+  enable_export_full_csv,
+  enable_export_full_excel,
+  enable_download_image,
 };
