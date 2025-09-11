@@ -27,8 +27,7 @@ export const GlobalStyles = () => (
       :root {
         --novus-primary: ${theme.colors.primary.base};
         --novus-accent: ${theme.colors.success.base};
-        --novus-secondary: ${theme.colors.secondary?.base ||
-        theme.colors.primary.dark1};
+        --novus-secondary: ${theme.colors.secondary?.base || theme.colors.primary.dark1};
         --novus-info: ${theme.colors.info.base};
         --novus-lavender: ${theme.colors.primary.light2};
         --novus-sky: ${theme.colors.info.light1};
@@ -134,12 +133,16 @@ export const GlobalStyles = () => (
 
       // Custom styling for error alerts to match design system
       .antd5-alert-error {
-        background-color: var(--novus-bg-alt) !important;
-        border: 1px solid var(--novus-border) !important;
-        border-radius: ${theme.borderRadius}px !important;
+        // background-color: var(--novus-bg-alt) !important;
+        // border: 1px solid var(--novus-border) !important;
+        border-radius: ${theme.borderRadius}px !important
+        background-color: rgb(255, 242, 236);
+        border: 1px solid rgb(255, 160, 0);
+        color: rgb(127, 63, 33);
 
         .antd5-alert-icon {
-          color: var(--novus-primary) !important;
+          // color: var(--novus-primary) !important;
+          color: rgb(127, 63, 33) !important;
 
           svg {
             background-color: var(--novus-primary);
