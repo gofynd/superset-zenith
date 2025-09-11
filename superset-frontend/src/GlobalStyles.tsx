@@ -194,6 +194,62 @@ export const GlobalStyles = () => (
         }
       }
 
+      // Custom styling for Thumbnails switch component (scoped to welcome page)
+      .nav-right .switch,
+      .superset-button .switch {
+        display: flex !important;
+        align-items: center !important;
+        gap: ${theme.gridUnit * 2}px !important;
+        
+        .antd5-switch {
+          background-color: ${theme.colors.grayscale.light2} !important;
+          border: none !important;
+          min-width: 40px !important;
+          height: 20px !important;
+          
+          &.antd5-switch-checked {
+            background-color: ${theme.colors.primary.base} !important;
+          }
+          
+          .antd5-switch-handle {
+            background-color: ${theme.colors.grayscale.light5} !important;
+            width: 16px !important;
+            height: 16px !important;
+            top: 2px !important;
+            left: 2px !important;
+            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2) !important;
+            
+            &::before {
+              border-radius: 50% !important;
+            }
+          }
+          
+          &.antd5-switch-checked .antd5-switch-handle {
+            left: calc(100% - 18px) !important;
+          }
+          
+          &:focus {
+            box-shadow: 0 0 0 2px ${theme.colors.primary.light3} !important;
+          }
+          
+          &:hover:not(.antd5-switch-disabled) {
+            background-color: ${theme.colors.grayscale.light1} !important;
+            
+            &.antd5-switch-checked {
+              background-color: ${theme.colors.primary.dark1} !important;
+            }
+          }
+        }
+        
+        span {
+          color: ${theme.colors.text.label} !important;
+          font-size: 14px !important;
+          font-weight: ${theme.typography.weights.normal} !important;
+          margin: 0 !important;
+          line-height: 1.4 !important;
+        }
+      }
+
       // Custom styling for error alerts to match design system
       .antd5-alert-error {
         // background-color: var(--novus-bg-alt) !important;
