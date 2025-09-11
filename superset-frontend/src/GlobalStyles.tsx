@@ -139,15 +139,18 @@ export const GlobalStyles = () => (
         background-color: rgb(255, 242, 236);
         border: 1px solid rgb(255, 160, 0);
         color: rgb(127, 63, 33);
+        padding: 12px;
 
         .antd5-alert-icon {
           // color: var(--novus-primary) !important;
           color: rgb(127, 63, 33) !important;
 
           svg {
-            background-color: var(--novus-primary);
+            border: 1px solid rgb(255, 160, 0);
+            color: 1px solid rgb(255, 160, 0);
+            // background-color: var(--novus-primary);
+            // color: var(--novus-bg) !important;
             border-radius: 50%;
-            color: var(--novus-bg) !important;
             padding: 2px;
           }
         }
