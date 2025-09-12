@@ -21,6 +21,7 @@ import { ReactNode, FC, useCallback, useState, memo } from 'react';
 import { useDispatch } from 'react-redux';
 import { setFilterConfiguration } from 'src/dashboard/actions/nativeFilters';
 import FiltersConfigModal from 'src/dashboard/components/nativeFilters/FiltersConfigModal/FiltersConfigModal';
+import Button from 'src/components/Button';
 import { getFilterBarTestId } from '../utils';
 import { SaveFilterChangesType } from '../../FiltersConfigModal/types';
 
@@ -62,14 +63,14 @@ export const FilterConfigurationLink: FC<FCBProps> = ({
 
   return (
     <>
-      <div
+      <Button
         {...getFilterBarTestId('create-filter')}
         onClick={handleClick}
-        role="button"
-        tabIndex={0}
+        buttonStyle="link"
+        buttonSize="small"
       >
         {children}
-      </div>
+      </Button>
       <FiltersConfigModal
         isOpen={isOpen}
         onSave={submit}
