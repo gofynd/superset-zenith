@@ -267,6 +267,24 @@ export const GlobalStyles = () => (
         }
       }
 
+      // Custom styling for card components border-radius
+      .antd5-card,
+      .antd5-card.antd5-card-bordered {
+        border-radius: 8px !important;
+        
+        .antd5-card-cover {
+          border-radius: 8px 8px 0 0 !important;
+          
+          > div:first-child {
+            border-radius: 8px 8px 0 0 !important;
+          }
+        }
+        
+        .antd5-card-body {
+          border-radius: 0 0 8px 8px !important;
+        }
+      }
+
       // Custom styling for error alerts to match design system
       .antd5-alert-error {
         // background-color: var(--novus-bg-alt) !important;
