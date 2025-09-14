@@ -276,7 +276,9 @@ export const GlobalStyles = () => (
         background-color: rgb(255, 242, 236);
         border: 1px solid rgb(255, 160, 0);
         color: rgb(127, 63, 33);
-        padding: 12px;
+        padding: 8px 12px;
+        justify-content: center;
+        align-items: center;
 
         .antd5-alert-icon {
           // color: var(--novus-primary) !important;
@@ -317,9 +319,13 @@ export const GlobalStyles = () => (
         }
       }
 
-      // Custom styling for Dashboard button with rounded corners (25px border-radius)
-      .superset-button {
-        border-radius: 25px;
+      // Custom styling for ALL buttons with 25px border-radius
+      .superset-button,
+      .ant-btn,
+      .antd5-btn,
+      button[class*="btn"],
+      button[class*="button"] {
+        border-radius: 25px !important;
       }
 
       // Custom styling for chart header slice control dropdown (multiple selectors for compatibility)
@@ -372,124 +378,180 @@ export const GlobalStyles = () => (
         }
       }
 
-      // Subtle radio button improvements - exclude date picker radio buttons
-      .antd5-radio-wrapper:not(.antd5-picker *):not(.antd5-picker-dropdown *) {
+      // Clean radio button styling - STRICTLY exclude ALL date picker contexts
+      .antd5-radio-wrapper:not(.antd5-picker *):not(.antd5-picker-dropdown *):not(.antd5-picker-panel *):not([data-test*="picker"]):not([class*="picker"]) {
         display: flex !important;
         align-items: center !important;
-        padding: ${theme.gridUnit}px 0 !important;
+        padding: ${theme.gridUnit * 2}px 0 !important;
         margin-bottom: ${theme.gridUnit}px !important;
         cursor: pointer !important;
-        transition: all 0.2s ease !important;
+        font-size: ${theme.typography.sizes.s}px !important;
         
         .antd5-radio {
           margin-right: ${theme.gridUnit * 2}px !important;
+          top: 0 !important;
           
           .antd5-radio-input {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
             width: 16px !important;
             height: 16px !important;
+            opacity: 0 !important;
+            z-index: 1 !important;
+            cursor: pointer !important;
           }
           
           .antd5-radio-inner {
+            position: relative !important;
+            display: block !important;
             width: 16px !important;
             height: 16px !important;
-            border: 1px solid ${theme.colors.grayscale.base} !important;
+            border: 2px solid ${theme.colors.grayscale.base} !important;
             border-radius: 50% !important;
             background-color: ${theme.colors.grayscale.light5} !important;
             transition: all 0.2s ease !important;
-            position: relative !important;
             
             &::after {
-              content: '' !important;
               position: absolute !important;
-              top: 3px !important;
-              left: 3px !important;
+              top: 2px !important;
+              left: 2px !important;
               width: 8px !important;
               height: 8px !important;
-              background-color: ${theme.colors.primary.base} !important;
               border-radius: 50% !important;
-              opacity: 0 !important;
+              background-color: ${theme.colors.primary.base} !important;
               transform: scale(0) !important;
-              transition: all 0.2s ease !important;
+              opacity: 0 !important;
+              transition: all 0.2s cubic-bezier(0.78, 0.14, 0.15, 0.86) !important;
+              content: '' !important;
             }
           }
           
           &:hover .antd5-radio-inner {
+            border-color: ${theme.colors.primary.light1} !important;
+          }
+          
+          &.antd5-radio-checked .antd5-radio-inner {
             border-color: ${theme.colors.primary.base} !important;
+            
+            &::after {
+              transform: scale(1) !important;
+              opacity: 1 !important;
+              top: 0;
+              left: 0;
+              margin-top: 0 !important;
+              margin-left: 0 !important;
+              width: 15px !important;
+              height: 16px !important;
+            }
           }
         }
         
         &.antd5-radio-wrapper-checked {
-          .antd5-radio .antd5-radio-inner {
+          .antd5-radio-inner {
             border-color: ${theme.colors.primary.base} !important;
-            background-color: ${theme.colors.grayscale.light5} !important;
             
             &::after {
-              opacity: 1 !important;
               transform: scale(1) !important;
+              opacity: 1 !important;
             }
           }
         }
         
-        span:last-child {
+        > span:last-child {
+          color: ${theme.colors.grayscale.dark1} !important;
           font-size: ${theme.typography.sizes.s}px !important;
           font-weight: ${theme.typography.weights.normal} !important;
-          color: ${theme.colors.grayscale.dark1} !important;
           line-height: 1.5 !important;
         }
       }
 
-      // Fix for date picker functionality - prevent interference from global styles
+      // COMPREHENSIVE DATE PICKER FIXES - Complete isolation from custom styles
       .antd5-picker,
+      .antd5-picker *,
       .antd5-picker-dropdown,
+      .antd5-picker-dropdown *,
       .antd5-picker-panel,
+      .antd5-picker-panel *,
+      .antd5-picker-body,
+      .antd5-picker-body *,
       .antd5-picker-content,
+      .antd5-picker-content *,
       .antd5-picker-cell,
+      .antd5-picker-cell *,
       .antd5-picker-date-panel,
-      .antd5-picker-time-panel {
+      .antd5-picker-date-panel *,
+      .antd5-picker-time-panel,
+      .antd5-picker-time-panel *,
+      .antd5-picker-header,
+      .antd5-picker-header *,
+      .antd5-picker-footer,
+      .antd5-picker-footer * {
+        // Reset all potential interference
+        pointer-events: auto !important;
+        user-select: auto !important;
+        cursor: default !important;
+        
+        // Reset positioning and transforms that might interfere
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+        
+        // Reset any z-index issues
+        position: relative !important;
+        z-index: auto !important;
+      }
+      
+      // Specific date picker cell fixes
+      .antd5-picker-cell {
+        cursor: pointer !important;
         pointer-events: auto !important;
         
-        // Reset any potentially interfering styles
-        .antd5-picker-cell {
-          cursor: pointer !important;
-          
-          &:hover {
-            background-color: ${theme.colors.primary.light5} !important;
-          }
-          
-          &.antd5-picker-cell-selected {
-            background-color: ${theme.colors.primary.base} !important;
-            color: ${theme.colors.grayscale.light5} !important;
-          }
+        &:hover {
+          background-color: #f5f5f5 !important;
         }
         
-        .antd5-picker-header {
-          button {
-            cursor: pointer !important;
-            pointer-events: auto !important;
-            
-            &:hover {
-              background-color: ${theme.colors.primary.light5} !important;
-            }
-          }
+        &.antd5-picker-cell-selected {
+          background-color: #1890ff !important;
+          color: #fff !important;
         }
         
-        // Ensure radio buttons inside date picker work correctly
-        .antd5-radio-wrapper {
-          pointer-events: auto !important;
-          cursor: pointer !important;
-          
-          .antd5-radio {
-            pointer-events: auto !important;
-            
-            .antd5-radio-input {
-              pointer-events: auto !important;
-              cursor: pointer !important;
-            }
-          }
+        &.antd5-picker-cell-today {
+          border-color: #1890ff !important;
         }
       }
       
-      // Specific fixes for CustomFrame date range picker
+      // Date picker header navigation buttons
+      .antd5-picker-header-view,
+      .antd5-picker-header-view button,
+      .antd5-picker-prev-icon,
+      .antd5-picker-next-icon,
+      .antd5-picker-super-prev-icon,
+      .antd5-picker-super-next-icon {
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        
+        &:hover {
+          background-color: #f5f5f5 !important;
+        }
+      }
+      
+      // Date picker dropdown positioning
+      .antd5-picker-dropdown {
+        z-index: 9999 !important;
+        pointer-events: auto !important;
+        position: absolute !important;
+        
+        .antd5-picker-panel-container {
+          pointer-events: auto !important;
+        }
+        
+        .antd5-picker-panels {
+          pointer-events: auto !important;
+        }
+      }
+      
+      // Date picker range specific fixes
       .antd5-picker-range {
         pointer-events: auto !important;
         
@@ -498,22 +560,74 @@ export const GlobalStyles = () => (
           cursor: text !important;
         }
         
-        .antd5-picker-active-bar {
+        .antd5-picker-separator {
           pointer-events: none !important;
         }
       }
       
-      // Fix for date picker dropdown positioning and interactions
-      .antd5-picker-dropdown {
-        z-index: ${theme.zIndex.max + 10} !important;
+      // Completely exclude date picker elements from radio button styling
+      .antd5-picker .antd5-radio-wrapper,
+      .antd5-picker-dropdown .antd5-radio-wrapper,
+      .antd5-picker-panel .antd5-radio-wrapper {
+        // Reset to default radio button styles
+        all: revert !important;
         pointer-events: auto !important;
+        cursor: pointer !important;
         
-        .antd5-picker-panel-container {
+        .antd5-radio {
+          all: revert !important;
           pointer-events: auto !important;
+          
+          .antd5-radio-input {
+            all: revert !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            opacity: 0 !important;
+          }
+          
+          .antd5-radio-inner {
+            all: revert !important;
+            pointer-events: auto !important;
+          }
+        }
+      }
+
+      // EMERGENCY DATE PICKER ISOLATION - Complete reset of all styles
+      .antd5-picker,
+      .antd5-picker-dropdown {
+        // Force reset ALL inherited styles that might interfere
+        * {
+          box-sizing: border-box !important;
+          pointer-events: auto !important;
+          user-select: auto !important;
+          
+          // Reset any transform or animation interference
+          transform: none !important;
+          transition: none !important;
+          animation: none !important;
+          
+          // Reset positioning
+          position: static !important;
+          
+          // Reset event handling
+          cursor: auto !important;
         }
         
-        .antd5-picker-panels {
+        // Specific resets for interactive elements
+        button, input, [role="button"], [tabindex] {
           pointer-events: auto !important;
+          cursor: pointer !important;
+          user-select: none !important;
+        }
+        
+        // Reset for cells and dates
+        td, .antd5-picker-cell {
+          pointer-events: auto !important;
+          cursor: pointer !important;
+          
+          &:hover {
+            pointer-events: auto !important;
+          }
         }
       }
     `}
