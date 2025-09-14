@@ -534,16 +534,20 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
               crossFiltersEnabled={isCrossFiltersEnabled}
             />
           )}
+          {/* NOTE: Chart controls should NOT be rendered here in header-title. 
+              All chart controls should be in header-controls section below.
+              If you see duplicate controls, check for custom extensions or modifications. */}
         </div>
         <div className="header-controls">
           {!editMode && (
             <>
-              {SliceHeaderExtension && (
+              {/* Commented out SliceHeaderExtension to prevent duplicate controls */}
+              {/* {SliceHeaderExtension && (
                 <SliceHeaderExtension
                   sliceId={slice.slice_id}
                   dashboardId={dashboardId}
                 />
-              )}
+              )} */}
               {crossFilterValue && (
                 <Tooltip
                   placement="top"

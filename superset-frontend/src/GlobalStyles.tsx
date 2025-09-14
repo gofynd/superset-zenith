@@ -316,6 +316,61 @@ export const GlobalStyles = () => (
           }
         }
       }
+
+      // Custom styling for Dashboard button with rounded corners (25px border-radius)
+      .superset-button {
+        border-radius: 25px;
+      }
+
+      // Custom styling for chart header slice control dropdown
+      .antd5-dropdown[class*="slice_"][class*="-menu"] {
+        .antd5-dropdown-menu {
+          background-color: ${theme.colors.grayscale.light5};
+          border: 1px solid ${theme.colors.grayscale.light2};
+          border-radius: ${theme.gridUnit * 2}px;
+          box-shadow: 0 ${theme.gridUnit}px ${theme.gridUnit * 6}px 0 
+            rgba(0, 0, 0, 0.1);
+          padding: ${theme.gridUnit * 2}px 0;
+          min-width: 200px;
+          font-size: ${theme.typography.sizes.s}px;
+          
+          .antd5-dropdown-menu-item,
+          .antd5-dropdown-menu-submenu-title {
+            padding: ${theme.gridUnit * 2}px ${theme.gridUnit * 4}px;
+            margin: 0 ${theme.gridUnit}px;
+            border-radius: ${theme.gridUnit}px;
+            color: ${theme.colors.grayscale.dark1};
+            font-weight: ${theme.typography.weights.normal};
+            line-height: 1.5;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              background-color: ${theme.colors.primary.light5};
+              color: ${theme.colors.primary.dark1};
+            }
+            
+            .antd5-dropdown-menu-title-content {
+              color: inherit;
+              font-size: inherit;
+            }
+          }
+          
+          .antd5-dropdown-menu-item-divider {
+            margin: ${theme.gridUnit}px ${theme.gridUnit * 2}px;
+            background-color: ${theme.colors.grayscale.light3};
+          }
+          
+          .antd5-dropdown-menu-submenu {
+            .antd5-dropdown-menu-submenu-arrow {
+              color: ${theme.colors.grayscale.base};
+            }
+            
+            &:hover .antd5-dropdown-menu-submenu-arrow {
+              color: ${theme.colors.primary.dark1};
+            }
+          }
+        }
+      }
     `}
   />
 );
