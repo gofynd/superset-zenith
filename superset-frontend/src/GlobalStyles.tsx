@@ -371,6 +371,93 @@ export const GlobalStyles = () => (
           }
         }
       }
+
+      // Custom styling for radio buttons to make them larger and more visible
+      .antd5-radio-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        margin-bottom: ${theme.gridUnit * 2}px !important;
+        padding: ${theme.gridUnit * 2}px !important;
+        border-radius: ${theme.gridUnit}px !important;
+        transition: all 0.2s ease !important;
+        
+        &:hover {
+          background-color: ${theme.colors.primary.light5} !important;
+        }
+        
+        .antd5-radio {
+          margin-right: ${theme.gridUnit * 2}px !important;
+          
+          .antd5-radio-input {
+            width: 18px !important;
+            height: 18px !important;
+          }
+          
+          .antd5-radio-inner {
+            width: 18px !important;
+            height: 18px !important;
+            border: 2px solid ${theme.colors.grayscale.light1} !important;
+            border-radius: 50% !important;
+            background-color: ${theme.colors.grayscale.light5} !important;
+            transition: all 0.2s ease !important;
+            
+            &::after {
+              width: 8px !important;
+              height: 8px !important;
+              margin-top: 3px !important;
+              margin-left: 3px !important;
+              background-color: ${theme.colors.primary.base} !important;
+              border-radius: 50% !important;
+              transform: scale(0) !important;
+              transition: all 0.2s ease !important;
+            }
+          }
+          
+          &:hover .antd5-radio-inner {
+            border-color: ${theme.colors.primary.base} !important;
+          }
+        }
+        
+        &.antd5-radio-wrapper-checked {
+          background-color: ${theme.colors.primary.light5} !important;
+          
+          .antd5-radio .antd5-radio-inner {
+            border-color: ${theme.colors.primary.base} !important;
+            background-color: ${theme.colors.grayscale.light5} !important;
+            
+            &::after {
+              transform: scale(1) !important;
+            }
+          }
+        }
+        
+        span:last-child {
+          font-size: ${theme.typography.sizes.s}px !important;
+          font-weight: ${theme.typography.weights.normal} !important;
+          color: ${theme.colors.grayscale.dark1} !important;
+          line-height: 1.5 !important;
+        }
+      }
+      
+      // Specific styling for time range configuration radio buttons
+      .antd5-space-item .antd5-radio-wrapper {
+        min-height: 44px !important;
+        padding: ${theme.gridUnit * 3}px ${theme.gridUnit * 4}px !important;
+        margin-bottom: ${theme.gridUnit}px !important;
+        border: 1px solid ${theme.colors.grayscale.light2} !important;
+        border-radius: ${theme.gridUnit * 2}px !important;
+        
+        &:hover {
+          border-color: ${theme.colors.primary.light3} !important;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        &.antd5-radio-wrapper-checked {
+          border-color: ${theme.colors.primary.base} !important;
+          background-color: ${theme.colors.primary.light5} !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+        }
+      }
     `}
   />
 );
