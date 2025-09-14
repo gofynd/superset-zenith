@@ -378,12 +378,17 @@ export const GlobalStyles = () => (
         }
       }
 
+      // Reduce spacing in radio button groups
+      .antd5-space.antd5-space-vertical {
+        gap: 8px !important;
+      }
+
       // Clean radio button styling - STRICTLY exclude ALL date picker contexts
       .antd5-radio-wrapper:not(.antd5-picker *):not(.antd5-picker-dropdown *):not(.antd5-picker-panel *):not([data-test*="picker"]):not([class*="picker"]) {
         display: flex !important;
         align-items: center !important;
-        padding: ${theme.gridUnit * 2}px 0 !important;
-        margin-bottom: ${theme.gridUnit}px !important;
+        padding: 0 !important;
+        margin-bottom: 0 !important;
         cursor: pointer !important;
         font-size: ${theme.typography.sizes.s}px !important;
         
@@ -437,12 +442,12 @@ export const GlobalStyles = () => (
             &::after {
               transform: scale(1) !important;
               opacity: 1 !important;
-              top: 0;
-              left: 0;
+              top: 0 !important;
+              left: 0 !important;
               margin-top: 0 !important;
               margin-left: 0 !important;
-              width: 15px !important;
-              height: 16px !important;
+              width: 12px !important;
+              height: 12px !important;
             }
           }
         }
