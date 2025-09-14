@@ -17,7 +17,13 @@
  * under the License.
  */
 import { t, customTimeRangeDecode } from '@superset-ui/core';
+import { Moment } from 'moment';
+import moment from 'moment-timezone';
+import { useTimezone } from 'src/components/TimezoneContext';
 import { InfoTooltipWithTrigger } from '@superset-ui/chart-controls';
+import { isInteger } from 'lodash';
+// @ts-ignore
+import { locales } from 'antd/dist/antd-with-locales';
 import { Col, Row } from 'src/components';
 import { InputNumber } from 'src/components/Input';
 import { DatePicker } from 'src/components/DatePicker';
@@ -31,7 +37,6 @@ import {
   DAYJS_FORMAT,
   MIDNIGHT,
   customTimeRangeEncode,
-  dttmToDayjs,
 } from 'src/explore/components/controls/DateFilterControl/utils';
 import {
   CustomRangeKey,
@@ -43,6 +48,7 @@ import { AntdThemeProvider } from 'src/components/AntdThemeProvider';
 import { useLocale } from 'src/hooks/useLocale';
 
 export function CustomFrame(props: FrameComponentProps) {
+  const { timezone } = useTimezone();
   const { customRange, matchedFlag } = customTimeRangeDecode(props.value);
   const datePickerLocale = useLocale();
   if (!matchedFlag) {
@@ -110,6 +116,17 @@ export function CustomFrame(props: FrameComponentProps) {
     return <Loading position="inline-centered" />;
   }
 
+  // Helper functions for timezone-aware date handling
+  const convertToTimezone = (datetime: string): Moment => {
+    const converted = moment.tz(datetime, timezone);
+    return converted;
+  };
+
+  // const convertFromTimezone = (momentDate: Moment): string => {
+  //   const result = momentDate.clone().tz(timezone).format(MOMENT_FORMAT);
+  //   return result;
+  // };
+
   return (
     <AntdThemeProvider locale={datePickerLocale}>
       <div data-test="custom-frame">
@@ -133,9 +150,14 @@ export function CustomFrame(props: FrameComponentProps) {
               <Row>
                 <DatePicker
                   showTime
-                  defaultValue={dttmToDayjs(sinceDatetime)}
+                  defaultValue={
+                    convertToTimezone(sinceDatetime) as unknown as Dayjs
+                  }
                   onChange={(datetime: Dayjs) =>
-                    onChange('sinceDatetime', datetime.format(DAYJS_FORMAT))
+                    onChange(
+                      'sinceDatetime',
+                      convertToTimezone(DAYJS_FORMAT) as unknown as string,
+                    )
                   }
                   allowClear={false}
                   getPopupContainer={(triggerNode: HTMLElement) =>
@@ -192,9 +214,14 @@ export function CustomFrame(props: FrameComponentProps) {
               <Row>
                 <DatePicker
                   showTime
-                  defaultValue={dttmToDayjs(untilDatetime)}
+                  defaultValue={
+                    convertToTimezone(untilDatetime) as unknown as Dayjs
+                  }
                   onChange={(datetime: Dayjs) =>
-                    onChange('untilDatetime', datetime.format(DAYJS_FORMAT))
+                    onChange(
+                      'untilDatetime',
+                      convertToTimezone(DAYJS_FORMAT) as unknown as string,
+                    )
                   }
                   allowClear={false}
                   getPopupContainer={(triggerNode: HTMLElement) =>
@@ -252,9 +279,14 @@ export function CustomFrame(props: FrameComponentProps) {
                 <Col>
                   <DatePicker
                     showTime
-                    defaultValue={dttmToDayjs(anchorValue)}
+                    defaultValue={
+                      convertToTimezone(anchorValue) as unknown as Dayjs
+                    }
                     onChange={(datetime: Dayjs) =>
-                      onChange('anchorValue', datetime.format(DAYJS_FORMAT))
+                      onChange(
+                        'anchorValue',
+                        convertToTimezone(DAYJS_FORMAT) as unknown as string,
+                      )
                     }
                     allowClear={false}
                     className="control-anchor-to-datetime"
