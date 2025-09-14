@@ -322,52 +322,52 @@ export const GlobalStyles = () => (
         border-radius: 25px;
       }
 
-      // Custom styling for chart header slice control dropdown
-      .antd5-dropdown[class*="slice_"][class*="-menu"] {
-        .antd5-dropdown-menu {
-          background-color: ${theme.colors.grayscale.light5};
-          border: 1px solid ${theme.colors.grayscale.light2};
-          border-radius: ${theme.gridUnit * 2}px;
-          box-shadow: 0 ${theme.gridUnit}px ${theme.gridUnit * 6}px 0 
-            rgba(0, 0, 0, 0.1);
-          padding: ${theme.gridUnit * 2}px 0;
-          min-width: 200px;
-          font-size: ${theme.typography.sizes.s}px;
+      // Custom styling for chart header slice control dropdown (multiple selectors for compatibility)
+      .antd5-dropdown .antd5-dropdown-menu[id*="slice_"][id$="-menu"],
+      .antd5-dropdown-menu[id*="slice_"][id$="-menu"],
+      ul.antd5-dropdown-menu[role="menu"][id*="slice_"] {
+        background-color: ${theme.colors.grayscale.light5} !important;
+        border: 1px solid ${theme.colors.grayscale.light2} !important;
+        border-radius: ${theme.gridUnit * 2}px !important;
+        box-shadow: 0 ${theme.gridUnit}px ${theme.gridUnit * 6}px 0 
+          rgba(0, 0, 0, 0.1) !important;
+        padding: ${theme.gridUnit * 2}px 0 !important;
+        min-width: 200px !important;
+        font-size: ${theme.typography.sizes.s}px !important;
+        
+        .antd5-dropdown-menu-item,
+        .antd5-dropdown-menu-submenu-title {
+          padding: ${theme.gridUnit * 2}px ${theme.gridUnit * 4}px !important;
+          margin: 0 ${theme.gridUnit}px !important;
+          border-radius: ${theme.gridUnit}px !important;
+          color: ${theme.colors.grayscale.dark1} !important;
+          font-weight: ${theme.typography.weights.normal} !important;
+          line-height: 1.5 !important;
+          transition: all 0.2s ease !important;
           
-          .antd5-dropdown-menu-item,
-          .antd5-dropdown-menu-submenu-title {
-            padding: ${theme.gridUnit * 2}px ${theme.gridUnit * 4}px;
-            margin: 0 ${theme.gridUnit}px;
-            border-radius: ${theme.gridUnit}px;
-            color: ${theme.colors.grayscale.dark1};
-            font-weight: ${theme.typography.weights.normal};
-            line-height: 1.5;
-            transition: all 0.2s ease;
-            
-            &:hover {
-              background-color: ${theme.colors.primary.light5};
-              color: ${theme.colors.primary.dark1};
-            }
-            
-            .antd5-dropdown-menu-title-content {
-              color: inherit;
-              font-size: inherit;
-            }
+          &:hover {
+            background-color: ${theme.colors.primary.light5} !important;
+            color: ${theme.colors.primary.dark1} !important;
           }
           
-          .antd5-dropdown-menu-item-divider {
-            margin: ${theme.gridUnit}px ${theme.gridUnit * 2}px;
-            background-color: ${theme.colors.grayscale.light3};
+          .antd5-dropdown-menu-title-content {
+            color: inherit !important;
+            font-size: inherit !important;
+          }
+        }
+        
+        .antd5-dropdown-menu-item-divider {
+          margin: ${theme.gridUnit}px ${theme.gridUnit * 2}px !important;
+          background-color: ${theme.colors.grayscale.light3} !important;
+        }
+        
+        .antd5-dropdown-menu-submenu {
+          .antd5-dropdown-menu-submenu-arrow {
+            color: ${theme.colors.grayscale.base} !important;
           }
           
-          .antd5-dropdown-menu-submenu {
-            .antd5-dropdown-menu-submenu-arrow {
-              color: ${theme.colors.grayscale.base};
-            }
-            
-            &:hover .antd5-dropdown-menu-submenu-arrow {
-              color: ${theme.colors.primary.dark1};
-            }
+          &:hover .antd5-dropdown-menu-submenu-arrow {
+            color: ${theme.colors.primary.dark1} !important;
           }
         }
       }

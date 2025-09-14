@@ -502,7 +502,9 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
           {!uiConfig.hideChartControls && (
             <FiltersBadge chartId={slice.slice_id} />
           )}
-          {!uiConfig.hideChartControls && (
+          {/* REMOVED: Duplicate SliceHeaderControls that was causing duplicate chart controls
+              The correct SliceHeaderControls is rendered below in header-controls section */}
+          {/* {!uiConfig.hideChartControls && (
             <SliceHeaderControls
               slice={slice}
               isCached={isCached}
@@ -533,7 +535,7 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
               exploreUrl={exploreUrl}
               crossFiltersEnabled={isCrossFiltersEnabled}
             />
-          )}
+          )} */}
           {/* NOTE: Chart controls should NOT be rendered here in header-title. 
               All chart controls should be in header-controls section below.
               If you see duplicate controls, check for custom extensions or modifications. */}
@@ -541,13 +543,12 @@ const SliceHeader = forwardRef<HTMLDivElement, SliceHeaderProps>(
         <div className="header-controls">
           {!editMode && (
             <>
-              {/* Commented out SliceHeaderExtension to prevent duplicate controls */}
-              {/* {SliceHeaderExtension && (
+              {SliceHeaderExtension && (
                 <SliceHeaderExtension
                   sliceId={slice.slice_id}
                   dashboardId={dashboardId}
                 />
-              )} */}
+              )}
               {crossFilterValue && (
                 <Tooltip
                   placement="top"
