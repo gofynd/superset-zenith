@@ -32,7 +32,7 @@ import {
 import cx from 'classnames';
 import { styled, t, useTheme } from '@superset-ui/core';
 import { Icons } from '@superset-ui/core/components/Icons';
-import { EmptyState, Loading } from '@superset-ui/core/components';
+import { EmptyState, Loading, Skeleton } from '@superset-ui/core/components';
 import { getFilterBarTestId } from './utils';
 import { VerticalBarProps } from './types';
 import Header from './Header';
@@ -223,8 +223,15 @@ const VerticalFilterBar: FC<VerticalBarProps> = ({
         <Bar className={cx({ open: filtersOpen })} width={width}>
           <Header toggleFiltersBar={toggleFiltersBar} />
           {!isInitialized ? (
-            <div css={{ height }}>
-              <Loading />
+            <div css={{ height, padding: `${theme.sizeUnit * 4}px` }}>
+              <div css={{ display: 'flex', flexDirection: 'column', gap: `${theme.sizeUnit * 4}px` }}>
+                {filterValues.map((_, i) => (
+                  <div key={i} css={{ display: 'flex', flexDirection: 'column', gap: `${theme.sizeUnit}px` }}>
+                    <Skeleton.Input active size="small" style={{ width: '60%', height: 20 }} />
+                    <Skeleton.Input active size="small" style={{ width: '100%', height: 32 }} />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div css={tabPaneStyle} onScroll={onScroll}>

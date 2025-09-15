@@ -19,7 +19,7 @@
 
 import { FC, memo, useMemo } from 'react';
 import { DataMaskStateWithId, styled, t } from '@superset-ui/core';
-import { Loading } from '@superset-ui/core/components';
+import { Loading, Skeleton } from '@superset-ui/core/components';
 import { RootState } from 'src/dashboard/types';
 import { useChartLayoutItems } from 'src/dashboard/util/useChartLayoutItems';
 import { useChartIds } from 'src/dashboard/util/charts/useChartIds';
@@ -96,7 +96,14 @@ const HorizontalFilterBar: FC<HorizontalBarProps> = ({
     <HorizontalBar {...getFilterBarTestId()}>
       <HorizontalBarContent>
         {!isInitialized ? (
-          <Loading position="inline-centered" />
+          <>
+            {filterValues.map((_, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', marginRight: 16 }}>
+                <Skeleton.Input active size="small" style={{ width: 80, height: 20, marginRight: 8 }} />
+                <Skeleton.Input active size="small" style={{ width: 120, height: 32 }} />
+              </div>
+            ))}
+          </>
         ) : (
           <>
             <FilterBarSettings />
