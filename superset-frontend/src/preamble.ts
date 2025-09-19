@@ -31,8 +31,12 @@ import setupClient from './setup/setupClient';
 import setupColors from './setup/setupColors';
 import setupFormatters from './setup/setupFormatters';
 import setupDashboardComponents from './setup/setupDashboardComponents';
+import setupBolticStreams from './setup/setupBolticStreams';
 import { User } from './types/bootstrapTypes';
 import getBootstrapData from './utils/getBootstrapData';
+
+// Initialize Boltic Streams Analytics early in the app lifecycle
+setupBolticStreams();
 
 if (process.env.WEBPACK_MODE === 'development') {
   setHotLoaderConfig({ logLevel: 'debug', trackTailUpdates: false });

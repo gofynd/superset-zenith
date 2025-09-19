@@ -147,7 +147,7 @@ function processHTML(proxyResponse, response) {
     });
 }
 
-module.exports = newManifest => {
+const runManifestProd = newManifest => {
   manifest = newManifest;
   return {
     context: '/',
@@ -173,3 +173,54 @@ module.exports = newManifest => {
     },
   };
 };
+
+// webpack.proxy-config.js (fixed)
+const runManifestLocal = (newManifest, env = {}) => {
+  console.log('running local manifest');
+  manifest = newManifest;
+
+  // accept either --env=--superset=... OR process.env.SUPERSET
+  const target =
+    env.SUPERSET || process.env.SUPERSET || 'http://localhost:8088';
+
+  return {
+    context: '/', // proxy everything that isn't a local asset
+    target, // use the computed target (not "backend")
+    hostRewrite: true,
+    changeOrigin: true,
+    cookieDomainRewrite: '', // strip cookie domain to localhost
+    secure: false, // SIT often uses non-prod certs
+    selfHandleResponse: true, // you already rely on this for HTML transforms
+
+    // 1) Ask the backend for plain bytes (no gzip/br/zstd)
+    onProxyReq(proxyReq) {
+      proxyReq.setHeader('accept-encoding', 'identity');
+    },
+
+    // 2) Make sure the browser doesn't expect compressed payload
+    onProxyRes(proxyResponse, request, response) {
+      try {
+        delete proxyResponse.headers['content-encoding'];
+        delete proxyResponse.headers['content-length'];
+
+        copyHeaders(proxyResponse, response);
+        if (isHTML(response)) {
+          processHTML(proxyResponse, response);
+        } else {
+          proxyResponse.pipe(response);
+        }
+        response.flushHeaders();
+      } catch (e) {
+        response.setHeader('content-type', 'text/plain');
+        response.write(`Error requesting ${request.path} from proxy:\n\n`);
+        response.end(e.stack);
+      }
+    },
+
+    // IMPORTANT: remove the "proxies: [ ... ]" block you added.
+  };
+};
+
+module.exports = process.env.RUN_MANIFEST_LOCAL
+  ? runManifestLocal
+  : runManifestProd;
