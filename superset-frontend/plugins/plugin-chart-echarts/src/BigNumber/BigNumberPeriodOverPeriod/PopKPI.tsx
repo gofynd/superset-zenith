@@ -260,7 +260,7 @@ export default function PopKPI(props: PopKPIProps) {
             <Tooltip
               title={`${metricName}: ${getNumberFormatter(',.6f')(
                 exactBigNumber,
-              )}`}
+              ).replace(/\.?0+$/, '')}`}
               placement="top"
             >
               <span>{bigNumber}</span>
