@@ -283,7 +283,8 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     };
 
     // Show the exact number with comma formatting for better readability
-    const exactFormatter = getNumberFormatter(',.0f');
+    // Use a formatter that preserves decimal places
+    const exactFormatter = getNumberFormatter(',.6f');
     const exactValue =
       bigNumber === null ? '0' : exactFormatter(bigNumber as number);
 

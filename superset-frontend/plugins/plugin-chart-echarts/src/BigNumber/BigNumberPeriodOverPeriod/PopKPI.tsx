@@ -258,7 +258,7 @@ export default function PopKPI(props: PopKPIProps) {
           exactBigNumber !== null &&
           !isPercentageFormat(yAxisFormat) ? (
             <Tooltip
-              title={`${metricName}: ${getNumberFormatter(',.0f')(
+              title={`${metricName}: ${getNumberFormatter(',.6f')(
                 exactBigNumber,
               )}`}
               placement="top"
