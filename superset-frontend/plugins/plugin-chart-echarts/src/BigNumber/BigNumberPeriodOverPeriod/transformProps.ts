@@ -217,5 +217,7 @@ export default function transformProps(chartProps: ChartProps) {
     shift: timeComparison,
     dashboardTimeRange: formData?.extraFormData?.time_range,
     enableDetailOnHover,
+    exactBigNumber,
+    yAxisFormat,
   };
 }

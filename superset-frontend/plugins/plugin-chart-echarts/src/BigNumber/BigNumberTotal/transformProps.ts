@@ -403,6 +403,7 @@ export default function transformProps(
     comparisonIndicator,
     enableDetailOnHover,
     metric: getMetricLabel(metric),
+    yAxisFormat,
   };
 
   console.group('🚀 BigNumberTotal transformProps - FINAL RETURN PROPS');

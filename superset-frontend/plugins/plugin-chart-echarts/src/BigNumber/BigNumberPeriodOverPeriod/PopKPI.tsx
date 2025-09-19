@@ -25,6 +25,8 @@ import {
   styled,
   t,
   useTheme,
+  NumberFormats,
+  getNumberFormatter,
 } from '@superset-ui/core';
 import { Tooltip } from '@superset-ui/chart-controls';
 import { isEmpty } from 'lodash';
@@ -35,6 +37,24 @@ import {
   PopKPIProps,
 } from './types';
 import { useOverflowDetection } from './useOverflowDetection';
+
+// Function to detect if a metric is using percentage formatting
+const isPercentageFormat = (yAxisFormat?: string): boolean => {
+  if (!yAxisFormat) return false;
+
+  // Check if the format contains percentage symbols or matches percentage format constants
+  return (
+    yAxisFormat.includes('%') ||
+    yAxisFormat === NumberFormats.PERCENT ||
+    yAxisFormat === NumberFormats.PERCENT_1_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_2_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_3_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED_1_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED_2_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED_3_POINT
+  );
+};
 
 const NumbersContainer = styled.div`
   display: flex;
@@ -85,6 +105,7 @@ export default function PopKPI(props: PopKPIProps) {
     dashboardTimeRange,
     enableDetailOnHover = true,
     metricName,
+    yAxisFormat,
   } = props;
 
   const [comparisonRange, setComparisonRange] = useState<string>('');
@@ -233,8 +254,15 @@ export default function PopKPI(props: PopKPIProps) {
         }
       >
         <div css={bigValueContainerStyles}>
-          {enableDetailOnHover && exactBigNumber !== null ? (
-            <Tooltip title={`${metricName}: ${exactBigNumber}`} placement="top">
+          {enableDetailOnHover &&
+          exactBigNumber !== null &&
+          !isPercentageFormat(yAxisFormat) ? (
+            <Tooltip
+              title={`${metricName}: ${getNumberFormatter(',.0f')(
+                exactBigNumber,
+              )}`}
+              placement="top"
+            >
               <span>{bigNumber}</span>
             </Tooltip>
           ) : (

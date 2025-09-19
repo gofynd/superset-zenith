@@ -26,6 +26,7 @@ import {
   BRAND_COLOR,
   styled,
   BinaryQueryObjectFilterClause,
+  NumberFormats,
 } from '@superset-ui/core';
 import { Tooltip } from '@superset-ui/chart-controls';
 import Echart from '../components/Echart';
@@ -33,6 +34,24 @@ import { BigNumberVizProps } from './types';
 import { EventHandlers } from '../types';
 
 const defaultNumberFormatter = getNumberFormatter();
+
+// Function to detect if a metric is using percentage formatting
+const isPercentageFormat = (yAxisFormat?: string): boolean => {
+  if (!yAxisFormat) return false;
+
+  // Check if the format contains percentage symbols or matches percentage format constants
+  return (
+    yAxisFormat.includes('%') ||
+    yAxisFormat === NumberFormats.PERCENT ||
+    yAxisFormat === NumberFormats.PERCENT_1_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_2_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_3_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED_1_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED_2_POINT ||
+    yAxisFormat === NumberFormats.PERCENT_SIGNED_3_POINT
+  );
+};
 
 const PROPORTION = {
   // text size: proportion of the chart container sans trendline
@@ -222,6 +241,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       colorThresholdFormatters,
       enableDetailOnHover,
       metric,
+      yAxisFormat,
     } = this.props;
     // @ts-ignore
     const text = bigNumber === null ? '0' : headerFormatter(bigNumber);
@@ -262,8 +282,10 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       }
     };
 
-    // Show the exact number without any formatting/rounding
-    const exactValue = bigNumber === null ? '0' : String(bigNumber);
+    // Show the exact number with comma formatting for better readability
+    const exactFormatter = getNumberFormatter(',.0f');
+    const exactValue =
+      bigNumber === null ? '0' : exactFormatter(bigNumber as number);
 
     const headerContent = (
       <div
@@ -281,8 +303,13 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       </div>
     );
 
-    // Show tooltip with exact value if enabled and the formatted text is different from exact value
-    if (enableDetailOnHover && bigNumber !== null && text !== exactValue) {
+    // Show tooltip with exact value if enabled, not a percentage format, and the formatted text is different from exact value
+    if (
+      enableDetailOnHover &&
+      bigNumber !== null &&
+      text !== exactValue &&
+      !isPercentageFormat(yAxisFormat)
+    ) {
       return (
         <Tooltip title={`${metric}: ${exactValue}`} placement="top">
           {headerContent}

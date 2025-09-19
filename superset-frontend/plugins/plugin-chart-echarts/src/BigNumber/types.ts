@@ -105,4 +105,5 @@ export type BigNumberVizProps = {
   // Hover detail properties
   enableDetailOnHover?: boolean;
   metric?: string;
+  yAxisFormat?: string;
 };

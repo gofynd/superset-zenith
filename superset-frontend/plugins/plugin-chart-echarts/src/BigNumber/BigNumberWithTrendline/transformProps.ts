@@ -519,5 +519,6 @@ export default function transformProps(
     comparisonIndicator,
     enableDetailOnHover,
     metric: getMetricLabel(metric),
+    yAxisFormat,
   };
 }

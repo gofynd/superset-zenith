@@ -68,6 +68,7 @@ export type PopKPIProps = PopKPIStylesProps &
     shift: string;
     dashboardTimeRange?: string;
     enableDetailOnHover?: boolean;
+    yAxisFormat?: string;
   };
 
 export enum ColorSchemeEnum {
