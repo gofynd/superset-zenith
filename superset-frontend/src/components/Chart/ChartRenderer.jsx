@@ -283,7 +283,7 @@ class ChartRenderer extends Component {
         bolticHelper.checkThresholdAndTrack(analyticsPayload);
         
       } catch (error) {
-        console.error('❌ Analytics failed:', error.message);
+        console.error('❌ Boltic-streams failed:', error.message);
       }
     }
   }
