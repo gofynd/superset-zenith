@@ -437,16 +437,6 @@ class Chart extends Component {
     const initialValues = {};
 
     // Extract comparison data for BigNumber charts (inline implementation)
-    console.group('📊 Chart Component - BigNumber Comparison Data Extraction');
-    console.log('🔍 Input data for comparison extraction:', {
-      sliceVizType: slice?.viz_type,
-      hasQueriesResponse: !!queriesResponse,
-      queriesResponseLength: queriesResponse?.length || 0,
-      hasFormData: !!formData,
-      formDataVizType: formData?.viz_type,
-      chartStatus,
-    });
-
     let bigNumberComparisonData = null;
 
     // Simplified inline comparison data extraction
@@ -481,47 +471,20 @@ class Chart extends Component {
             ? null 
             : parseMetricValue(data[0][metricName]);
           
-          console.log('🔧 Chart.jsx - Metric Resolution:', {
-            rawMetric: formData.metric,
-            rawMetricType: typeof formData.metric,
-            resolvedMetricName: metricName,
-            currentValue,
-            currentValueType: typeof currentValue,
-            availableColumns: colnames,
-            firstRowData: data[0],
-            allDataKeys: data[0] ? Object.keys(data[0]) : [],
-            dataKeyValues: data[0] ? Object.entries(data[0]) : [],
-          });
-          
           // Find previous period value EXACTLY like BigNumber transformProps does
           let previousPeriodValue = null;
           if (data[0]) {
             for (const col of colnames) {
               if (col.includes('__') && col !== metricName) {
                 const rawValue = data[0][col];
-                console.log('🔍 Checking time offset column:', {
-                  col,
-                  rawValue,
-                  rawValueType: typeof rawValue,
-                  isNull: rawValue === null,
-                  isUndefined: rawValue === undefined,
-                });
                 if (rawValue !== null && rawValue !== undefined) {
                   // Use parseMetricValue like BigNumber transformProps does (line 236)
                   previousPeriodValue = parseMetricValue(rawValue);
-                  console.log('✅ Found previousPeriodValue:', previousPeriodValue);
                   break;
                 }
               }
             }
           }
-          
-          console.log('📊 Values before calculation:', {
-            currentValue,
-            previousPeriodValue,
-            currentValueValid: currentValue !== null && !isNaN(currentValue),
-            previousValueValid: previousPeriodValue !== null && !isNaN(previousPeriodValue),
-          });
           
           if (previousPeriodValue !== null && !isNaN(previousPeriodValue)) {
             let percentageChange = 0;
@@ -543,15 +506,6 @@ class Chart extends Component {
               comparisonIndicator = percentageChange > 0 ? 'positive' : percentageChange < 0 ? 'negative' : 'neutral';
             }
             
-            console.log('🧮 Chart.jsx - Final calculation:', {
-              currentValue,
-              previousPeriodValue,
-              difference: (currentValue || 0) - previousPeriodValue,
-              percentageChange,
-              comparisonIndicator,
-              isNaN: isNaN(percentageChange),
-            });
-            
             bigNumberComparisonData = {
               percentageChange,
               comparisonIndicator,
@@ -562,13 +516,6 @@ class Chart extends Component {
         }
       }
     }
-
-    console.log('📈 Comparison data extraction result:', {
-      bigNumberComparisonData,
-      hasBigNumberComparisonData: !!bigNumberComparisonData,
-      willPassToSliceHeader: true,
-    });
-    console.groupEnd();
 
     return (
       <SliceContainer
