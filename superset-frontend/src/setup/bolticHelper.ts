@@ -38,6 +38,8 @@ class BolticHelper {
    * Check if chart value crosses threshold and trigger analytics
    */
   checkThresholdAndTrack(payload: any) {
+    console.log(`Boltic streams - checkThresholdAndTrack`, { payload });
+
     const chartId = Number(payload.chart.id);
     const currentValue = Number(payload.chart.currentValue);
 
@@ -85,7 +87,8 @@ class BolticHelper {
         },
       };
 
-      (window as any).stelios.track('BigNumber Threshold Crossed', analyticsData);
+      console.log(`Boltic streams - checkThresholdAndTrack`, { payload });
+      (window as any)?.stelios?.track('BigNumber Threshold Crossed', analyticsData);
     }
   }
 
