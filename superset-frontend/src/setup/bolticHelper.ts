@@ -27,8 +27,6 @@ class BolticHelper {
       const thresholdsEnv: any = [{"chartId":152,"threshold":330000}, {"chartId":248,"threshold":10000}, {"chartId":570,"threshold":10000}];
       if (thresholdsEnv) {
         this.thresholds = JSON.parse(thresholdsEnv);
-        // eslint-disable-next-line no-console
-        console.log('📊 Loaded BigNumber thresholds:', this.thresholds);
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -86,12 +84,6 @@ class BolticHelper {
         },
       };
 
-      // eslint-disable-next-line no-console
-      console.group('🎯 BigNumber Threshold Crossed!');
-      // eslint-disable-next-line no-console
-      console.log('📊 Analytics Data:', analyticsData);
-      // eslint-disable-next-line no-console
-      console.groupEnd();
       stelios.track('BigNumber Threshold Crossed', analyticsData);
     }
   }

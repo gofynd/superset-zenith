@@ -83,33 +83,7 @@ function calculatePeriodFromDates(since: string, until: string): string | null {
 }
 
 export default function buildQuery(formData: QueryFormData) {
-  // Debug logging for buildQuery
-  console.log('BigNumberWithTrendline buildQuery - Input formData:', {
-    hasExtraFormData: !!formData.extra_form_data,
-    extraFormData: formData.extra_form_data,
-    customFormData: formData.extra_form_data?.custom_form_data,
-    timeCompare: formData.time_compare,
-    timeCompareExtra: (formData.extra_form_data?.custom_form_data as any)
-      ?.time_compare,
-    timeCompareDirect: (formData.extra_form_data as any)?.time_compare,
-    metrics: formData.metrics,
-    datasource: formData.datasource,
-    xAxis: formData.x_axis,
-    timeGrain: formData.time_grain_sqla,
-    timeRange: formData.time_range,
-    since: formData.since,
-    until: formData.until,
-    granularity: formData.granularity,
-    filters: formData.filters,
-    adhocFilters: formData.adhoc_filters,
-  });
-
   const buildQuery = (baseQueryObject: any) => {
-    console.log(
-      'BigNumberWithTrendline buildQuery - baseQueryObject:',
-      baseQueryObject,
-    );
-
     // Use the proper Superset single-query approach for time comparison
     // This ensures that formData.time_compare is preserved and passed to transformProps
     const time_offsets = (() => {
@@ -125,25 +99,10 @@ export default function buildQuery(formData: QueryFormData) {
           const { since } = formData;
           const { until } = formData;
 
-          console.log(
-            'BigNumberWithTrendline buildQuery - Inherit logic analysis:',
-            {
-              timeRange,
-              since,
-              until,
-              hasTimeRange: !!timeRange,
-              hasSinceUntil: !!(since && until),
-            },
-          );
-
           if (timeRange && typeof timeRange === 'string') {
             // Parse time range string to detect period
             const period = detectTimePeriod(timeRange);
             if (period) {
-              console.log(
-                'BigNumberWithTrendline buildQuery - Detected period from timeRange:',
-                period,
-              );
               return [period];
             }
           }
@@ -152,18 +111,11 @@ export default function buildQuery(formData: QueryFormData) {
             // Calculate period from since/until dates
             const period = calculatePeriodFromDates(since, until);
             if (period) {
-              console.log(
-                'BigNumberWithTrendline buildQuery - Calculated period from dates:',
-                period,
-              );
               return [period];
             }
           }
 
           // Fallback to default
-          console.log(
-            'BigNumberWithTrendline buildQuery - Using fallback period: 1 day ago',
-          );
           return ['1 day ago'];
         }
         if (timeCompare === 'custom') {
@@ -206,23 +158,9 @@ export default function buildQuery(formData: QueryFormData) {
   if (timeCompare && !formData.time_compare) {
     // eslint-disable-next-line no-param-reassign
     formData.time_compare = timeCompare;
-    console.log(
-      'BigNumberWithTrendline buildQuery - Setting time_compare on root formData:',
-      timeCompare,
-    );
   }
 
   const result = buildQueryContext(formData, buildQuery);
-  console.log(
-    'BigNumberWithTrendline buildQuery - Final result from buildQueryContext:',
-    {
-      result,
-      hasQueries: !!result.queries,
-      queriesLength: result.queries?.length,
-      formData: result.form_data,
-      timeCompare: result.form_data?.time_compare,
-    },
-  );
 
   return result;
 }
