@@ -25,8 +25,10 @@ class BolticHelper {
     try {
       this.thresholds = [
         { chartId: 152, threshold: 330000 },
-        { chartId: 248, threshold: 500000000 },
-        { chartId: 570, threshold: 500000000 },
+        { chartId: 248, threshold: 10000 },
+        { chartId: 570, threshold: 10000 },
+        // { chartId: 248, threshold: 500000000 },
+        // { chartId: 570, threshold: 500000000 },
       ] as any;
       // const thresholdsEnv = process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS;
       // if (thresholdsEnv) {
