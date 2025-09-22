@@ -175,16 +175,25 @@ class ChartRenderer extends Component {
   }
 
   initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse) {
+    console.group('🚀 initializeBolticStreamsOnCharts');
+    console.log('📊 Chart Info:', { chartId, vizType, source: this.props.source });
+
+    // Check initial conditions
+    const isWindowAvailable = typeof window !== 'undefined';
+    const isDashboardSource = this.props.source === ChartSource.Dashboard;
+    const isBigNumberChart = vizType === 'big_number_total' ||
+      vizType === 'big_number' ||
+      vizType === 'big_number_period_over_period';
+
     if (
-      typeof window !== 'undefined' &&
-      this.props.source === ChartSource.Dashboard &&
-      (vizType === 'big_number_total' ||
-        vizType === 'big_number' ||
-        vizType === 'big_number_period_over_period')
+      isWindowAvailable &&
+      isDashboardSource &&
+      isBigNumberChart
     ) {
+      console.log('✅ Processing BigNumber chart for analytics...');
+      
       try {
         let dashboardTitle = 'Unknown Dashboard Title';
-
         const dashboardId = this.props.dashboardId || 
           (window.location &&
             window.location.pathname &&
@@ -214,21 +223,25 @@ class ChartRenderer extends Component {
         // Get metric details from formData
         const metricDetails = formData && formData.metric;
         const metricLabel = metricDetails && metricDetails.label;
-        const metricColumn = metricDetails && metricDetails.column;
 
         // Get current value from chart data
         const currentValue = chartData[metricLabel] || chartData.value || null;
 
+        // Extract URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const currencyCode = urlParams.get('currency_code') || null;
         const timezone = urlParams.get('timezone') || null;
         const countryCode = urlParams.get('country_code') || null;
         const country = urlParams.get('country') || null;
         
-        // Detect iframe context and get iframe URL
+        // Detect iframe context
         const isInIframe = window.parent !== window;
         const iframeUrl = isInIframe ? document.referrer || window.parent.location.href : null;
         const currentUrl = window.location.href;
+        
+        console.log('📋 Dashboard:', { id: dashboardId, title: dashboardTitle });
+        console.log('💰 Chart Value:', { metricLabel, currentValue, type: typeof currentValue });
+        console.log('🌐 Context:', { isInIframe, currencyCode, timezone, countryCode, country });
         
         const analyticsPayload = {
           user:{
@@ -274,13 +287,19 @@ class ChartRenderer extends Component {
           }
         };
 
+        console.log('📤 Sending to BolticHelper...');
         const bolticHelper = new BolticHelper();
         bolticHelper.checkThresholdAndTrack(analyticsPayload);
+        console.log('✅ Analytics tracking completed');
+        
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn('BigNumber threshold analytics failed:', error);
+        console.error('❌ Analytics failed:', error.message);
       }
+    } else {
+      console.log('⏭️ Skipping - not a BigNumber chart in dashboard context');
     }
+    
+    console.groupEnd();
   }
 
   handleRenderSuccess() {
