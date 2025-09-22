@@ -23,14 +23,18 @@ class BolticHelper {
    */
   private loadThresholds() {
     try {
+      this.thresholds = [
+        { chartId: 152, threshold: 330000 },
+        { chartId: 248, threshold: 500000000 },
+        { chartId: 570, threshold: 500000000 },
+      ] as any;
       // const thresholdsEnv = process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS;
-      const thresholdsEnv: any = [{"chartId":152,"threshold":330000}, {"chartId":248,"threshold":10000}, {"chartId":570,"threshold":10000}];
-      if (thresholdsEnv) {
-        this.thresholds = JSON.parse(thresholdsEnv);
-      }
+      // if (thresholdsEnv) {
+      //   this.thresholds = JSON.parse(thresholdsEnv);
+      // }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.warn('Failed to parse BIG_NUMBER_THRESHOLDS:', error);
+      console.error('Failed to parse BIG_NUMBER_THRESHOLDS:', error);
     }
   }
 
@@ -88,7 +92,7 @@ class BolticHelper {
       };
 
       console.log(`Boltic streams - checkThresholdAndTrack`, { payload });
-      (window as any)?.stelios?.track('BigNumber Threshold Crossed', analyticsData);
+      (window as any).stelios.track('BigNumber Threshold Crossed', analyticsData);
     }
   }
 
