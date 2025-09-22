@@ -93,7 +93,8 @@ export default function setupBolticStreams() {
       };
 
       // eslint-disable-next-line no-underscore-dangle
-      stelios._writeKey = process.env.BOLTIC_STREAMS_KEY;
+      stelios._writeKey =
+        'Zc7Og8DXevJG85xZyjKPJBAgkOITWUdtpDB8EsyQWxyx8JgqZIsGz-smhWqpsCcLJ0_wPw-3_NMkljT0x1SLsQ';
       // eslint-disable-next-line no-underscore-dangle
       stelios._cdn = 'https://apiv2-streams.boltic.io';
       stelios.SNIPPET_VERSION = '4.15.3';

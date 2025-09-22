@@ -23,9 +23,8 @@ class BolticHelper {
    */
   private loadThresholds() {
     try {
-      const thresholdsEnv = process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS;
-      // const thresholdsEnv = '[{"chartId": 152, "title": "Total Orders", "threshold": 330000}]'
-      console.log({ thresholdsEnv, 'process.env': process.env });
+      // const thresholdsEnv = process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS;
+      const thresholdsEnv: any = [{"chartId":152,"threshold":330000}, {"chartId":248,"threshold":10000}, {"chartId":570,"threshold":10000}];
       if (thresholdsEnv) {
         this.thresholds = JSON.parse(thresholdsEnv);
         // eslint-disable-next-line no-console
