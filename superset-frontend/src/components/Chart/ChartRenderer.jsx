@@ -274,7 +274,6 @@ class ChartRenderer extends Component {
           }
         };
 
-        console.log('📊 BigNumber Analytics Payload:', analyticsPayload);
         const bolticHelper = new BolticHelper();
         bolticHelper.checkThresholdAndTrack(analyticsPayload);
       } catch (error) {

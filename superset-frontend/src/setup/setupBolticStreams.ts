@@ -111,9 +111,4 @@ export default function setupBolticStreams() {
       });
     }
   }
-
-  // eslint-disable-next-line no-console
-  console.log(
-    '🚀 Boltic Streams Analytics initialized with BigNumber chart logging',
-  );
 }
