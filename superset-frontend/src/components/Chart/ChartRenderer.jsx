@@ -227,15 +227,32 @@ class ChartRenderer extends Component {
         // Get current value from chart data
         const currentValue = chartData[metricLabel] || chartData.value || null;
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const currencyCode = urlParams.get('currency_code') || null;
+        const timezone = urlParams.get('timezone') || null;
+        const countryCode = urlParams.get('country_code') || null;
+        const country = urlParams.get('country') || null;
+        
+        // Detect iframe context and get iframe URL
+        const isInIframe = window.parent !== window;
+        const iframeUrl = isInIframe ? document.referrer || window.parent.location.href : null;
+        const currentUrl = window.location.href;
+        
         const analyticsPayload = {
           user:{
             id: (formData && formData.user_id) || 'unknown',
             name: (formData && formData.user_name) || 'unknown',
             email: (formData && formData.user_email) || 'unknown',
-            role: (formData && formData.user_role) || 'unknown',
             company: (formData && formData.user_company) || 'unknown',
-            location: (formData && formData.user_location) || 'unknown',
-            timezone: (formData && formData.user_timezone) || 'unknown',
+            business_details: {
+              currency_code: currencyCode,
+              timezone: timezone,
+              country_code: countryCode,
+              country: country,
+              is_in_iframe: isInIframe,
+              iframe_url: iframeUrl,
+              current_url: currentUrl
+            }
           },
           dashboard: {
             id: dashboardId,
