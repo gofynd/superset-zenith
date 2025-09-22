@@ -39,7 +39,6 @@ class BolticHelper {
    */
   checkThresholdAndTrack(payload: any) {
     console.log(`Boltic streams - checkThresholdAndTrack`, { payload });
-
     const chartId = Number(payload.chart.id);
     const currentValue = Number(payload.chart.currentValue);
 
@@ -69,6 +68,7 @@ class BolticHelper {
     payload: any,
     thresholdConfig: ThresholdConfig,
   ) {
+    console.log(`Boltic streams - trackThresholdCrossed`, { payload });
     if (typeof window !== 'undefined' && (window as any).stelios) {
       const analyticsData = {
         event: 'big_number_threshold_crossed',
