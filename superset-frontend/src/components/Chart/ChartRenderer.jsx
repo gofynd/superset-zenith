@@ -34,6 +34,7 @@ import { ChartSource } from 'src/types/ChartSource';
 import ChartContextMenu from './ChartContextMenu/ChartContextMenu';
 import AISummaryBox from './AISummaryBox';
 import BolticHelper from 'src/setup/bolticHelper';
+import { isEmbeddedMode } from 'src/utils/embeddedUtils';
 
 const propTypes = {
   annotationData: PropTypes.object,
@@ -175,9 +176,6 @@ class ChartRenderer extends Component {
   }
 
   initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse) {
-    console.group('🚀 initializeBolticStreamsOnCharts');
-    console.log('📊 Chart Info:', { chartId, vizType, source: this.props.source });
-
     // Check initial conditions
     const isWindowAvailable = typeof window !== 'undefined';
     const isDashboardSource = this.props.source === ChartSource.Dashboard;
@@ -190,8 +188,6 @@ class ChartRenderer extends Component {
       isDashboardSource &&
       isBigNumberChart
     ) {
-      console.log('✅ Processing BigNumber chart for analytics...');
-      
       try {
         let dashboardTitle = 'Unknown Dashboard Title';
         const dashboardId = this.props.dashboardId || 
@@ -239,10 +235,6 @@ class ChartRenderer extends Component {
         const iframeUrl = isInIframe ? document.referrer || window.parent.location.href : null;
         const currentUrl = window.location.href;
         
-        console.log('📋 Dashboard:', { id: dashboardId, title: dashboardTitle });
-        console.log('💰 Chart Value:', { metricLabel, currentValue, type: typeof currentValue });
-        console.log('🌐 Context:', { isInIframe, currencyCode, timezone, countryCode, country });
-        
         const analyticsPayload = {
           user:{
             id: (formData && formData.user_id) || 'unknown',
@@ -287,19 +279,13 @@ class ChartRenderer extends Component {
           }
         };
 
-        console.log('📤 Sending to BolticHelper...');
         const bolticHelper = new BolticHelper();
         bolticHelper.checkThresholdAndTrack(analyticsPayload);
-        console.log('✅ Analytics tracking completed');
         
       } catch (error) {
         console.error('❌ Analytics failed:', error.message);
       }
-    } else {
-      console.log('⏭️ Skipping - not a BigNumber chart in dashboard context');
     }
-    
-    console.groupEnd();
   }
 
   handleRenderSuccess() {
@@ -307,11 +293,8 @@ class ChartRenderer extends Component {
     if (['loading', 'rendered'].indexOf(chartStatus) < 0) {
       actions.chartRenderingSucceeded(chartId);
     }
-    const isEmbedded =
-      window.location.pathname.includes('/superset/dashboard/') &&
-      (window.parent !== window ||
-        window.location.search.includes('standalone=false') ||
-        window.location.search.includes('embedded=true'));
+    // Use the comprehensive embedded detection utility
+    const isEmbedded = isEmbeddedMode();
 
     if(isEmbedded) this.initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse);
 
