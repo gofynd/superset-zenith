@@ -118,6 +118,8 @@ const plugins = [
     'process.env.REDUX_DEFAULT_MIDDLEWARE':
       process.env.REDUX_DEFAULT_MIDDLEWARE,
     'process.env.SCARF_ANALYTICS': JSON.stringify(process.env.SCARF_ANALYTICS),
+    'process.env.BOLTIC_STREAMS_KEY': JSON.stringify(process.env.BOLTIC_STREAMS_KEY),
+    'process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS': JSON.stringify(process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS),
   }),
 
   new CopyPlugin({
