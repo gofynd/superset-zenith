@@ -278,7 +278,7 @@ class ChartRenderer extends Component {
             urlParams: (formData && formData.url_params) || {},
           }
         };
-
+        console.log(`Boltic streams - ${chartId}/initializeBolticStreamsOnCharts`, { analyticsPayload });
         const bolticHelper = new BolticHelper();
         bolticHelper.checkThresholdAndTrack(analyticsPayload);
         
@@ -296,6 +296,7 @@ class ChartRenderer extends Component {
     // Use the comprehensive embedded detection utility
     const isEmbedded = isEmbeddedMode();
 
+    console.log(`Boltic streams - ${chartId}/handleRenderSuccess`, { isEmbedded, actions, chartStatus, chartId, vizType, formData, datasource, queriesResponse});
     if(isEmbedded) this.initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse);
 
     // only log chart render time which is triggered by query results change
