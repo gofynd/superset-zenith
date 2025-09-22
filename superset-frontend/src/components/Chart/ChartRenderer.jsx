@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one
+ * Licensed to the Apache Software Foundation  (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -33,6 +33,7 @@ import { EmptyStateBig, EmptyStateSmall } from 'src/components/EmptyState';
 import { ChartSource } from 'src/types/ChartSource';
 import ChartContextMenu from './ChartContextMenu/ChartContextMenu';
 import AISummaryBox from './AISummaryBox';
+import BolticHelper from 'src/setup/bolticHelper';
 
 const propTypes = {
   annotationData: PropTypes.object,
@@ -173,11 +174,113 @@ class ChartRenderer extends Component {
     this.props.addFilter(col, vals, merge, refresh);
   }
 
+  initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse) {
+     const isEmbedded =
+      window?.location &&
+      window?.location?.pathname &&
+      window.location?.pathname?.includes('/superset/dashboard/') &&
+      (window.parent !== window || // Check if in iframe
+        window.location.search.includes('standalone=false') ||
+        window.location.search.includes('embedded=true'));
+    
+    if (
+      typeof window !== 'undefined' &&
+      this.props.source === ChartSource.Dashboard &&
+      (vizType === 'big_number_total' ||
+        vizType === 'big_number' ||
+        vizType === 'big_number_period_over_period')
+    ) {
+      try {
+        let dashboardTitle = 'Unknown Dashboard Title';
+
+        const dashboardId = this.props.dashboardId || 
+          (window.location &&
+            window.location.pathname &&
+            window.location.pathname.match(/\/superset\/dashboard\/(\d+)/) &&
+            window.location.pathname.match(/\/superset\/dashboard\/(\d+)/)[1]);
+        
+        // Try to get title from page metadata or fallback to a clean document title
+        const metaTitle = document.querySelector('meta[property="og:title"]')?.getAttribute('content');
+        if (metaTitle) {
+          dashboardTitle = metaTitle;
+        } else if (document.title) {
+          const title = cloneDeep(document.title);
+          dashboardTitle = title
+            .replace(/^\[DEV\]\s*/, '')
+            .replace(/\s*-\s*Superset\s*$/, '') 
+            .trim();
+        }
+
+        // Extract chart data from query response
+        const chartData =
+          (queriesResponse &&
+            queriesResponse[0] &&
+            queriesResponse[0].data &&
+            queriesResponse[0].data[0]) ||
+          {};
+
+        // Get metric details from formData
+        const metricDetails = formData && formData.metric;
+        const metricLabel = metricDetails && metricDetails.label;
+        const metricColumn = metricDetails && metricDetails.column;
+
+        // Get current value from chart data
+        const currentValue = chartData[metricLabel] || chartData.value || null;
+
+        const analyticsPayload = {
+          user:{
+            id: (formData && formData.user_id) || 'unknown',
+            name: (formData && formData.user_name) || 'unknown',
+            email: (formData && formData.user_email) || 'unknown',
+            role: (formData && formData.user_role) || 'unknown',
+            company: (formData && formData.user_company) || 'unknown',
+            location: (formData && formData.user_location) || 'unknown',
+            timezone: (formData && formData.user_timezone) || 'unknown',
+          },
+          dashboard: {
+            id: dashboardId,
+            title: dashboardTitle,
+          },
+          chart: {
+            id: chartId || (formData && formData.slice_id) || 'unknown',
+            type: vizType,
+            name: (formData && formData.slice_name) || 'Unnamed Chart',
+            description: (formData && formData.description) || null,
+            currentValue: currentValue,
+            previousValue: chartData.previous_value || null,
+            percentageChange: chartData.percentage_change || null,
+            chartId: (formData && formData.chart_id) || chartId,
+          },
+          datasource: {
+            id: (datasource && datasource.id) || (formData && formData.datasource) || 'unknown',
+            name: (datasource && datasource.datasource_name) || 'unknown',
+            type: (datasource && datasource.type) || 'unknown',
+          },
+          filters: {
+            adhocFilters: (formData && formData.adhoc_filters) || [],
+            extraFilters: (formData && formData.extra_filters) || [],
+            dataMask: (formData && formData.dataMask) || {},
+            extraFormData: (formData && formData.extra_form_data) || {},
+            urlParams: (formData && formData.url_params) || {},
+          }
+        };
+
+        console.log('📊 BigNumber Analytics Payload:', analyticsPayload);
+        const bolticHelper = new BolticHelper();
+        bolticHelper.checkThresholdAndTrack(analyticsPayload);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn('BigNumber threshold analytics failed:', error);
+      }
+    }
+  }
+
   handleRenderSuccess() {
-    const { actions, chartStatus, chartId, vizType } = this.props;
+    const { actions, chartStatus, chartId, vizType, formData, datasource, queriesResponse } = this.props;
     if (['loading', 'rendered'].indexOf(chartStatus) < 0) {
       actions.chartRenderingSucceeded(chartId);
     }
+    this.initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse);
 
     // only log chart render time which is triggered by query results change
     // currently we don't log chart re-render time, like window resize etc

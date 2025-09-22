@@ -18,7 +18,7 @@
  */
 
 /**
- * Initialize Stelios Analytics for tracking user interactions and page views
+ * Initialize Boltic Streams Analytics for tracking user interactions and BigNumber chart views
  * This function sets up the Stelios analytics tracking system early in the application lifecycle
  */
 export default function setupBolticStreams() {
@@ -48,7 +48,7 @@ export default function setupBolticStreams() {
         'ready',
         'alias',
         'debug',
-        'page',
+        // 'page',
         'once',
         'off',
         'on',
@@ -93,8 +93,7 @@ export default function setupBolticStreams() {
       };
 
       // eslint-disable-next-line no-underscore-dangle
-      stelios._writeKey =
-        'Zc7Og8DXevJG85xZyjKPJBAgkOITWUdtpDB8EsyQWxyx8JgqZIsGz-smhWqpsCcLJ0_wPw-3_NMkljT0x1SLsQ';
+      stelios._writeKey = process.env.BOLTIC_STREAMS_KEY;
       // eslint-disable-next-line no-underscore-dangle
       stelios._cdn = 'https://apiv2-streams.boltic.io';
       stelios.SNIPPET_VERSION = '4.15.3';
@@ -111,4 +110,9 @@ export default function setupBolticStreams() {
       });
     }
   }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    '🚀 Boltic Streams Analytics initialized with BigNumber chart logging',
+  );
 }

@@ -221,6 +221,6 @@ const runManifestLocal = (newManifest, env = {}) => {
   };
 };
 
-module.exports = process.env.RUN_MANIFEST_LOCAL
+module.exports = process.env.RUN_MANIFEST_LOCAL === "true"
   ? runManifestLocal
   : runManifestProd;
