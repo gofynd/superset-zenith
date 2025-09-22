@@ -388,10 +388,12 @@ export default function transformProps(
           ...getTotalValuePadding({ chartPadding, donut, width, height }),
           style: {
             text: donut 
-              ? `Total:\n${numberFormatter(totalValue)}`
-              : t('Total: %s', numberFormatter(totalValue)),
+              ? `Total\n${numberFormatter(totalValue)}`
+              : t('Total %s', numberFormatter(totalValue)),
             fontSize: 16,
             fontWeight: 'bold',
+            textAlign: 'center',
+            textVerticalAlign: 'middle',
           },
           z: 10,
         }
