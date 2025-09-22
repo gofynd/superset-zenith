@@ -297,7 +297,7 @@ class ChartRenderer extends Component {
     const isEmbedded = isEmbeddedMode();
 
     console.log(`Boltic streams - ${chartId}/handleRenderSuccess`, { isEmbedded, actions, chartStatus, chartId, vizType, formData, datasource, queriesResponse});
-    if(isEmbedded) this.initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse);
+    if(true) this.initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse);
 
     // only log chart render time which is triggered by query results change
     // currently we don't log chart re-render time, like window resize etc
