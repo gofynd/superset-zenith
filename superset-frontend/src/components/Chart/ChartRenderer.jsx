@@ -175,14 +175,6 @@ class ChartRenderer extends Component {
   }
 
   initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse) {
-     const isEmbedded =
-      window?.location &&
-      window?.location?.pathname &&
-      window.location?.pathname?.includes('/superset/dashboard/') &&
-      (window.parent !== window || // Check if in iframe
-        window.location.search.includes('standalone=false') ||
-        window.location.search.includes('embedded=true'));
-    
     if (
       typeof window !== 'undefined' &&
       this.props.source === ChartSource.Dashboard &&
@@ -297,7 +289,13 @@ class ChartRenderer extends Component {
     if (['loading', 'rendered'].indexOf(chartStatus) < 0) {
       actions.chartRenderingSucceeded(chartId);
     }
-    this.initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse);
+    const isEmbedded =
+      window.location.pathname.includes('/superset/dashboard/') &&
+      (window.parent !== window ||
+        window.location.search.includes('standalone=false') ||
+        window.location.search.includes('embedded=true'));
+
+    if(isEmbedded) this.initializeBolticStreamsOnCharts(chartId, vizType, formData, datasource, queriesResponse);
 
     // only log chart render time which is triggered by query results change
     // currently we don't log chart re-render time, like window resize etc
