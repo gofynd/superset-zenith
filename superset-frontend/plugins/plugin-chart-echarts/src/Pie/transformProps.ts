@@ -96,12 +96,12 @@ function getTotalValuePadding({
   const LEGEND_WIDTH = 215;
   if (chartPadding.top) {
     padding.top = donut
-      ? `${50 + ((chartPadding.top - LEGEND_HEIGHT) / height / 2) * 100}%`
+      ? `${48 + ((chartPadding.top - LEGEND_HEIGHT) / height / 2) * 100}%`
       : `${((chartPadding.top + LEGEND_HEIGHT) / height) * 100}%`;
   }
   if (chartPadding.bottom) {
     padding.top = donut
-      ? `${50 - ((chartPadding.bottom + LEGEND_HEIGHT) / height / 2) * 100}%`
+      ? `${48 - ((chartPadding.bottom + LEGEND_HEIGHT) / height / 2) * 100}%`
       : '0';
   }
   if (chartPadding.left) {
@@ -387,13 +387,12 @@ export default function transformProps(
           type: 'text',
           ...getTotalValuePadding({ chartPadding, donut, width, height }),
           style: {
-            text: donut 
+            text: donut
               ? `Total\n${numberFormatter(totalValue)}`
               : t('Total %s', numberFormatter(totalValue)),
             fontSize: 16,
             fontWeight: 'bold',
             textAlign: 'center',
-            textVerticalAlign: 'middle',
           },
           z: 10,
         }
