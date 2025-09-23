@@ -68,20 +68,6 @@ const config: ControlPanelConfig = {
             },
           },
         ],
-        [
-          {
-            name: 'enable_custom_chart_colors',
-            config: {
-              type: 'CheckboxControl',
-              label: t('Enable Custom Chart Colors'),
-              default: false,
-              description: t(
-                'When enabled, this chart will use its own color scheme instead of the dashboard colors.',
-              ),
-              renderTrigger: true,
-            },
-          },
-        ],
         ['linear_color_scheme'],
       ],
     },
@@ -99,8 +85,6 @@ const config: ControlPanelConfig = {
     },
     linear_color_scheme: {
       renderTrigger: false,
-      visibility: ({ controls }) =>
-        Boolean(controls?.enable_custom_chart_colors?.value),
     },
   },
   formDataOverrides: formData => ({
