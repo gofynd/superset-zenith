@@ -248,6 +248,20 @@ const config: ControlPanelConfig = {
         ],
         [
           {
+            name: 'enable_custom_chart_colors',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Enable Custom Chart Colors'),
+              default: false,
+              description: t(
+                'When enabled, this chart will use its own color scheme instead of the dashboard colors.',
+              ),
+              renderTrigger: true,
+            },
+          },
+        ],
+        [
+          {
             name: 'mapbox_color',
             config: {
               type: 'SelectControl',
@@ -256,6 +270,8 @@ const config: ControlPanelConfig = {
               default: colorChoices[0][0],
               choices: colorChoices,
               description: t('The color for points and clusters in RGB'),
+              visibility: ({ controls }) =>
+                Boolean(controls?.enable_custom_chart_colors?.value),
             },
           },
         ],
