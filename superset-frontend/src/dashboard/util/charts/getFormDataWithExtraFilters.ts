@@ -113,13 +113,21 @@ export default function getFormDataWithExtraFilters({
     };
   }
 
+  // Check if this is a map chart that uses sequential colors
+  const isMapChart =
+    chart.form_data?.viz_type?.includes('map') ||
+    chart.form_data?.viz_type === 'country_map' ||
+    chart.form_data?.viz_type === 'world_map';
+  const hasLinearColorScheme = chart.form_data?.linear_color_scheme;
+
   const formData = {
     ...chart.form_data,
     chart_id: chart.id,
     label_colors: labelsColor,
     shared_label_colors: sharedLabelsColors,
     map_label_colors: labelsColorMap,
-    ...(colorScheme && { color_scheme: colorScheme }),
+    ...(colorScheme &&
+      !(isMapChart && hasLinearColorScheme) && { color_scheme: colorScheme }),
     ...(ownColorScheme && {
       own_color_scheme: ownColorScheme,
     }),
