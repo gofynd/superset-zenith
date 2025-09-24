@@ -17,7 +17,7 @@
  * under the License.
  */
 import { t } from '@superset-ui/core';
-import { ErrorAlert } from './ErrorAlert';
+import ErrorAlert from './ErrorAlert';
 import type { ErrorMessageComponentProps } from './types';
 
 interface GatewayTimeoutErrorExtra {
@@ -26,7 +26,6 @@ interface GatewayTimeoutErrorExtra {
 }
 
 export function GatewayTimeoutErrorMessage({
-  error,
   source,
 }: ErrorMessageComponentProps<GatewayTimeoutErrorExtra>) {
   const isVisualization = (
@@ -34,14 +33,33 @@ export function GatewayTimeoutErrorMessage({
   ).includes(source);
 
   const subtitle = isVisualization
-    ? t("We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.")
-    : t("We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.");
+    ? t(
+        "We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.",
+      )
+    : t(
+        "We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.",
+      );
+
+  const body = (
+    <p>
+      {t(
+        "We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.",
+      )}
+    </p>
+  );
+
+  const copyText = t('%(subtitle)s', {
+    subtitle,
+  });
 
   return (
     <ErrorAlert
-      errorType={t('Oops! That took too long.')}
-      message={subtitle}
-      type="error"
+      title={t('Oops! That took too long.')}
+      subtitle={subtitle}
+      level="error"
+      source={source}
+      copyText={copyText}
+      body={body}
     />
   );
 }

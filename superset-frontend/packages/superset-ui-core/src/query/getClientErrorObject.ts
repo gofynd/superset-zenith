@@ -155,7 +155,7 @@ export function parseErrorJson(responseJson: JsonObject): ClientErrorObject {
       ...error,
       error: t(COMMON_ERR_MESSAGES.SESSION_TIMED_OUT),
     };
-  } else if (error.status === 504) {
+  } else if (error.status === 504 || error.error === 'Gateway timeout') {
     // Handle gateway timeout specifically
     error = {
       ...error,
