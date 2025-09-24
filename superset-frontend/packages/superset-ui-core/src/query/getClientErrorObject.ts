@@ -77,7 +77,7 @@ const ERROR_CODE_LOOKUP = {
   501: 'Not implemented',
   502: 'Bad gateway',
   503: 'Service unavailable',
-  504: 'Gateway timeout',
+  504: "We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.",
   505: 'HTTP version not supported',
   506: 'Variant also negotiates',
   507: 'Insufficient storage',
@@ -146,7 +146,7 @@ export function parseErrorJson(responseJson: JsonObject): ClientErrorObject {
     error = {
       ...error,
       error:
-        t('Unexpected error: ') +
+        t('Oops! That took too long: ') +
         (error.description || t('(no description, click to see stack trace)')),
       stacktrace: error.stack,
     };
@@ -154,6 +154,23 @@ export function parseErrorJson(responseJson: JsonObject): ClientErrorObject {
     error = {
       ...error,
       error: t(COMMON_ERR_MESSAGES.SESSION_TIMED_OUT),
+    };
+  } else if (error.status === 504) {
+    // Handle gateway timeout specifically
+    error = {
+      ...error,
+      error: t("We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again."),
+      errors: [
+        {
+          error_type: ErrorTypeEnum.FRONTEND_GATEWAY_TIMEOUT_ERROR,
+          extra: {
+            status: error.status,
+            statusText: error.statusText,
+          },
+          level: 'error',
+          message: "We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.",
+        },
+      ],
     };
   }
 

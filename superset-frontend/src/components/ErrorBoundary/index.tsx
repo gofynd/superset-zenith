@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<
       if (showMessage) {
         return (
           <ErrorAlert
-            errorType={t('Unexpected error')}
+            errorType={t('Oops! That took too long.')}
             message={firstLine}
             descriptionDetails={info?.componentStack}
             className={className}

@@ -23,6 +23,7 @@ export { ErrorAlert } from './ErrorAlert';
 export { ErrorMessageWithStackTrace } from './ErrorMessageWithStackTrace';
 export { getErrorMessageComponentRegistry } from './getErrorMessageComponentRegistry';
 export { FrontendNetworkErrorMessage } from './FrontendNetworkErrorMessage';
+export { GatewayTimeoutErrorMessage } from './GatewayTimeoutErrorMessage';
 export { InvalidSQLErrorMessage } from './InvalidSQLErrorMessage';
 export { IssueCode } from './IssueCode';
 export { MarshmallowErrorMessage } from './MarshmallowErrorMessage';

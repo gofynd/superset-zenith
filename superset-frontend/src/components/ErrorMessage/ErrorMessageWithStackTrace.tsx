@@ -22,7 +22,7 @@ import { Typography } from '@superset-ui/core/components';
 import { getErrorMessageComponentRegistry } from './getErrorMessageComponentRegistry';
 import { ErrorAlert } from './ErrorAlert';
 
-const DEFAULT_TITLE = t('Unexpected error');
+const DEFAULT_TITLE = t('Oops! That took too long.');
 
 type Props = {
   title?: string;
