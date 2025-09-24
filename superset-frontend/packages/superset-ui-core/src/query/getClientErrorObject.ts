@@ -105,7 +105,7 @@ export function parseStringResponse(str: string): string {
 }
 
 export function getErrorFromStatusCode(status: number): string | null {
-  return ERROR_CODE_LOOKUP[status] || null;
+  return ERROR_CODE_LOOKUP[status as keyof typeof ERROR_CODE_LOOKUP] || null;
 }
 
 export function retrieveErrorMessage(
@@ -154,6 +154,26 @@ export function parseErrorJson(responseJson: JsonObject): ClientErrorObject {
     error = {
       ...error,
       error: t(COMMON_ERR_MESSAGES.SESSION_TIMED_OUT),
+    };
+  } else if (error.status === 504) {
+    // Handle gateway timeout specifically
+    error = {
+      ...error,
+      error: t(
+        "We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.",
+      ),
+      errors: [
+        {
+          error_type: ErrorTypeEnum.FRONTEND_GATEWAY_TIMEOUT_ERROR,
+          extra: {
+            status: error.status,
+            statusText: error.statusText,
+          },
+          level: 'error',
+          message:
+            "We're trying to load a large amount of data, and it's taking longer than expected. Please refresh the page to try again.",
+        },
+      ],
     };
   }
 
@@ -243,11 +263,12 @@ export function getClientErrorObject(
         .catch(() => {
           // fall back to reading as text
           responseObject.text().then((errorText: any) => {
-            resolve({
+            const error = {
               // Destructuring not necessary here
               ...responseObject,
               error: retrieveErrorMessage(errorText, responseObject),
-            });
+            };
+            resolve(parseErrorJson(error));
           });
         });
       return;
@@ -260,10 +281,11 @@ export function getClientErrorObject(
       console.error('non-standard error:', response);
       error = t('An error occurred');
     }
-    resolve({
+    const errorObj = {
       ...responseObject,
       error: parseStringResponse(error),
-    });
+    };
+    resolve(parseErrorJson(errorObj));
   });
 }
 
