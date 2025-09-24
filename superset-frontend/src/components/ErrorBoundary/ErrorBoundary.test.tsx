@@ -45,7 +45,7 @@ test('should not render an error message', () => {
       <Child />
     </ErrorBoundary>,
   );
-  expect(screen.queryByText('Unexpected error')).not.toBeInTheDocument();
+  expect(screen.queryByText('Oops! That took too long.')).not.toBeInTheDocument();
 });
 
 test('should render an error message', () => {
@@ -58,5 +58,5 @@ test('should render an error message', () => {
       <Child />
     </ErrorBoundary>,
   );
-  expect(screen.getByText('Unexpected error')).toBeInTheDocument();
+  expect(screen.getByText('Oops! That took too long.')).toBeInTheDocument();
 });

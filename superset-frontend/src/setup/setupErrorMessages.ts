@@ -24,6 +24,7 @@ import MarshmallowErrorMessage from 'src/components/ErrorMessage/MarshmallowErro
 import ParameterErrorMessage from 'src/components/ErrorMessage/ParameterErrorMessage';
 import DatasetNotFoundErrorMessage from 'src/components/ErrorMessage/DatasetNotFoundErrorMessage';
 import OAuth2RedirectMessage from 'src/components/ErrorMessage/OAuth2RedirectMessage';
+import { GatewayTimeoutErrorMessage } from 'src/components/ErrorMessage/GatewayTimeoutErrorMessage';
 
 import setupErrorMessagesExtra from './setupErrorMessagesExtra';
 
@@ -33,6 +34,10 @@ export default function setupErrorMessages() {
   errorMessageComponentRegistry.registerValue(
     ErrorTypeEnum.FRONTEND_TIMEOUT_ERROR,
     TimeoutErrorMessage,
+  );
+  errorMessageComponentRegistry.registerValue(
+    ErrorTypeEnum.FRONTEND_GATEWAY_TIMEOUT_ERROR,
+    GatewayTimeoutErrorMessage,
   );
   errorMessageComponentRegistry.registerValue(
     ErrorTypeEnum.BACKEND_TIMEOUT_ERROR,

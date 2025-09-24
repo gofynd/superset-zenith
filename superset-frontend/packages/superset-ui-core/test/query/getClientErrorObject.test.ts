@@ -290,7 +290,7 @@ test('parseErrorJson with stacktrace', () => {
   expect(
     parseErrorJson({ error: 'error message', stack: 'stacktrace' }),
   ).toEqual({
-    error: 'Unexpected error: (no description, click to see stack trace)',
+    error: 'Oops! That took too long: (no description, click to see stack trace)',
     stacktrace: 'stacktrace',
     stack: 'stacktrace',
   });
@@ -302,7 +302,7 @@ test('parseErrorJson with stacktrace', () => {
       stack: 'stacktrace',
     }),
   ).toEqual({
-    error: 'Unexpected error: error description',
+    error: 'Oops! That took too long: error description',
     stacktrace: 'stacktrace',
     description: 'error description',
     stack: 'stacktrace',
