@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { rgba } from 'polished';
-import Icons from 'src/components/Icons';
+import aiStarImage from 'src/assets/images/ai-star.png';
 import { generateSummary, extractRawDataSample } from '../../utils/aiSummary';
 
 type Props = {
@@ -117,23 +117,20 @@ const ToggleLink = styled('span')`
   cursor: pointer;
 `;
 
-// Fallback-safe AI icon
 function AIGlyph(props: {
   width?: number;
   height?: number;
   'aria-label'?: string;
 }) {
-  const anyIcons = Icons as any;
-  const Icon =
-    anyIcons?.Ai ||
-    anyIcons?.Bot ||
-    anyIcons?.Robot ||
-    anyIcons?.Bulb ||
-    anyIcons?.Lightbulb ||
-    anyIcons?.Thunderbolt ||
-    anyIcons?.QuestionCircleOutlined ||
-    Icons.InfoSolid;
-  return <Icon {...props} />;
+  return (
+    <img
+      src={aiStarImage}
+      alt={props['aria-label'] || 'AI'}
+      width={props.width || 14}
+      height={props.height || 14}
+      style={{ display: 'block' }}
+    />
+  );
 }
 
 export default function AISummaryBox({
@@ -446,7 +443,7 @@ export default function AISummaryBox({
             className="ai-summary-box__icon"
             style={{ gridColumn: 1, alignSelf: 'start' }}
           >
-            <AIGlyph width={14} height={14} aria-label="AI" />
+            <AIGlyph width={24} height={24} aria-label="AI" />
           </div>
           <div className="ai-summary-box__skeleton" style={{ gridColumn: 2 }}>
             <SkeletonLine className="ai-summary-box__skeleton-line" />
@@ -478,7 +475,7 @@ export default function AISummaryBox({
           className="ai-summary-box__icon"
           style={{ gridColumn: 1, alignSelf: 'start' }}
         >
-          <AIGlyph width={14} height={14} aria-label="AI" />
+          <AIGlyph width={24} height={24} aria-label="AI" />
         </div>
         <TextWrapper
           ref={textWrapperRef}

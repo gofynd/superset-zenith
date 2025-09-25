@@ -52,6 +52,7 @@ const {
 const isDevMode = mode !== 'production';
 const isDevServer = process.argv[1].includes('webpack-dev-server');
 const ASSET_BASE_URL = process.env.ASSET_BASE_URL || '';
+const DEV_SERVER_HOST = process.env.DEV_SERVER_HOST || null;
 
 const output = {
   path: BUILD_DIR,
@@ -538,6 +539,7 @@ if (isDevMode) {
     historyApiFallback: true,
     hot: true,
     port: devserverPort,
+    ...(DEV_SERVER_HOST && { host: DEV_SERVER_HOST }),
     // Only serves bundled files from webpack-dev-server
     // and proxy everything else to Superset backend
     proxy: [
