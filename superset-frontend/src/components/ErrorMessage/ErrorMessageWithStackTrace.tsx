@@ -21,7 +21,7 @@ import { ErrorSource, t, SupersetError } from '@superset-ui/core';
 import getErrorMessageComponentRegistry from './getErrorMessageComponentRegistry';
 import ErrorAlert from './ErrorAlert';
 
-const DEFAULT_TITLE = t('Oops! That took too long.');
+const DEFAULT_TITLE = t('Unexpected error');
 
 type Props = {
   title?: string;
