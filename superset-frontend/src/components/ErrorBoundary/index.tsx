@@ -53,12 +53,12 @@ export default class ErrorBoundary extends Component<
     const { error, info } = this.state;
     if (error) {
       const firstLine = error.toString();
-      const messageString = `${t('Oops! That took too long.')}${
+      const messageString = `${t('Unexpected error')}${
         firstLine ? `: ${firstLine}` : ''
       }`;
       const messageElement = (
         <span>
-          <strong>{t('Oops! That took too long.')}</strong>
+          <strong>{t('Unexpected error')}</strong>
           {firstLine ? `: ${firstLine}` : ''}
         </span>
       );
