@@ -26,6 +26,7 @@ import {
   HTTP_STATUS_NOT_MODIFIED,
   HTTP_STATUS_OK,
 } from '../constants';
+import { logApiError } from './errorLogger';
 
 function tryParsePayload(payload: Payload) {
   try {
@@ -110,25 +111,43 @@ export default async function callApi({
       // If superset is in an iframe and third-party cookies are disabled, caches.open throws
     }
 
-    const response = await fetchWithRetry(url, request);
+    try {
+      const response = await fetchWithRetry(url, request);
 
-    if (supersetCache && response.status === HTTP_STATUS_NOT_MODIFIED) {
-      const cachedFullResponse = await supersetCache.match(url);
-      if (cachedFullResponse) {
-        return cachedFullResponse.clone();
+      if (supersetCache && response.status === HTTP_STATUS_NOT_MODIFIED) {
+        const cachedFullResponse = await supersetCache.match(url);
+        if (cachedFullResponse) {
+          return cachedFullResponse.clone();
+        }
+        throw new Error('Received 304 but no content is cached!');
       }
-      throw new Error('Received 304 but no content is cached!');
-    }
-    if (
-      supersetCache &&
-      response.status === HTTP_STATUS_OK &&
-      response.headers.get('Etag')
-    ) {
-      supersetCache.delete(url);
-      supersetCache.put(url, response.clone());
-    }
+      if (
+        supersetCache &&
+        response.status === HTTP_STATUS_OK &&
+        response.headers.get('Etag')
+      ) {
+        supersetCache.delete(url);
+        supersetCache.put(url, response.clone());
+      }
 
-    return response;
+      return response;
+    } catch (error) {
+      // Extract payload for context
+      let payload: any = undefined;
+      if (postPayload) {
+        payload = postPayload;
+      } else if (jsonPayload !== undefined) {
+        payload = jsonPayload;
+      } else if (body) {
+        payload = body;
+      }
+      
+      // Log enhanced error information
+      logApiError(error, url, method, payload);
+      
+      // Re-throw the error to maintain existing behavior
+      throw error;
+    }
   }
 
   if (method === 'POST' || method === 'PATCH' || method === 'PUT') {
@@ -177,5 +196,23 @@ export default async function callApi({
     }
   }
 
-  return fetchWithRetry(url, request);
+  try {
+    return await fetchWithRetry(url, request);
+  } catch (error) {
+    // Extract payload for context
+    let payload: any = undefined;
+    if (postPayload) {
+      payload = postPayload;
+    } else if (jsonPayload !== undefined) {
+      payload = jsonPayload;
+    } else if (body) {
+      payload = body;
+    }
+    
+    // Log enhanced error information
+    logApiError(error, url, method, payload);
+    
+    // Re-throw the error to maintain existing behavior
+    throw error;
+  }
 }
