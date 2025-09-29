@@ -18,6 +18,7 @@
  */
 
 import { JsonObject } from '../types';
+import { reportErrorWithContext } from '../../../../../src/setup/sentryConfig';
 
 export interface ErrorContext {
   dashboardName?: string;
@@ -221,6 +222,14 @@ export function logApiError(
     console.log('Method:', context.method || 'N/A');
     console.log('Timestamp:', context.timestamp);
     console.groupEnd();
+
+    // Report to Sentry with enhanced context
+    try {
+      reportErrorWithContext(context.error, context, 'error');
+    } catch (sentryError) {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to report error to Sentry:', sentryError);
+    }
   } catch (logError) {
     // Fallback to basic error logging if enhanced logging fails
     console.error('API Error (enhanced logging failed):', error);
@@ -308,6 +317,14 @@ export function logApiErrorWithStore(
     console.log('Method:', context.method || 'N/A');
     console.log('Timestamp:', context.timestamp);
     console.groupEnd();
+
+    // Report to Sentry with enhanced context
+    try {
+      reportErrorWithContext(context.error, context, 'error');
+    } catch (sentryError) {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to report error to Sentry:', sentryError);
+    }
   } catch (logError) {
     // Fallback to basic error logging if enhanced logging fails
     console.error('API Error (enhanced logging failed):', error);
