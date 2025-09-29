@@ -32,8 +32,12 @@ import setupColors from './setup/setupColors';
 import setupFormatters from './setup/setupFormatters';
 import setupDashboardComponents from './setup/setupDashboardComponents';
 import setupBolticStreams from './setup/setupBolticStreams';
+import { initializeSentry } from './setup/sentryConfig';
 import { User } from './types/bootstrapTypes';
 import getBootstrapData from './utils/getBootstrapData';
+
+// Initialize Sentry error tracking early in the app lifecycle
+initializeSentry();
 
 // Initialize Boltic Streams Analytics early in the app lifecycle
 setupBolticStreams();
