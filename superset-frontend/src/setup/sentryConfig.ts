@@ -38,7 +38,7 @@ export interface SentryConfig {
 const DEFAULT_CONFIG: SentryConfig = {
   dsn: '',
   environment: process.env.NODE_ENV || 'development',
-  release: process.env.SENTRY_RELEASE || 'superset@4.1.3',
+  release: process.env.ZEN_SENTRY_RELEASE || 'superset@4.1.3',
   debug: process.env.NODE_ENV === 'development',
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
   replaysSessionSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0.5,
@@ -51,8 +51,8 @@ const DEFAULT_CONFIG: SentryConfig = {
 export function initializeSentry(config?: Partial<SentryConfig>): void {
   try {
     // Check if required environment variables are available
-    const sentryDsn = process.env.SENTRY_DSN;
-    const sentryEnvironment = process.env.SENTRY_ENVIRONMENT;
+    const sentryDsn = process.env.ZEN_SENTRY_DSN;
+    const sentryEnvironment = process.env.ZEN_SENTRY_ENVIRONMENT;
 
     if (!sentryDsn) {
       // eslint-disable-next-line no-console
@@ -65,17 +65,20 @@ export function initializeSentry(config?: Partial<SentryConfig>): void {
     if (!sentryEnvironment) {
       // eslint-disable-next-line no-console
       console.warn(
-        '⚠️ SENTRY_ENVIRONMENT not found in environment variables. Sentry will not be initialized.',);
+        '⚠️ SENTRY_ENVIRONMENT not found in environment variables. Sentry will not be initialized.',
+      );
       return;
     }
 
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
+    console.log("SENTRY DEFAULTS",{ DEFAULT_CONFIG, config, finalConfig});
+
 
     finalConfig.dsn = sentryDsn;
     finalConfig.environment = sentryEnvironment;
 
-    if (process.env.SENTRY_RELEASE) {
-      finalConfig.release = process.env.SENTRY_RELEASE;
+    if (process.env.ZEN_SENTRY_RELEASE) {
+      finalConfig.release = process.env.ZEN_SENTRY_RELEASE;
     }
     Sentry.init({
       dsn: finalConfig.dsn,
