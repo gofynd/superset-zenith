@@ -121,9 +121,9 @@ const plugins = [
     'process.env.SCARF_ANALYTICS': JSON.stringify(process.env.SCARF_ANALYTICS),
     'process.env.BOLTIC_STREAMS_KEY': JSON.stringify(process.env.BOLTIC_STREAMS_KEY),
     'process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS': JSON.stringify(process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS),
-    'process.env.SENTRY_DSN': JSON.stringify(process.env.SENTRY_DSN),
-    'process.env.SENTRY_ENVIRONMENT': JSON.stringify(process.env.SENTRY_ENVIRONMENT),
-    'process.env.SENTRY_RELEASE': JSON.stringify(process.env.SENTRY_RELEASE),
+    'process.env.MJS_SENTRY_DSN': JSON.stringify(process.env.MJS_SENTRY_DSN),
+    'process.env.MJS_SENTRY_ENVIRONMENT': JSON.stringify(process.env.MJS_SENTRY_ENVIRONMENT),
+    'process.env.MJS_SENTRY_RELEASE': JSON.stringify(process.env.MJS_SENTRY_RELEASE),
   }),
 
   new CopyPlugin({
