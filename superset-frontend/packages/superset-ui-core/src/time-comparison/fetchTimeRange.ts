@@ -44,17 +44,6 @@ export const formatTimeRange = (
   )} to ${formatDateEndpoint(splitDateRange[1])}`;
 };
 
-export const formatTimeRangeOriginal = (
-  timeRange: string,
-  columnPlaceholder = 'col',
-) => {
-  const splitDateRange = timeRange.split(SEPARATOR);
-  if (splitDateRange.length === 1) return timeRange;
-  return `${formatDateEndpoint(
-    splitDateRange[0],
-    true,
-  )} ≤ ${columnPlaceholder} < ${formatDateEndpoint(splitDateRange[1])}`;
-};
 
 export const formatTimeRangeComparison = (
   initialTimeRange: string,
