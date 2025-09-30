@@ -28,7 +28,7 @@ import {
   useCSSTextTruncation,
   fetchTimeRange,
 } from '@superset-ui/core';
-import { formatTimeRangeOriginal } from '@superset-ui/core/src/time-comparison/fetchTimeRange';
+import { formatTimeRangeOriginal } from '@superset-ui/core';
 import Button from 'src/components/Button';
 import ControlHeader from 'src/explore/components/ControlHeader';
 import Modal from 'src/components/Modal';
