@@ -86,25 +86,25 @@ describe('Actual Time Range Formatting', () => {
   };
 
   test('should format full datetime ranges (Custom frame)', () => {
-    const input = '2025-09-16T00:00:00 ≤ date < 2025-09-17T17:38:16';
+    const input = '2025-09-16T00:00:00 to 2025-09-17T17:38:16';
     const result = formatDateTimeForDisplay(input, 'UTC');
     
-    expect(result).toMatch(/Sep 16, 2025, \d{1,2}:\d{2} [AP]M ≤ date < Sep 17, 2025, \d{1,2}:\d{2} [AP]M/);
+    expect(result).toMatch(/Sep 16, 2025, \d{1,2}:\d{2} [AP]M to Sep 17, 2025, \d{1,2}:\d{2} [AP]M/);
     expect(result).not.toContain('2025-09-16T00:00:00');
     expect(result).not.toContain('2025-09-17T17:38:16');
   });
 
   test('should format date-only ranges (Last/Previous/Current frames)', () => {
-    const input = '2025-09-10 ≤ date < 2025-09-17';
+    const input = '2025-09-10 to 2025-09-17';
     const result = formatDateTimeForDisplay(input, 'UTC');
     
-    expect(result).toMatch(/Sep 10, 2025, \d{1,2}:\d{2} [AP]M ≤ date < Sep 17, 2025, \d{1,2}:\d{2} [AP]M/);
+    expect(result).toMatch(/Sep 10, 2025, \d{1,2}:\d{2} [AP]M to Sep 17, 2025, \d{1,2}:\d{2} [AP]M/);
     expect(result).not.toContain('2025-09-10');
     expect(result).not.toContain('2025-09-17');
   });
 
   test('should handle different timezones', () => {
-    const input = '2025-09-10 ≤ date < 2025-09-17';
+    const input = '2025-09-10 to 2025-09-17';
     const resultUTC = formatDateTimeForDisplay(input, 'UTC');
     const resultKolkata = formatDateTimeForDisplay(input, 'Asia/Kolkata');
     
@@ -121,10 +121,28 @@ describe('Actual Time Range Formatting', () => {
   });
 
   test('should handle single date (should not format)', () => {
-    const input = '2025-09-10 ≤ date';
+    const input = '2025-09-10 to 2025-09-17';
     const result = formatDateTimeForDisplay(input);
     
-    expect(result).toBe(input); // Should not change if only one date
+    expect(result).toMatch(/Sep 10, 2025, \d{1,2}:\d{2} [AP]M to Sep 17, 2025, \d{1,2}:\d{2} [AP]M/);
+  });
+});
+
+describe('formatTimeRangeOriginal', () => {
+  const { formatTimeRangeOriginal } = require('@superset-ui/core/src/time-comparison/fetchTimeRange');
+
+  test('should format time range with original ≤ and < symbols', () => {
+    const input = '2025-09-01 : 2025-10-01';
+    const result = formatTimeRangeOriginal(input, 'date');
+    
+    expect(result).toBe('2025-09-01 ≤ date < 2025-10-01');
+  });
+
+  test('should handle single date range', () => {
+    const input = '2025-09-01';
+    const result = formatTimeRangeOriginal(input, 'date');
+    
+    expect(result).toBe('2025-09-01');
   });
 });
 

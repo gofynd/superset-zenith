@@ -28,6 +28,7 @@ import {
   useCSSTextTruncation,
   fetchTimeRange,
 } from '@superset-ui/core';
+import { formatTimeRangeOriginal } from '@superset-ui/core/src/time-comparison/fetchTimeRange';
 import Button from 'src/components/Button';
 import ControlHeader from 'src/explore/components/ControlHeader';
 import Modal from 'src/components/Modal';
@@ -285,6 +286,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const [timeRangeValue, setTimeRangeValue] = useState(value);
   const [validTimeRange, setValidTimeRange] = useState<boolean>(false);
   const [evalResponse, setEvalResponse] = useState<string>(value);
+  const [originalFormat, setOriginalFormat] = useState<string>('');
   const [tooltipTitle, setTooltipTitle] = useState<ReactNode | null>(value);
   const theme = useTheme();
   const [labelRef, labelIsTruncated] = useCSSTextTruncation<HTMLSpanElement>();
@@ -325,6 +327,12 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
         const formattedADR = convertedADR
           ? formatDateTimeForDisplay(convertedADR, urlTZ)
           : convertedADR;
+        
+        // Store original format for tooltip
+        const originalFormatText = convertedADR
+          ? formatDateTimeForDisplay(formatTimeRangeOriginal(convertedADR, 'date'), urlTZ)
+          : '';
+        setOriginalFormat(originalFormatText);
 
         if (
           guessedFrame === 'Common' ||
@@ -450,7 +458,16 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       <Divider />
       <div>
         <div className="section-title">{t('Actual time range')}</div>
-        {validTimeRange && <div>{evalResponse}</div>}
+        {validTimeRange && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>{evalResponse}</span>
+            {originalFormat && (
+              <Tooltip title={originalFormat} placement="top">
+                <Icons.Info iconColor={theme.colors.grayscale.base} />
+              </Tooltip>
+            )}
+          </div>
+        )}
         {!validTimeRange && (
           <IconWrapper className="warning">
             <Icons.ErrorSolidSmall iconColor={theme.colors.error.base} />
