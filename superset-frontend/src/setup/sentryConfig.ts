@@ -17,7 +17,7 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { ErrorContext } from 'packages/superset-ui-core/src/connection/callApi/errorLogger';
+import { ErrorContext } from '../../packages/superset-ui-core/src/connection/callApi/errorLogger';
 
 /**
  * Sentry configuration for Superset
@@ -33,7 +33,7 @@ export interface SentryConfig {
 }
 
 /**
- * Default Sentry configuration
+ * Default Sentry configuration with fallbacks
  */
 const DEFAULT_CONFIG: SentryConfig = {
   dsn: '',
@@ -50,35 +50,41 @@ const DEFAULT_CONFIG: SentryConfig = {
  */
 export function initializeSentry(config?: Partial<SentryConfig>): void {
   try {
+    // Debug logging for environment variables
+    // eslint-disable-next-line no-console
+    console.log('🔍 Sentry Alerts:', {
+      ZEN_SENTRY_DSN: process.env.ZEN_SENTRY_DSN,
+      ZEN_SENTRY_ENVIRONMENT: process.env.ZEN_SENTRY_ENVIRONMENT,
+      ZEN_SENTRY_RELEASE: process.env.ZEN_SENTRY_RELEASE,
+      NODE_ENV: process.env.NODE_ENV,
+      WEBPACK_MODE: process.env.WEBPACK_MODE,
+    });
+
     // Check if required environment variables are available
     const sentryDsn = process.env.ZEN_SENTRY_DSN;
     const sentryEnvironment = process.env.ZEN_SENTRY_ENVIRONMENT;
+    const sentryRelease = process.env.ZEN_SENTRY_RELEASE;
 
-    if (!sentryDsn) {
+    // Determine if we should initialize Sentry or use fallback
+    const hasValidConfig = sentryDsn && sentryEnvironment;
+
+    if (!hasValidConfig) {
       // eslint-disable-next-line no-console
       console.warn(
-        '⚠️ SENTRY_DSN not found in environment variables. Sentry will not be initialized.',
-      );
-      return;
-    }
-
-    if (!sentryEnvironment) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        '⚠️ SENTRY_ENVIRONMENT not found in environment variables. Sentry will not be initialized.',
+        '⚠️ Sentry environment variables not found. Using fallback configuration (Sentry disabled).',
       );
       return;
     }
 
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
-    console.log("SENTRY DEFAULTS",{ DEFAULT_CONFIG, config, finalConfig});
-
+    // eslint-disable-next-line no-console
+    console.log('SENTRY DEFAULTS', { DEFAULT_CONFIG, config, finalConfig });
 
     finalConfig.dsn = sentryDsn;
     finalConfig.environment = sentryEnvironment;
 
-    if (process.env.ZEN_SENTRY_RELEASE) {
-      finalConfig.release = process.env.ZEN_SENTRY_RELEASE;
+    if (sentryRelease) {
+      finalConfig.release = sentryRelease;
     }
     Sentry.init({
       dsn: finalConfig.dsn,
@@ -86,12 +92,6 @@ export function initializeSentry(config?: Partial<SentryConfig>): void {
       debug: finalConfig.debug,
       environment: finalConfig.environment,
       release: finalConfig.release,
-      transportOptions: {
-        beacon: true,
-        fetch: {
-          keepalive: true,
-        },
-      },
     });
 
     if (typeof window !== 'undefined' && window.location) {

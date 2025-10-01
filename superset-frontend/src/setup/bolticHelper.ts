@@ -28,6 +28,10 @@ class BolticHelper {
         { chartId: 248, threshold: 500000000 },
         { chartId: 570, threshold: 500000000 },
       ] as any;
+      console.log('Boltic Helper - BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS ', {
+        BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS:
+          process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS,
+      });
       // const thresholdsEnv = process.env.BOLTIC_STREAMS_CHART_TRIGGER_THRESHOLDS;
       // if (thresholdsEnv) {
       //   this.thresholds = JSON.parse(thresholdsEnv);
@@ -92,7 +96,10 @@ class BolticHelper {
       };
 
       console.log(`Boltic streams - checkThresholdAndTrack`, { payload });
-      (window as any).stelios.track('BigNumber Threshold Crossed', analyticsData);
+      (window as any).stelios.track(
+        'BigNumber Threshold Crossed',
+        analyticsData,
+      );
     }
   }
 

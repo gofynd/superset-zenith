@@ -36,6 +36,14 @@ import { initializeSentry } from './setup/sentryConfig';
 import { User } from './types/bootstrapTypes';
 import getBootstrapData from './utils/getBootstrapData';
 
+// Debug logging for environment variables in preamble
+// eslint-disable-next-line no-console
+console.log('🔍 Sentry Alerts', {
+  ZEN_SENTRY_DSN: process.env.ZEN_SENTRY_DSN,
+  ZEN_SENTRY_ENVIRONMENT: process.env.ZEN_SENTRY_ENVIRONMENT,
+  ZEN_SENTRY_RELEASE: process.env.ZEN_SENTRY_RELEASE,
+});
+
 // Initialize Sentry error tracking early in the app lifecycle
 initializeSentry();
 
