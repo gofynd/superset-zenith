@@ -265,19 +265,10 @@ class ChartRenderer extends Component {
         }
 
         const userId = (parsedDashboardUser && (parsedDashboardUser.userId || parsedDashboardUser.id)) || 'unknown';
-        const userName = (parsedDashboardUser && parsedDashboardUser.name) || 'unknown';
-        const userEmail = (parsedDashboardUser && parsedDashboardUser.email) || 'unknown';
-        const userCompany = (parsedDashboardUser && parsedDashboardUser.company) || 'unknown';
-        const userFirstname = (parsedDashboardUser && parsedDashboardUser.first_name) || 'unknown';
-        const userLastname = (parsedDashboardUser && parsedDashboardUser.last_name) || 'unknown';
         
         const analyticsPayload = {
           user:{
             id: userId,
-            name: userName,
-            userFirstname,
-            userLastname,
-            email: userEmail,
             company: userCompany,
             business_details: {
               currency_code: currencyCode,
