@@ -17,88 +17,46 @@
  * under the License.
  */
 
-/**
- * Comprehensive embedded mode detection utility
- * Uses multiple methods to reliably detect if Superset is running in embedded context
- */
 export interface EmbeddedDetectionResult {
   isEmbedded: boolean;
-  methods: {
-    iframe: boolean;
-    standalone: boolean;
-    embedded: boolean;
-    uiConfig: boolean;
-    guestToken: boolean;
-    referrer: boolean;
-    embeddedRoute: boolean;
-  };
-  confidence: 'high' | 'medium' | 'low';
+  reason: string;
 }
 
 /**
  * Detects if the current Superset instance is running in embedded mode
- * Uses multiple detection methods for reliability
+ * Uses the most reliable detection methods
  */
 export function detectEmbeddedMode(): EmbeddedDetectionResult {
-  // Method 1: Check if we're in an iframe (most reliable)
+  // Check if we're in an iframe (most reliable indicator)
   const inIframe = typeof window !== 'undefined' && window.parent !== window;
-
-  // Method 2: Check URL parameters for embedded indicators
-  const urlParams =
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search)
-      : new URLSearchParams();
-  const hasStandalone =
-    urlParams.get('standalone') === '0' ||
-    urlParams.get('standalone') === 'false';
-  const hasEmbedded = urlParams.get('embedded') === 'true';
-  const hasUiConfig = urlParams.get('uiConfig') !== null;
-
-  // Method 3: Check if we're on the embedded route
-  const isEmbeddedRoute =
-    typeof window !== 'undefined' &&
-    window.location.pathname.includes('/superset/dashboard/');
-
-  // Method 4: Check for guest token (embedded context indicator)
-  const hasGuestToken = urlParams.get('guest_token') !== null;
-
-  // Method 5: Check document referrer for iframe context
-  const hasReferrer =
-    typeof document !== 'undefined' &&
-    document.referrer &&
-    document.referrer !== window.location.href;
-
-  const methods = {
-    iframe: inIframe,
-    standalone: hasStandalone,
-    embedded: hasEmbedded,
-    uiConfig: hasUiConfig,
-    guestToken: hasGuestToken,
-    referrer: hasReferrer,
-    embeddedRoute: isEmbeddedRoute,
-  };
-
-  // Calculate confidence based on detection methods
-  const trueMethods = Object.values(methods).filter(Boolean).length;
-  let confidence: 'high' | 'medium' | 'low' = 'low';
-
-  if (inIframe || hasStandalone || hasEmbedded) {
-    confidence = 'high';
-  } else if (isEmbeddedRoute && (hasUiConfig || hasGuestToken || hasReferrer)) {
-    confidence = 'medium';
+  if (inIframe) {
+    return { isEmbedded: true, reason: 'iframe' };
   }
 
-  const isEmbedded =
-    inIframe ||
-    hasStandalone ||
-    hasEmbedded ||
-    (isEmbeddedRoute && (hasUiConfig || hasGuestToken || hasReferrer));
+  // Check URL parameters for embedded indicators
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
 
-  return {
-    isEmbedded,
-    methods,
-    confidence,
-  };
+    // Check for explicit embedded flag
+    if (urlParams.get('embedded') === 'true') {
+      return { isEmbedded: true, reason: 'embedded_param' };
+    }
+
+    // Check for standalone=false (embedded context)
+    if (
+      urlParams.get('standalone') === '0' ||
+      urlParams.get('standalone') === 'false'
+    ) {
+      return { isEmbedded: true, reason: 'standalone_false' };
+    }
+
+    // Check for guest token (embedded context)
+    if (urlParams.get('guest_token') !== null) {
+      return { isEmbedded: true, reason: 'guest_token' };
+    }
+  }
+
+  return { isEmbedded: false, reason: 'none' };
 }
 
 /**
@@ -107,30 +65,4 @@ export function detectEmbeddedMode(): EmbeddedDetectionResult {
  */
 export function isEmbeddedMode(): boolean {
   return detectEmbeddedMode().isEmbedded;
-}
-
-/**
- * Get embedded context information for debugging
- */
-export function getEmbeddedContext() {
-  if (typeof window === 'undefined') {
-    return { error: 'Not in browser environment' };
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-
-  return {
-    url: window.location.href,
-    pathname: window.location.pathname,
-    search: window.location.search,
-    referrer: document.referrer,
-    inIframe: window.parent !== window,
-    urlParams: {
-      standalone: urlParams.get('standalone'),
-      embedded: urlParams.get('embedded'),
-      uiConfig: urlParams.get('uiConfig'),
-      guest_token: urlParams.get('guest_token'),
-    },
-    detection: detectEmbeddedMode(),
-  };
 }
