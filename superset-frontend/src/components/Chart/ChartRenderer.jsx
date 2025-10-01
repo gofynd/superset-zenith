@@ -269,7 +269,6 @@ class ChartRenderer extends Component {
         const analyticsPayload = {
           user:{
             id: userId,
-            company: userCompany,
             business_details: {
               currency_code: currencyCode,
               timezone: timezone,
