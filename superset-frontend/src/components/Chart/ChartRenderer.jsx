@@ -230,17 +230,45 @@ class ChartRenderer extends Component {
         const countryCode = urlParams.get('country_code') || null;
         const country = urlParams.get('country') || null;
         
-        // Detect iframe context
         const isInIframe = window.parent !== window;
         const iframeUrl = isInIframe ? document.referrer || window.parent.location.href : null;
         const currentUrl = window.location.href;
         
+        const rlsKeys = [
+          "productLine", "companyId", "orgId", "applicationId", 
+          "customerId", "partnerId", "storeId", "productId", "promotionId", 
+          "discountId", "collectionId", "customerGroupId", "couponId", 
+          "accountId", "copilotId", "copilotAppId", "productAccountId", 
+          "serverlessId", "workflowId", "granularity"
+        ];
+
+        const rls = {};
+        // urlParams is already defined as new URLSearchParams(window.location.search) in the outer scope
+        rlsKeys.forEach(key => {
+          const value = urlParams.get(key);
+          if (value !== null) {
+            rls[key] = value;
+          }
+        });
+
+        // Parse dashboardUser from URL parameter
+        let parsedDashboardUser = null;
+        const dashboardUserParam = urlParams.get('dashboardUser');
+        if (dashboardUserParam) {
+          try {
+            parsedDashboardUser = JSON.parse(dashboardUserParam);
+          } catch (e) {
+            // If parsing fails, assume the param itself is the ID or a simple string
+            console.warn('Failed to parse dashboardUser from URL as JSON, treating as ID string:', e);
+            parsedDashboardUser = { id: dashboardUserParam }; 
+          }
+        }
+
+        const userId = (parsedDashboardUser && (parsedDashboardUser.userId || parsedDashboardUser.id)) || 'unknown';
+        
         const analyticsPayload = {
           user:{
-            id: (formData && formData.user_id) || 'unknown',
-            name: (formData && formData.user_name) || 'unknown',
-            email: (formData && formData.user_email) || 'unknown',
-            company: (formData && formData.user_company) || 'unknown',
+            id: userId,
             business_details: {
               currency_code: currencyCode,
               timezone: timezone,
@@ -254,6 +282,7 @@ class ChartRenderer extends Component {
           dashboard: {
             id: dashboardId,
             title: dashboardTitle,
+            rls: rls, // Add RLS (Row-Level Security) parameters
           },
           chart: {
             id: chartId || (formData && formData.slice_id) || 'unknown',
