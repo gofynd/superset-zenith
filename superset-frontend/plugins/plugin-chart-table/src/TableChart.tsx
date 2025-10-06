@@ -79,6 +79,7 @@ import { formatColumnValue } from './utils/formatValue';
 import { PAGE_SIZE_OPTIONS } from './consts';
 import { updateExternalFormData } from './DataTable/utils/externalAPIs';
 import getScrollBarSize from './DataTable/utils/getScrollBarSize';
+import { validateAndFormatUrl, getHyperlinkDisplayText } from './utils/urlUtils';
 
 type ValueRange = [number, number];
 
@@ -264,6 +265,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     isUsingTimeComparison,
     basicColorFormatters,
     basicColorColumnFormatters,
+    hyperlinkConfigs = { enabled: false, configs: [] },
   } = props;
   const comparisonColumns = [
     { key: 'all', label: t('Display all') },
@@ -309,6 +311,36 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       return null;
     },
     [data],
+  );
+
+  // Helper function to check if a column should be hyperlinked
+  const getHyperlinkConfig = useCallback(
+    (columnKey: string) => {
+      if (!hyperlinkConfigs.enabled) return null;
+      return hyperlinkConfigs.configs.find(config => config.displayColumn === columnKey);
+    },
+    [hyperlinkConfigs],
+  );
+
+  // Helper function to get URL for a hyperlinked column
+  const getHyperlinkUrl = useCallback(
+    (columnKey: string, rowData: D) => {
+      const config = getHyperlinkConfig(columnKey);
+      if (!config) return null;
+      
+      const urlValue = rowData[config.urlColumn as keyof D];
+      return validateAndFormatUrl(urlValue);
+    },
+    [getHyperlinkConfig],
+  );
+
+  // Helper function to check if a column should be hidden (URL column)
+  const isUrlColumn = useCallback(
+    (columnKey: string) => {
+      if (!hyperlinkConfigs.enabled) return false;
+      return hyperlinkConfigs.configs.some(config => config.urlColumn === columnKey);
+    },
+    [hyperlinkConfigs],
   );
 
   const isActiveFilterValue = useCallback(
@@ -406,14 +438,21 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
   const comparisonLabels = [t('Main'), '#', '△', '%'];
   const filteredColumnsMeta = useMemo(() => {
+    let filtered = columnsMeta;
+    
+    // Filter out URL columns if hyperlink is enabled
+    if (hyperlinkConfigs.enabled) {
+      filtered = filtered.filter(column => !isUrlColumn(column.key));
+    }
+    
     if (!isUsingTimeComparison) {
-      return columnsMeta;
+      return filtered;
     }
     const allColumns = comparisonColumns[0].key;
     const main = comparisonLabels[0];
     const showAllColumns = selectedComparisonColumns.includes(allColumns);
 
-    return columnsMeta.filter(({ label, key }) => {
+    return filtered.filter(({ label, key }) => {
       // Extract the key portion after the space, assuming the format is always "label key"
       const keyPortion = key.substring(label.length);
       const isKeyHidded = hideComparisonKeys.includes(keyPortion);
@@ -429,6 +468,8 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     });
   }, [
     columnsMeta,
+    hyperlinkConfigs.enabled,
+    isUrlColumn,
     comparisonColumns,
     comparisonLabels,
     isUsingTimeComparison,
@@ -746,6 +787,10 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           const [isHtml, text] = formatColumnValue(column, value);
           const html = isHtml && allowRenderHtml ? { __html: text } : undefined;
 
+          // Check if this column should be hyperlinked
+          const hyperlinkUrl = getHyperlinkUrl(key, row.original);
+          const displayText = getHyperlinkDisplayText(value);
+
           let backgroundColor;
           let arrow = '';
           const originKey = column.key.substring(column.label.length).trim();
@@ -908,12 +953,36 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                   style={columnWidth ? { width: columnWidth } : undefined}
                 >
                   {arrow && <span css={arrowStyles}>{arrow}</span>}
-                  {text}
+                  {hyperlinkUrl ? (
+                    <a
+                      href={hyperlinkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="dt-hyperlink"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {displayText}
+                    </a>
+                  ) : (
+                    text
+                  )}
                 </div>
               ) : (
                 <>
                   {arrow && <span css={arrowStyles}>{arrow}</span>}
-                  {text}
+                  {hyperlinkUrl ? (
+                    <a
+                      href={hyperlinkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="dt-hyperlink"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {displayText}
+                    </a>
+                  ) : (
+                    text
+                  )}
                 </>
               )}
             </StyledCell>

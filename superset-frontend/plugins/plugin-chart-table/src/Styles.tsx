@@ -118,5 +118,21 @@ export default styled.div`
     table .right-border-only:last-child {
       border-right: none;
     }
+
+    /* Hyperlink styling */
+    .dt-hyperlink {
+      color: ${theme.colors.primary.base};
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .dt-hyperlink:hover {
+      color: ${theme.colors.primary.dark1};
+      text-decoration: underline;
+    }
+
+    .dt-hyperlink:visited {
+      color: ${theme.colors.primary.light1};
+    }
   `}
 `;

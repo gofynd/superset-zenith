@@ -49,6 +49,7 @@ import {
 import { isEmpty } from 'lodash';
 import { PAGE_SIZE_OPTIONS } from './consts';
 import { ColorSchemeEnum } from './types';
+import HyperlinkConfigControl from './controls/HyperlinkConfigControl';
 
 function getQueryMode(controls: ControlStateMapping): QueryMode {
   const mode = controls?.query_mode?.value;
@@ -451,6 +452,22 @@ const config: ControlPanelConfig = {
               renderTrigger: true,
               default: true,
               description: t('Render data in HTML format if applicable.'),
+            },
+          },
+        ],
+        [
+          {
+            name: 'hyperlink_configs',
+            config: {
+              type: HyperlinkConfigControl,
+              label: t('Hyperlink Columns'),
+              description: t('Configure columns to display as hyperlinks using values from other columns as URLs'),
+              renderTrigger: true,
+              default: { enabled: false, configs: [] },
+              mapStateToProps: (state: ControlPanelState) => ({
+                columns: state.datasource?.columns || [],
+                queryResponse: state.chart?.queriesResponse?.[0] as ChartDataResponseResult | undefined,
+              }),
             },
           },
         ],
