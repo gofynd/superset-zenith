@@ -51,6 +51,16 @@ export type TableColumnConfig = {
   currencyFormat?: Currency;
 };
 
+export interface HyperlinkConfig {
+  displayColumn: string;
+  urlColumn: string;
+}
+
+export interface HyperlinkConfigs {
+  enabled: boolean;
+  configs: HyperlinkConfig[];
+}
+
 export interface DataColumnMeta {
   // `key` is what is called `label` in the input props
   key: string;
@@ -91,6 +101,7 @@ export type TableChartFormData = QueryFormData & {
   time_grain_sqla?: TimeGranularity;
   column_config?: Record<string, TableColumnConfig>;
   allow_rearrange_columns?: boolean;
+  hyperlink_configs?: HyperlinkConfigs;
 };
 
 export interface TableChartProps extends ChartProps {
@@ -146,6 +157,7 @@ export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
   basicColorFormatters?: { [Key: string]: BasicColorFormatterType }[];
   basicColorColumnFormatters?: { [Key: string]: BasicColorFormatterType }[];
   startDateOffset?: string;
+  hyperlinkConfigs?: HyperlinkConfigs;
 }
 
 export enum ColorSchemeEnum {
