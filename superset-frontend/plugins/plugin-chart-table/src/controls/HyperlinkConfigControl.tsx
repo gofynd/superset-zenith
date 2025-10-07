@@ -19,7 +19,6 @@
 
 import React, { useState, useCallback } from 'react';
 import { styled, t } from '@superset-ui/core';
-import { ControlProps } from '@superset-ui/chart-controls';
 import { HyperlinkConfig, HyperlinkConfigs } from '../types';
 
 const ControlContainer = styled.div`
@@ -108,7 +107,9 @@ const ControlContainer = styled.div`
   }
 `;
 
-interface HyperlinkConfigControlProps extends ControlProps {
+interface HyperlinkConfigControlProps {
+  value?: HyperlinkConfigs;
+  onChange?: (value: HyperlinkConfigs) => void;
   columns: Array<{ column_name: string; verbose_name?: string }>;
   queryResponse?: any;
 }
@@ -163,8 +164,8 @@ export default function HyperlinkConfigControl({
     const newConfigs = [...hyperlinkConfigs.configs];
     newConfigs[index] = { ...newConfigs[index], [field]: newValue };
     
-    const newValue = { ...hyperlinkConfigs, configs: newConfigs };
-    onChange?.(newValue);
+    const updatedValue = { ...hyperlinkConfigs, configs: newConfigs };
+    onChange?.(updatedValue);
 
     // Validate the changed config
     const error = validateConfig(newConfigs[index], index);
@@ -181,14 +182,14 @@ export default function HyperlinkConfigControl({
     };
     
     const newConfigs = [...hyperlinkConfigs.configs, newConfig];
-    const newValue = { ...hyperlinkConfigs, configs: newConfigs };
-    onChange?.(newValue);
+    const updatedValue = { ...hyperlinkConfigs, configs: newConfigs };
+    onChange?.(updatedValue);
   }, [hyperlinkConfigs, onChange]);
 
   const removeConfig = useCallback((index: number) => {
     const newConfigs = hyperlinkConfigs.configs.filter((_, i) => i !== index);
-    const newValue = { ...hyperlinkConfigs, configs: newConfigs };
-    onChange?.(newValue);
+    const updatedValue = { ...hyperlinkConfigs, configs: newConfigs };
+    onChange?.(updatedValue);
     
     // Clear errors for removed config
     setErrors(prev => {
@@ -203,8 +204,8 @@ export default function HyperlinkConfigControl({
   }, [hyperlinkConfigs, onChange]);
 
   const toggleEnabled = useCallback(() => {
-    const newValue = { ...hyperlinkConfigs, enabled: !hyperlinkConfigs.enabled };
-    onChange?.(newValue);
+    const updatedValue = { ...hyperlinkConfigs, enabled: !hyperlinkConfigs.enabled };
+    onChange?.(updatedValue);
   }, [hyperlinkConfigs, onChange]);
 
   return (
