@@ -270,7 +270,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     basicColorColumnFormatters,
     hyperlinkConfigs = { enabled: false, configs: [] },
   } = props;
-
   const comparisonColumns = [
     { key: 'all', label: t('Display all') },
     { key: '#', label: '#' },
