@@ -54,6 +54,18 @@ export type TableColumnConfig = {
 export interface HyperlinkConfig {
   displayColumn: string;
   urlColumn: string;
+  styles: {
+    hyperlinkColor: boolean;
+    underline: boolean;
+    redirectIcon: boolean;
+    iconPosition: 'left' | 'right';
+    fontWeight: 'normal' | 'bold' | 'light';
+    fontStyle: 'normal' | 'italic';
+    hoverEffect: boolean;
+    backgroundColor: boolean;
+    borderRadius: boolean;
+    padding: boolean;
+  };
 }
 
 export interface HyperlinkConfigs {
