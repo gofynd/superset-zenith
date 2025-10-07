@@ -464,10 +464,16 @@ const config: ControlPanelConfig = {
               description: t('Configure columns to display as hyperlinks using values from other columns as URLs'),
               renderTrigger: true,
               default: { enabled: false, configs: [] },
-              mapStateToProps: (state: ControlPanelState) => ({
-                columns: state.datasource?.columns || [],
-                queryResponse: state.chart?.queriesResponse?.[0] as ChartDataResponseResult | undefined,
-              }),
+              mapStateToProps: (state: ControlPanelState) => {
+                console.log('🎛️ Control panel mapStateToProps called with state:', {
+                  datasourceColumns: state.datasource?.columns?.length,
+                  queryResponse: !!state.chart?.queriesResponse?.[0]
+                });
+                return {
+                  columns: state.datasource?.columns || [],
+                  queryResponse: state.chart?.queriesResponse?.[0] as ChartDataResponseResult | undefined,
+                };
+              },
             },
           },
         ],
