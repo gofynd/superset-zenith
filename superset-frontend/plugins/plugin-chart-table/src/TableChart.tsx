@@ -551,23 +551,20 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
       // Provide default styles for backward compatibility
       const defaultStyles = {
-        hyperlinkColor: true,
+        hyperlinkColor: false,
         underline: true,
         redirectIcon: false,
         iconPosition: 'right' as const,
         fontWeight: 'normal' as const,
         fontStyle: 'normal' as const,
         hoverEffect: true,
-        backgroundColor: false,
-        borderRadius: false,
-        padding: false,
       };
 
       const styles = config.styles || defaultStyles;
       const cssStyles: React.CSSProperties = {};
 
       if (styles.hyperlinkColor) {
-        cssStyles.color = '#1890ff';
+        cssStyles.color = 'rgb(53,53,245)';
       }
 
       if (styles.underline) {
@@ -580,18 +577,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
       if (styles.fontStyle === 'italic') {
         cssStyles.fontStyle = 'italic';
-      }
-
-      if (styles.backgroundColor) {
-        cssStyles.backgroundColor = '#f0f8ff';
-      }
-
-      if (styles.borderRadius) {
-        cssStyles.borderRadius = '4px';
-      }
-
-      if (styles.padding) {
-        cssStyles.padding = '2px 6px';
       }
 
       if (styles.hoverEffect) {
@@ -611,28 +596,67 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
       // Provide default styles for backward compatibility
       const defaultStyles = {
-        hyperlinkColor: true,
+        hyperlinkColor: false,
         underline: true,
         redirectIcon: false,
         iconPosition: 'right' as const,
         fontWeight: 'normal' as const,
         fontStyle: 'normal' as const,
         hoverEffect: true,
-        backgroundColor: false,
-        borderRadius: false,
-        padding: false,
       };
 
       const styles = config.styles || defaultStyles;
 
       const icon = styles.redirectIcon ? (
-        <span style={{ marginLeft: '4px', fontSize: '12px' }}>↗</span>
+        <span
+          style={{
+            marginLeft: '4px',
+            fontSize: '12px',
+            textDecoration: 'none',
+            display: 'inline-block',
+            width: '12px',
+            height: '12px',
+            verticalAlign: 'middle',
+          }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="currentColor"
+            style={{ textDecoration: 'none' }}
+          >
+            <path d="M3 2h6v1H4.414l4.293 4.293-.707.707L3.707 3.707V8H3V2z" />
+            <path d="M2 3h1v7h7v-1H3V3z" />
+          </svg>
+        </span>
       ) : null;
 
       if (styles.redirectIcon && styles.iconPosition === 'left') {
         return (
           <>
-            {icon}
+            <span
+              style={{
+                marginRight: '4px',
+                fontSize: '12px',
+                textDecoration: 'none',
+                display: 'inline-block',
+                width: '12px',
+                height: '12px',
+                verticalAlign: 'middle',
+              }}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="currentColor"
+                style={{ textDecoration: 'none' }}
+              >
+                <path d="M3 2h6v1H4.414l4.293 4.293-.707.707L3.707 3.707V8H3V2z" />
+                <path d="M2 3h1v7h7v-1H3V3z" />
+              </svg>
+            </span>
             {displayText}
           </>
         );
