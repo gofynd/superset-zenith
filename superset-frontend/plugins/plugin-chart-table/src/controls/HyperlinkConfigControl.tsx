@@ -163,8 +163,8 @@ export default function HyperlinkConfigControl({
     const newConfigs = [...hyperlinkConfigs.configs];
     newConfigs[index] = { ...newConfigs[index], [field]: newValue };
     
-    const newValue = { ...hyperlinkConfigs, configs: newConfigs };
-    onChange?.(newValue);
+    const updatedConfig = { ...hyperlinkConfigs, configs: newConfigs };
+    onChange?.(updatedConfig);
 
     // Validate the changed config
     const error = validateConfig(newConfigs[index], index);
