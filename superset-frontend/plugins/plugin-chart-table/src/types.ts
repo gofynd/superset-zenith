@@ -62,9 +62,6 @@ export interface HyperlinkConfig {
     fontWeight: 'normal' | 'bold' | 'light';
     fontStyle: 'normal' | 'italic';
     hoverEffect: boolean;
-    backgroundColor: boolean;
-    borderRadius: boolean;
-    padding: boolean;
   };
 }
 

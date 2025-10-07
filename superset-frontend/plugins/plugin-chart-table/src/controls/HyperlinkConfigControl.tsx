@@ -183,16 +183,13 @@ export default function HyperlinkConfigControl({
     return {
       ...config,
       styles: {
-        hyperlinkColor: true,
+        hyperlinkColor: false,
         underline: true,
         redirectIcon: false,
         iconPosition: 'right',
         fontWeight: 'normal',
         fontStyle: 'normal',
         hoverEffect: true,
-        backgroundColor: false,
-        borderRadius: false,
-        padding: false,
       },
     };
   };
@@ -276,16 +273,13 @@ export default function HyperlinkConfigControl({
       displayColumn: '',
       urlColumn: '',
       styles: {
-        hyperlinkColor: true,
+        hyperlinkColor: false,
         underline: true,
         redirectIcon: false,
         iconPosition: 'right',
         fontWeight: 'normal',
         fontStyle: 'normal',
         hoverEffect: true,
-        backgroundColor: false,
-        borderRadius: false,
-        padding: false,
       },
     };
     
@@ -457,30 +451,6 @@ export default function HyperlinkConfigControl({
                         </Space>
                       </div>
 
-                      {/* Advanced Styles */}
-                      <div className="styling-group">
-                        <h4>{t('Advanced Styles')}</h4>
-                        <Space direction="vertical" size="small">
-                          <Checkbox
-                            checked={config.styles.backgroundColor}
-                            onChange={(e) => handleStyleChange(index, 'backgroundColor', e.target.checked)}
-                          >
-                            {t('Background Color')}
-                          </Checkbox>
-                          <Checkbox
-                            checked={config.styles.borderRadius}
-                            onChange={(e) => handleStyleChange(index, 'borderRadius', e.target.checked)}
-                          >
-                            {t('Rounded Corners')}
-                          </Checkbox>
-                          <Checkbox
-                            checked={config.styles.padding}
-                            onChange={(e) => handleStyleChange(index, 'padding', e.target.checked)}
-                          >
-                            {t('Extra Padding')}
-                          </Checkbox>
-                        </Space>
-                      </div>
                     </div>
                   </Panel>
                 </Collapse>
