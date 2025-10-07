@@ -123,13 +123,30 @@ export default function HyperlinkConfigControl({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const hyperlinkConfigs: HyperlinkConfigs = value as HyperlinkConfigs;
+  
+  console.log('🎛️ HyperlinkConfigControl rendered with:', {
+    enabled: hyperlinkConfigs.enabled,
+    configs: hyperlinkConfigs.configs,
+    columns: columns.length,
+    queryResponse: !!queryResponse
+  });
 
   // Get available columns from query response if available
   const availableColumns = React.useMemo(() => {
+    console.log('📊 Getting available columns from:', {
+      queryResponseData: queryResponse?.data?.length,
+      columnsLength: columns.length,
+      queryResponseKeys: queryResponse?.data?.length > 0 ? Object.keys(queryResponse.data[0]) : null
+    });
+    
     if (queryResponse?.data?.length > 0) {
-      return Object.keys(queryResponse.data[0]);
+      const keys = Object.keys(queryResponse.data[0]);
+      console.log('📊 Using query response columns:', keys);
+      return keys;
     }
-    return columns.map(col => col.column_name);
+    const columnNames = columns.map(col => col.column_name);
+    console.log('📊 Using datasource columns:', columnNames);
+    return columnNames;
   }, [queryResponse, columns]);
 
   const validateConfig = useCallback((config: HyperlinkConfig, index: number): string | null => {
@@ -161,14 +178,20 @@ export default function HyperlinkConfigControl({
   }, [availableColumns, hyperlinkConfigs.configs]);
 
   const handleConfigChange = useCallback((index: number, field: keyof HyperlinkConfig, newValue: string) => {
+    console.log(`⚙️ Config change: ${field} = "${newValue}" for index ${index}`);
+    
     const newConfigs = [...hyperlinkConfigs.configs];
     newConfigs[index] = { ...newConfigs[index], [field]: newValue };
     
     const updatedValue = { ...hyperlinkConfigs, configs: newConfigs };
+    console.log('⚙️ Updated configs:', updatedValue);
+    
     onChange?.(updatedValue);
 
     // Validate the changed config
     const error = validateConfig(newConfigs[index], index);
+    console.log(`⚙️ Validation result for ${field}:`, error || 'Valid');
+    
     setErrors(prev => ({
       ...prev,
       [`${index}-${field}`]: error || '',
@@ -176,6 +199,7 @@ export default function HyperlinkConfigControl({
   }, [hyperlinkConfigs, onChange, validateConfig]);
 
   const addConfig = useCallback(() => {
+    console.log('➕ Adding new hyperlink config');
     const newConfig: HyperlinkConfig = {
       displayColumn: '',
       urlColumn: '',
@@ -183,6 +207,7 @@ export default function HyperlinkConfigControl({
     
     const newConfigs = [...hyperlinkConfigs.configs, newConfig];
     const updatedValue = { ...hyperlinkConfigs, configs: newConfigs };
+    console.log('➕ New configs after add:', updatedValue);
     onChange?.(updatedValue);
   }, [hyperlinkConfigs, onChange]);
 
@@ -204,7 +229,9 @@ export default function HyperlinkConfigControl({
   }, [hyperlinkConfigs, onChange]);
 
   const toggleEnabled = useCallback(() => {
+    console.log('🔄 Toggling hyperlink enabled:', !hyperlinkConfigs.enabled);
     const updatedValue = { ...hyperlinkConfigs, enabled: !hyperlinkConfigs.enabled };
+    console.log('🔄 Updated value after toggle:', updatedValue);
     onChange?.(updatedValue);
   }, [hyperlinkConfigs, onChange]);
 
