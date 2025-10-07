@@ -575,8 +575,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       }
 
       if (styles.fontWeight !== 'normal') {
-        cssStyles.fontWeight =
-          styles.fontWeight === 'bold' ? 'bold' : '300';
+        cssStyles.fontWeight = styles.fontWeight === 'bold' ? 'bold' : '300';
       }
 
       if (styles.fontStyle === 'italic') {
