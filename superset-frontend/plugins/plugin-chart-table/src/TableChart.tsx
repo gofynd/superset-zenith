@@ -79,7 +79,10 @@ import { formatColumnValue } from './utils/formatValue';
 import { PAGE_SIZE_OPTIONS } from './consts';
 import { updateExternalFormData } from './DataTable/utils/externalAPIs';
 import getScrollBarSize from './DataTable/utils/getScrollBarSize';
-import { validateAndFormatUrl, getHyperlinkDisplayText } from './utils/urlUtils';
+import {
+  validateAndFormatUrl,
+  getHyperlinkDisplayText,
+} from './utils/urlUtils';
 
 type ValueRange = [number, number];
 
@@ -313,36 +316,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     [data],
   );
 
-  // Helper function to check if a column should be hyperlinked
-  const getHyperlinkConfig = useCallback(
-    (columnKey: string) => {
-      if (!hyperlinkConfigs.enabled) return null;
-      return hyperlinkConfigs.configs.find(config => config.displayColumn === columnKey);
-    },
-    [hyperlinkConfigs],
-  );
-
-  // Helper function to get URL for a hyperlinked column
-  const getHyperlinkUrl = useCallback(
-    (columnKey: string, rowData: D) => {
-      const config = getHyperlinkConfig(columnKey);
-      if (!config) return null;
-      
-      const urlValue = rowData[config.urlColumn as keyof D];
-      return validateAndFormatUrl(urlValue);
-    },
-    [getHyperlinkConfig],
-  );
-
-  // Helper function to check if a column should be hidden (URL column)
-  const isUrlColumn = useCallback(
-    (columnKey: string) => {
-      if (!hyperlinkConfigs.enabled) return false;
-      return hyperlinkConfigs.configs.some(config => config.urlColumn === columnKey);
-    },
-    [hyperlinkConfigs],
-  );
-
   const isActiveFilterValue = useCallback(
     function isActiveFilterValue(key: string, val: DataRecordValue) {
       return !!filters && filters[key]?.includes(val);
@@ -436,15 +409,26 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     };
   };
 
+  // Helper function to check if a column should be hidden (URL column)
+  const isUrlColumn = useCallback(
+    (columnKey: string) => {
+      if (!hyperlinkConfigs.enabled) return false;
+      return hyperlinkConfigs.configs.some(
+        config => config.urlColumn === columnKey,
+      );
+    },
+    [hyperlinkConfigs],
+  );
+
   const comparisonLabels = [t('Main'), '#', '△', '%'];
   const filteredColumnsMeta = useMemo(() => {
     let filtered = columnsMeta;
-    
+
     // Filter out URL columns if hyperlink is enabled
     if (hyperlinkConfigs.enabled) {
       filtered = filtered.filter(column => !isUrlColumn(column.key));
     }
-    
+
     if (!isUsingTimeComparison) {
       return filtered;
     }
@@ -476,6 +460,50 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     hideComparisonKeys,
     selectedComparisonColumns,
   ]);
+
+  // Helper function to check if a column should be hyperlinked
+  const getHyperlinkConfig = useCallback(
+    (columnKey: string) => {
+      if (!hyperlinkConfigs.enabled) return null;
+
+      // Try multiple matching strategies
+      return hyperlinkConfigs.configs.find(config => {
+        // Direct match
+        if (config.displayColumn === columnKey) return true;
+
+        // Match after removing common prefixes
+        const cleanKey = columnKey
+          .replace(/^[^:]+:\s*/, '')
+          .replace(/^Column:\s*/, '');
+        if (config.displayColumn === cleanKey) return true;
+
+        // Match by label if available
+        const column = filteredColumnsMeta.find(col => col.key === columnKey);
+        if (column && config.displayColumn === column.label) return true;
+
+        // Match by column name (case insensitive)
+        if (config.displayColumn.toLowerCase() === columnKey.toLowerCase())
+          return true;
+        if (config.displayColumn.toLowerCase() === cleanKey.toLowerCase())
+          return true;
+
+        return false;
+      });
+    },
+    [hyperlinkConfigs, filteredColumnsMeta],
+  );
+
+  // Helper function to get URL for a hyperlinked column
+  const getHyperlinkUrl = useCallback(
+    (columnKey: string, rowData: D) => {
+      const config = getHyperlinkConfig(columnKey);
+      if (!config) return null;
+
+      const urlValue = rowData[config.urlColumn as keyof D];
+      return validateAndFormatUrl(urlValue);
+    },
+    [getHyperlinkConfig],
+  );
 
   const handleContextMenu =
     onContextMenu && !isRawRecords
@@ -959,7 +987,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                       target="_blank"
                       rel="noopener noreferrer"
                       className="dt-hyperlink"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                     >
                       {displayText}
                     </a>
@@ -976,7 +1004,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                       target="_blank"
                       rel="noopener noreferrer"
                       className="dt-hyperlink"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                     >
                       {displayText}
                     </a>
@@ -1051,9 +1079,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                 `}
               >
                 {t('Summary')}
-                <Tooltip
-                  overlay={'Shows total aggregation'}
-                >
+                <Tooltip overlay="Shows total aggregation">
                   <InfoCircleOutlined />
                 </Tooltip>
               </div>
