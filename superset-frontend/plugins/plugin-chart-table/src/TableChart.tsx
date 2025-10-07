@@ -243,7 +243,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
   console.log('📊 TableChart rendered with props:', {
     hyperlinkConfigs: props.hyperlinkConfigs,
     dataLength: props.data?.length,
-    columnsLength: props.columns?.length
+    columnsLength: props.columns?.length,
   });
   const {
     timeGrain,
@@ -275,7 +275,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     basicColorColumnFormatters,
     hyperlinkConfigs = { enabled: false, configs: [] },
   } = props;
-  
+
   console.log('📊 Extracted hyperlinkConfigs:', hyperlinkConfigs);
 
   const comparisonColumns = [
@@ -430,12 +430,18 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
   const comparisonLabels = [t('Main'), '#', '△', '%'];
   const filteredColumnsMeta = useMemo(() => {
-    console.log('🔍 Filtering columns with hyperlink configs:', hyperlinkConfigs);
+    console.log(
+      '🔍 Filtering columns with hyperlink configs:',
+      hyperlinkConfigs,
+    );
     let filtered = columnsMeta;
 
     // Filter out URL columns if hyperlink is enabled
     if (hyperlinkConfigs.enabled) {
-      console.log('🔍 Filtering out URL columns, original count:', filtered.length);
+      console.log(
+        '🔍 Filtering out URL columns, original count:',
+        filtered.length,
+      );
       filtered = filtered.filter(column => !isUrlColumn(column.key));
       console.log('🔍 After filtering URL columns:', filtered.length);
     }
@@ -478,7 +484,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       console.log('🔍 Checking hyperlink config for column:', columnKey);
       console.log('🔍 Hyperlink configs enabled:', hyperlinkConfigs.enabled);
       console.log('🔍 Available configs:', hyperlinkConfigs.configs);
-      
+
       if (!hyperlinkConfigs.enabled) {
         console.log('❌ Hyperlink not enabled');
         return null;
@@ -486,8 +492,10 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
       // Try multiple matching strategies
       const config = hyperlinkConfigs.configs.find(config => {
-        console.log(`🔍 Checking config: displayColumn="${config.displayColumn}", urlColumn="${config.urlColumn}"`);
-        
+        console.log(
+          `🔍 Checking config: displayColumn="${config.displayColumn}", urlColumn="${config.urlColumn}"`,
+        );
+
         // Direct match
         if (config.displayColumn === columnKey) {
           console.log('✅ Direct match found');
@@ -520,9 +528,33 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           return true;
         }
 
+        // Match by converting spaces to underscores and comparing (case insensitive)
+        const normalizedColumnKey = columnKey
+          .toLowerCase()
+          .replace(/\s+/g, '_');
+        const normalizedDisplayColumn = config.displayColumn
+          .toLowerCase()
+          .replace(/\s+/g, '_');
+        if (normalizedDisplayColumn === normalizedColumnKey) {
+          console.log('✅ Normalized space-to-underscore match found');
+          return true;
+        }
+
+        // Match by converting underscores to spaces and comparing (case insensitive)
+        const spaceNormalizedColumnKey = columnKey
+          .toLowerCase()
+          .replace(/_/g, ' ');
+        const spaceNormalizedDisplayColumn = config.displayColumn
+          .toLowerCase()
+          .replace(/_/g, ' ');
+        if (spaceNormalizedDisplayColumn === spaceNormalizedColumnKey) {
+          console.log('✅ Normalized underscore-to-space match found');
+          return true;
+        }
+
         return false;
       });
-      
+
       console.log('🔍 Final config result:', config);
       return config;
     },
@@ -787,8 +819,10 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
   const getColumnConfigs = useCallback(
     (column: DataColumnMeta, i: number): ColumnWithLooseAccessor<D> => {
-      console.log(`🏗️ Building column config for: ${column.key} (${column.label})`);
-      
+      console.log(
+        `🏗️ Building column config for: ${column.key} (${column.label})`,
+      );
+
       const {
         key,
         label,
@@ -863,13 +897,13 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           // Check if this column should be hyperlinked
           const hyperlinkUrl = getHyperlinkUrl(key, row.original);
           const displayText = getHyperlinkDisplayText(value);
-          
+
           console.log(`🎯 Cell rendering for column ${key}:`, {
             value,
             hyperlinkUrl,
             displayText,
             hasHyperlink: !!hyperlinkUrl,
-            rowData: row.original
+            rowData: row.original,
           });
 
           let backgroundColor;
