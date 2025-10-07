@@ -549,42 +549,57 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       const config = getHyperlinkConfig(columnKey);
       if (!config) return {};
 
-      const styles: React.CSSProperties = {};
+      // Provide default styles for backward compatibility
+      const defaultStyles = {
+        hyperlinkColor: true,
+        underline: true,
+        redirectIcon: false,
+        iconPosition: 'right' as const,
+        fontWeight: 'normal' as const,
+        fontStyle: 'normal' as const,
+        hoverEffect: true,
+        backgroundColor: false,
+        borderRadius: false,
+        padding: false,
+      };
 
-      if (config.styles.hyperlinkColor) {
-        styles.color = '#1890ff';
+      const styles = config.styles || defaultStyles;
+      const cssStyles: React.CSSProperties = {};
+
+      if (styles.hyperlinkColor) {
+        cssStyles.color = '#1890ff';
       }
 
-      if (config.styles.underline) {
-        styles.textDecoration = 'underline';
+      if (styles.underline) {
+        cssStyles.textDecoration = 'underline';
       }
 
-      if (config.styles.fontWeight !== 'normal') {
-        styles.fontWeight =
-          config.styles.fontWeight === 'bold' ? 'bold' : '300';
+      if (styles.fontWeight !== 'normal') {
+        cssStyles.fontWeight =
+          styles.fontWeight === 'bold' ? 'bold' : '300';
       }
 
-      if (config.styles.fontStyle === 'italic') {
-        styles.fontStyle = 'italic';
+      if (styles.fontStyle === 'italic') {
+        cssStyles.fontStyle = 'italic';
       }
 
-      if (config.styles.backgroundColor) {
-        styles.backgroundColor = '#f0f8ff';
+      if (styles.backgroundColor) {
+        cssStyles.backgroundColor = '#f0f8ff';
       }
 
-      if (config.styles.borderRadius) {
-        styles.borderRadius = '4px';
+      if (styles.borderRadius) {
+        cssStyles.borderRadius = '4px';
       }
 
-      if (config.styles.padding) {
-        styles.padding = '2px 6px';
+      if (styles.padding) {
+        cssStyles.padding = '2px 6px';
       }
 
-      if (config.styles.hoverEffect) {
-        styles.transition = 'all 0.2s ease';
+      if (styles.hoverEffect) {
+        cssStyles.transition = 'all 0.2s ease';
       }
 
-      return styles;
+      return cssStyles;
     },
     [getHyperlinkConfig],
   );
@@ -595,11 +610,27 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       const config = getHyperlinkConfig(columnKey);
       if (!config) return displayText;
 
-      const icon = config.styles.redirectIcon ? (
+      // Provide default styles for backward compatibility
+      const defaultStyles = {
+        hyperlinkColor: true,
+        underline: true,
+        redirectIcon: false,
+        iconPosition: 'right' as const,
+        fontWeight: 'normal' as const,
+        fontStyle: 'normal' as const,
+        hoverEffect: true,
+        backgroundColor: false,
+        borderRadius: false,
+        padding: false,
+      };
+
+      const styles = config.styles || defaultStyles;
+
+      const icon = styles.redirectIcon ? (
         <span style={{ marginLeft: '4px', fontSize: '12px' }}>↗</span>
       ) : null;
 
-      if (config.styles.redirectIcon && config.styles.iconPosition === 'left') {
+      if (styles.redirectIcon && styles.iconPosition === 'left') {
         return (
           <>
             {icon}

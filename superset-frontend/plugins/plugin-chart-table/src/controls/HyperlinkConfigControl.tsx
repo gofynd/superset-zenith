@@ -174,7 +174,33 @@ export default function HyperlinkConfigControl({
 }: HyperlinkConfigControlProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const hyperlinkConfigs: HyperlinkConfigs = value as HyperlinkConfigs;
+  // Migrate existing configs to include default styles
+  const migrateConfig = (config: any): HyperlinkConfig => {
+    if (config.styles) {
+      return config as HyperlinkConfig;
+    }
+    
+    return {
+      ...config,
+      styles: {
+        hyperlinkColor: true,
+        underline: true,
+        redirectIcon: false,
+        iconPosition: 'right',
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        hoverEffect: true,
+        backgroundColor: false,
+        borderRadius: false,
+        padding: false,
+      },
+    };
+  };
+
+  const hyperlinkConfigs: HyperlinkConfigs = {
+    ...value,
+    configs: (value as HyperlinkConfigs).configs.map(migrateConfig),
+  };
   
 
   // Get available columns from query response if available
