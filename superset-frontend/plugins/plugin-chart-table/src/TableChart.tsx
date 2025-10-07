@@ -240,11 +240,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     sticky?: DataTableProps<D>['sticky'];
   },
 ) {
-  console.log('📊 TableChart rendered with props:', {
-    hyperlinkConfigs: props.hyperlinkConfigs,
-    dataLength: props.data?.length,
-    columnsLength: props.columns?.length,
-  });
   const {
     timeGrain,
     height,
@@ -275,8 +270,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     basicColorColumnFormatters,
     hyperlinkConfigs = { enabled: false, configs: [] },
   } = props;
-
-  console.log('📊 Extracted hyperlinkConfigs:', hyperlinkConfigs);
 
   const comparisonColumns = [
     { key: 'all', label: t('Display all') },
@@ -430,20 +423,11 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
   const comparisonLabels = [t('Main'), '#', '△', '%'];
   const filteredColumnsMeta = useMemo(() => {
-    console.log(
-      '🔍 Filtering columns with hyperlink configs:',
-      hyperlinkConfigs,
-    );
     let filtered = columnsMeta;
 
     // Filter out URL columns if hyperlink is enabled
     if (hyperlinkConfigs.enabled) {
-      console.log(
-        '🔍 Filtering out URL columns, original count:',
-        filtered.length,
-      );
       filtered = filtered.filter(column => !isUrlColumn(column.key));
-      console.log('🔍 After filtering URL columns:', filtered.length);
     }
 
     if (!isUsingTimeComparison) {
@@ -481,24 +465,14 @@ export default function TableChart<D extends DataRecord = DataRecord>(
   // Helper function to check if a column should be hyperlinked
   const getHyperlinkConfig = useCallback(
     (columnKey: string) => {
-      console.log('🔍 Checking hyperlink config for column:', columnKey);
-      console.log('🔍 Hyperlink configs enabled:', hyperlinkConfigs.enabled);
-      console.log('🔍 Available configs:', hyperlinkConfigs.configs);
-
       if (!hyperlinkConfigs.enabled) {
-        console.log('❌ Hyperlink not enabled');
         return null;
       }
 
       // Try multiple matching strategies
       const config = hyperlinkConfigs.configs.find(config => {
-        console.log(
-          `🔍 Checking config: displayColumn="${config.displayColumn}", urlColumn="${config.urlColumn}"`,
-        );
-
         // Direct match
         if (config.displayColumn === columnKey) {
-          console.log('✅ Direct match found');
           return true;
         }
 
@@ -507,24 +481,20 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           .replace(/^[^:]+:\s*/, '')
           .replace(/^Column:\s*/, '');
         if (config.displayColumn === cleanKey) {
-          console.log('✅ Clean key match found:', cleanKey);
           return true;
         }
 
         // Match by label if available
         const column = filteredColumnsMeta.find(col => col.key === columnKey);
         if (column && config.displayColumn === column.label) {
-          console.log('✅ Label match found:', column.label);
           return true;
         }
 
         // Match by column name (case insensitive)
         if (config.displayColumn.toLowerCase() === columnKey.toLowerCase()) {
-          console.log('✅ Case insensitive match found');
           return true;
         }
         if (config.displayColumn.toLowerCase() === cleanKey.toLowerCase()) {
-          console.log('✅ Case insensitive clean key match found');
           return true;
         }
 
@@ -536,7 +506,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           .toLowerCase()
           .replace(/\s+/g, '_');
         if (normalizedDisplayColumn === normalizedColumnKey) {
-          console.log('✅ Normalized space-to-underscore match found');
           return true;
         }
 
@@ -548,14 +517,12 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           .toLowerCase()
           .replace(/_/g, ' ');
         if (spaceNormalizedDisplayColumn === spaceNormalizedColumnKey) {
-          console.log('✅ Normalized underscore-to-space match found');
           return true;
         }
 
         return false;
       });
 
-      console.log('🔍 Final config result:', config);
       return config;
     },
     [hyperlinkConfigs, filteredColumnsMeta],
@@ -564,18 +531,89 @@ export default function TableChart<D extends DataRecord = DataRecord>(
   // Helper function to get URL for a hyperlinked column
   const getHyperlinkUrl = useCallback(
     (columnKey: string, rowData: D) => {
-      console.log('🔗 Getting URL for column:', columnKey);
       const config = getHyperlinkConfig(columnKey);
       if (!config) {
-        console.log('❌ No config found for column:', columnKey);
         return null;
       }
 
       const urlValue = rowData[config.urlColumn as keyof D];
-      console.log('🔗 URL value from row data:', urlValue);
       const formattedUrl = validateAndFormatUrl(urlValue);
-      console.log('🔗 Formatted URL:', formattedUrl);
       return formattedUrl;
+    },
+    [getHyperlinkConfig],
+  );
+
+  // Helper function to get hyperlink styles
+  const getHyperlinkStyles = useCallback(
+    (columnKey: string) => {
+      const config = getHyperlinkConfig(columnKey);
+      if (!config) return {};
+
+      const styles: React.CSSProperties = {};
+
+      if (config.styles.hyperlinkColor) {
+        styles.color = '#1890ff';
+      }
+
+      if (config.styles.underline) {
+        styles.textDecoration = 'underline';
+      }
+
+      if (config.styles.fontWeight !== 'normal') {
+        styles.fontWeight =
+          config.styles.fontWeight === 'bold' ? 'bold' : '300';
+      }
+
+      if (config.styles.fontStyle === 'italic') {
+        styles.fontStyle = 'italic';
+      }
+
+      if (config.styles.backgroundColor) {
+        styles.backgroundColor = '#f0f8ff';
+      }
+
+      if (config.styles.borderRadius) {
+        styles.borderRadius = '4px';
+      }
+
+      if (config.styles.padding) {
+        styles.padding = '2px 6px';
+      }
+
+      if (config.styles.hoverEffect) {
+        styles.transition = 'all 0.2s ease';
+      }
+
+      return styles;
+    },
+    [getHyperlinkConfig],
+  );
+
+  // Helper function to render hyperlink content with icon
+  const renderHyperlinkContent = useCallback(
+    (columnKey: string, displayText: string) => {
+      const config = getHyperlinkConfig(columnKey);
+      if (!config) return displayText;
+
+      const icon = config.styles.redirectIcon ? (
+        <span style={{ marginLeft: '4px', fontSize: '12px' }}>↗</span>
+      ) : null;
+
+      if (config.styles.redirectIcon && config.styles.iconPosition === 'left') {
+        return (
+          <>
+            {icon}
+            {displayText}
+          </>
+        );
+      }
+
+      return (
+        <>
+          {displayText}
+          {icon}
+        </>
+      );
     },
     [getHyperlinkConfig],
   );
@@ -819,10 +857,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
   const getColumnConfigs = useCallback(
     (column: DataColumnMeta, i: number): ColumnWithLooseAccessor<D> => {
-      console.log(
-        `🏗️ Building column config for: ${column.key} (${column.label})`,
-      );
-
       const {
         key,
         label,
@@ -897,14 +931,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           // Check if this column should be hyperlinked
           const hyperlinkUrl = getHyperlinkUrl(key, row.original);
           const displayText = getHyperlinkDisplayText(value);
-
-          console.log(`🎯 Cell rendering for column ${key}:`, {
-            value,
-            hyperlinkUrl,
-            displayText,
-            hasHyperlink: !!hyperlinkUrl,
-            rowData: row.original,
-          });
 
           let backgroundColor;
           let arrow = '';
@@ -1075,8 +1101,9 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                       rel="noopener noreferrer"
                       className="dt-hyperlink"
                       onClick={e => e.stopPropagation()}
+                      style={getHyperlinkStyles(key)}
                     >
-                      {displayText}
+                      {renderHyperlinkContent(key, displayText)}
                     </a>
                   ) : (
                     text
@@ -1092,8 +1119,9 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                       rel="noopener noreferrer"
                       className="dt-hyperlink"
                       onClick={e => e.stopPropagation()}
+                      style={getHyperlinkStyles(key)}
                     >
-                      {displayText}
+                      {renderHyperlinkContent(key, displayText)}
                     </a>
                   ) : (
                     text
@@ -1194,6 +1222,8 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       totals,
       columnColorFormatters,
       columnOrderToggle,
+      getHyperlinkStyles,
+      renderHyperlinkContent,
     ],
   );
 
