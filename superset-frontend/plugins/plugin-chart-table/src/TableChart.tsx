@@ -267,7 +267,6 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     basicColorColumnFormatters,
     hyperlinkConfigs = { enabled: false, configs: [] },
   } = props;
-
   const comparisonColumns = [
     { key: 'all', label: t('Display all') },
     { key: '#', label: '#' },
@@ -318,28 +317,9 @@ export default function TableChart<D extends DataRecord = DataRecord>(
   const getHyperlinkConfig = useCallback(
     (columnKey: string) => {
       if (!hyperlinkConfigs.enabled) return null;
-      
-      // Try multiple matching strategies
-      return hyperlinkConfigs.configs.find(config => {
-        // Direct match
-        if (config.displayColumn === columnKey) return true;
-        
-        // Match after removing common prefixes
-        const cleanKey = columnKey.replace(/^[^:]+:\s*/, '').replace(/^Column:\s*/, '');
-        if (config.displayColumn === cleanKey) return true;
-        
-        // Match by label if available
-        const column = filteredColumnsMeta.find(col => col.key === columnKey);
-        if (column && config.displayColumn === column.label) return true;
-        
-        // Match by column name (case insensitive)
-        if (config.displayColumn.toLowerCase() === columnKey.toLowerCase()) return true;
-        if (config.displayColumn.toLowerCase() === cleanKey.toLowerCase()) return true;
-        
-        return false;
-      });
+      return hyperlinkConfigs.configs.find(config => config.displayColumn === columnKey);
     },
-    [hyperlinkConfigs, filteredColumnsMeta],
+    [hyperlinkConfigs],
   );
 
   // Helper function to get URL for a hyperlinked column
@@ -351,7 +331,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       const urlValue = rowData[config.urlColumn as keyof D];
       return validateAndFormatUrl(urlValue);
     },
-    [getHyperlinkConfig, hyperlinkConfigs.configs],
+    [getHyperlinkConfig],
   );
 
   // Helper function to check if a column should be hidden (URL column)
