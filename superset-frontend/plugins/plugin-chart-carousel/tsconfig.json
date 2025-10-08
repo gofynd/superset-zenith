@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "outDir": "lib",
+    "declaration": true,
+    "declarationMap": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "lib": ["es2017", "dom"],
+    "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@superset-ui/core": ["../../packages/superset-ui-core/src"],
+      "@superset-ui/chart-controls": ["../../packages/superset-ui-chart-controls/src"],
+      "@superset-ui/plugin-chart-table": ["../plugin-chart-table/src"]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "esm"
+  ]
+}
