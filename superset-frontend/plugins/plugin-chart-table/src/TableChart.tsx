@@ -62,11 +62,29 @@ import {
   TableOutlined,
 } from '@ant-design/icons';
 import { isEmpty, isNumber } from 'lodash';
+// Inline SVG for newtab icon to avoid import issues
 import {
   ColorSchemeEnum,
   DataColumnMeta,
   TableChartTransformedProps,
 } from './types';
+
+// Inline NewTabIcon component
+const NewTabIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 48 48"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M0 0h48v48H0z" fill="none"/>
+    <g>
+      <polygon points="44,30 40,30 40,38 8,38 8,10 20,10 20,6 4,6 4,42 44,42" fill="currentColor"/>
+      <polygon points="26,26.828 40,12.828 40,24 44,24 44,6 26,6 26,10 37.172,10 23.172,24" fill="currentColor"/>
+    </g>
+  </svg>
+);
 import DataTable, {
   DataTableProps,
   SearchInputProps,
@@ -563,12 +581,19 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       const styles = config.styles || defaultStyles;
       const cssStyles: React.CSSProperties = {};
 
+      // Always set color to override CSS class default
       if (styles.hyperlinkColor) {
         cssStyles.color = 'rgb(53,53,245)';
+      } else {
+        // Use default text color when hyperlink color is disabled
+        cssStyles.color = 'inherit';
       }
 
+      // Always set text decoration to override CSS class default
       if (styles.underline) {
         cssStyles.textDecoration = 'underline';
+      } else {
+        cssStyles.textDecoration = 'none';
       }
 
       if (styles.fontWeight !== 'normal') {
@@ -608,55 +633,31 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       const styles = config.styles || defaultStyles;
 
       const icon = styles.redirectIcon ? (
-        <span
+        <NewTabIcon
           style={{
             marginLeft: '4px',
-            fontSize: '12px',
-            textDecoration: 'none',
-            display: 'inline-block',
             width: '12px',
             height: '12px',
+            textDecoration: 'none',
             verticalAlign: 'middle',
+            display: 'inline-block',
           }}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="currentColor"
-            style={{ textDecoration: 'none' }}
-          >
-            <path d="M3 2h6v1H4.414l4.293 4.293-.707.707L3.707 3.707V8H3V2z" />
-            <path d="M2 3h1v7h7v-1H3V3z" />
-          </svg>
-        </span>
+        />
       ) : null;
 
       if (styles.redirectIcon && styles.iconPosition === 'left') {
         return (
           <>
-            <span
+            <NewTabIcon
               style={{
                 marginRight: '4px',
-                fontSize: '12px',
-                textDecoration: 'none',
-                display: 'inline-block',
                 width: '12px',
                 height: '12px',
+                textDecoration: 'none',
                 verticalAlign: 'middle',
+                display: 'inline-block',
               }}
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="currentColor"
-                style={{ textDecoration: 'none' }}
-              >
-                <path d="M3 2h6v1H4.414l4.293 4.293-.707.707L3.707 3.707V8H3V2z" />
-                <path d="M2 3h1v7h7v-1H3V3z" />
-              </svg>
-            </span>
+            />
             {displayText}
           </>
         );

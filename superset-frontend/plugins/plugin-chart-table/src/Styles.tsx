@@ -119,19 +119,29 @@ export default styled.div`
       border-right: none;
     }
 
-    /* Hyperlink styling */
+    /* Hyperlink styling - only apply defaults when no custom styles are provided */
     .dt-hyperlink {
-      color: ${theme.colors.primary.base};
-      text-decoration: underline;
       cursor: pointer;
     }
 
-    .dt-hyperlink:hover {
-      color: ${theme.colors.primary.dark1};
+    /* Default hyperlink styles - only applied when no inline styles override them */
+    .dt-hyperlink:not([style*="color"]) {
+      color: ${theme.colors.primary.base};
+    }
+
+    .dt-hyperlink:not([style*="text-decoration"]) {
       text-decoration: underline;
     }
 
-    .dt-hyperlink:visited {
+    .dt-hyperlink:hover:not([style*="color"]) {
+      color: ${theme.colors.primary.dark1};
+    }
+
+    .dt-hyperlink:hover:not([style*="text-decoration"]) {
+      text-decoration: underline;
+    }
+
+    .dt-hyperlink:visited:not([style*="color"]) {
       color: ${theme.colors.primary.light1};
     }
   `}
