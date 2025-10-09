@@ -70,30 +70,6 @@ export interface HyperlinkConfigs {
   configs: HyperlinkConfig[];
 }
 
-export interface ActionButtonConfig {
-  displayColumn: string;
-  urlColumn: string;
-  labelColumn?: string;
-  conditionColumn?: string;
-  styles: {
-    buttonColor: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'custom';
-    customColor?: string;
-    buttonSize: 'small' | 'medium' | 'large';
-    icon?: string;
-    iconPosition: 'left' | 'right' | 'none';
-    borderRadius: 'none' | 'small' | 'medium' | 'large';
-    fontWeight: 'normal' | 'bold' | 'light';
-    hoverEffect: boolean;
-    tooltip?: string;
-    tooltipColumn?: string;
-  };
-}
-
-export interface ActionButtonConfigs {
-  enabled: boolean;
-  configs: ActionButtonConfig[];
-}
-
 export interface DataColumnMeta {
   // `key` is what is called `label` in the input props
   key: string;
@@ -135,7 +111,6 @@ export type TableChartFormData = QueryFormData & {
   column_config?: Record<string, TableColumnConfig>;
   allow_rearrange_columns?: boolean;
   hyperlink_configs?: HyperlinkConfigs;
-  action_button_configs?: ActionButtonConfigs;
 };
 
 export interface TableChartProps extends ChartProps {
@@ -192,7 +167,6 @@ export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
   basicColorColumnFormatters?: { [Key: string]: BasicColorFormatterType }[];
   startDateOffset?: string;
   hyperlinkConfigs?: HyperlinkConfigs;
-  actionButtonConfigs?: ActionButtonConfigs;
 }
 
 export enum ColorSchemeEnum {
