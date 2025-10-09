@@ -287,6 +287,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     basicColorFormatters,
     basicColorColumnFormatters,
     hyperlinkConfigs = { enabled: false, configs: [] },
+    actionButtonConfigs = { enabled: false, configs: [] },
   } = props;
 
   const comparisonColumns = [
@@ -671,6 +672,197 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       );
     },
     [getHyperlinkConfig],
+  );
+
+  // Action Button Functions
+  const getActionButtonConfig = useCallback(
+    (columnKey: string) => {
+      if (!actionButtonConfigs.enabled) {
+        return null;
+      }
+
+      const config = actionButtonConfigs.configs.find(
+        config => config.displayColumn === columnKey
+      );
+
+      if (!config) {
+        return null;
+      }
+
+      // Validate that the URL column exists
+      const urlColumnExists = filteredColumnsMeta.some(
+        col => col.key === config.urlColumn
+      );
+
+      if (!urlColumnExists) {
+        return null;
+      }
+
+      return config;
+    },
+    [actionButtonConfigs, filteredColumnsMeta],
+  );
+
+  // Helper function to get URL for an action button
+  const getActionButtonUrl = useCallback(
+    (columnKey: string, rowData: D) => {
+      const config = getActionButtonConfig(columnKey);
+      if (!config) {
+        return null;
+      }
+
+      const urlValue = rowData[config.urlColumn as keyof D];
+      const formattedUrl = validateAndFormatUrl(urlValue);
+      return formattedUrl;
+    },
+    [getActionButtonConfig],
+  );
+
+  // Helper function to get action button styles
+  const getActionButtonStyles = useCallback(
+    (columnKey: string) => {
+      const config = getActionButtonConfig(columnKey);
+      if (!config) return {};
+
+      const styles = config.styles;
+      const cssStyles: React.CSSProperties = {};
+
+      // Apply custom color if specified
+      if (styles.buttonColor === 'custom' && styles.customColor) {
+        cssStyles.backgroundColor = styles.customColor;
+        cssStyles.borderColor = styles.customColor;
+        cssStyles.color = 'white';
+      }
+
+      return cssStyles;
+    },
+    [getActionButtonConfig],
+  );
+
+  // Helper function to get action button classes
+  const getActionButtonClasses = useCallback(
+    (columnKey: string) => {
+      const config = getActionButtonConfig(columnKey);
+      if (!config) return 'dt-action-button';
+
+      const styles = config.styles;
+      const classes = ['dt-action-button'];
+
+      // Add color class
+      if (styles.buttonColor !== 'custom') {
+        classes.push(styles.buttonColor);
+      }
+
+      // Add size class
+      classes.push(styles.buttonSize);
+
+      // Add border radius class
+      classes.push(`border-radius-${styles.borderRadius}`);
+
+      // Add font weight class
+      classes.push(`font-weight-${styles.fontWeight}`);
+
+      // Add hover effect class
+      if (styles.hoverEffect) {
+        classes.push('hover-effect');
+      }
+
+      return classes.join(' ');
+    },
+    [getActionButtonConfig],
+  );
+
+  // Helper function to get action button label
+  const getActionButtonLabel = useCallback(
+    (columnKey: string, rowData: D) => {
+      const config = getActionButtonConfig(columnKey);
+      if (!config) return 'Action';
+
+      // Use label from column if specified
+      if (config.labelColumn) {
+        const labelValue = rowData[config.labelColumn as keyof D];
+        return labelValue ? String(labelValue) : 'Action';
+      }
+
+      // Use static label from config
+      return 'Action';
+    },
+    [getActionButtonConfig],
+  );
+
+  // Helper function to get action button tooltip
+  const getActionButtonTooltip = useCallback(
+    (columnKey: string, rowData: D) => {
+      const config = getActionButtonConfig(columnKey);
+      if (!config) return undefined;
+
+      // Use tooltip from column if specified
+      if (config.styles.tooltipColumn) {
+        const tooltipValue = rowData[config.styles.tooltipColumn as keyof D];
+        return tooltipValue ? String(tooltipValue) : undefined;
+      }
+
+      // Use static tooltip from config
+      return config.styles.tooltip || undefined;
+    },
+    [getActionButtonConfig],
+  );
+
+  // Helper function to check if action button should be shown
+  const shouldShowActionButton = useCallback(
+    (columnKey: string, rowData: D) => {
+      const config = getActionButtonConfig(columnKey);
+      if (!config) return false;
+
+      // If no condition column specified, always show
+      if (!config.conditionColumn) return true;
+
+      // Check condition column value
+      const conditionValue = rowData[config.conditionColumn as keyof D];
+      return Boolean(conditionValue);
+    },
+    [getActionButtonConfig],
+  );
+
+  // Helper function to render action button content
+  const renderActionButtonContent = useCallback(
+    (columnKey: string, rowData: D) => {
+      const config = getActionButtonConfig(columnKey);
+      if (!config) return null;
+
+      const url = getActionButtonUrl(columnKey, rowData);
+      const label = getActionButtonLabel(columnKey, rowData);
+      const tooltip = getActionButtonTooltip(columnKey, rowData);
+      const shouldShow = shouldShowActionButton(columnKey, rowData);
+
+      if (!shouldShow || !url) return null;
+
+      const buttonClasses = getActionButtonClasses(columnKey);
+      const buttonStyles = getActionButtonStyles(columnKey);
+
+      return (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={buttonClasses}
+          style={buttonStyles}
+          title={tooltip}
+          onClick={e => e.stopPropagation()}
+        >
+          {label}
+        </a>
+      );
+    },
+    [
+      getActionButtonConfig,
+      getActionButtonUrl,
+      getActionButtonLabel,
+      getActionButtonTooltip,
+      shouldShowActionButton,
+      getActionButtonClasses,
+      getActionButtonStyles,
+    ],
   );
 
   const handleContextMenu =
@@ -1160,6 +1352,8 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                     >
                       {renderHyperlinkContent(key, displayText)}
                     </a>
+                  ) : renderActionButtonContent(key, row.original) ? (
+                    renderActionButtonContent(key, row.original)
                   ) : (
                     text
                   )}
@@ -1178,6 +1372,8 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                     >
                       {renderHyperlinkContent(key, displayText)}
                     </a>
+                  ) : renderActionButtonContent(key, row.original) ? (
+                    renderActionButtonContent(key, row.original)
                   ) : (
                     text
                   )}
@@ -1279,6 +1475,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       columnOrderToggle,
       getHyperlinkStyles,
       renderHyperlinkContent,
+      renderActionButtonContent,
     ],
   );
 

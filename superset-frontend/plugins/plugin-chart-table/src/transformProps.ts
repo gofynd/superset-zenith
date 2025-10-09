@@ -405,6 +405,7 @@ const transformProps = (
     comparison_color_scheme: comparisonColorScheme = ColorSchemeEnum.Green,
     comparison_type,
     hyperlink_configs: hyperlinkConfigs = { enabled: false, configs: [] },
+    action_button_configs: actionButtonConfigs = { enabled: false, configs: [] },
   } = formData;
   const isUsingTimeComparison =
     !isEmpty(time_compare) &&
@@ -645,6 +646,7 @@ const transformProps = (
     startDateOffset,
     basicColorColumnFormatters,
     hyperlinkConfigs,
+    actionButtonConfigs,
   };
 };
 
