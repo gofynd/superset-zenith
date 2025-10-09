@@ -50,6 +50,7 @@ import { isEmpty } from 'lodash';
 import { PAGE_SIZE_OPTIONS } from './consts';
 import { ColorSchemeEnum } from './types';
 import HyperlinkConfigControl from './controls/HyperlinkConfigControl';
+import ActionButtonConfigControl from './controls/ActionButtonConfigControl';
 
 function getQueryMode(controls: ControlStateMapping): QueryMode {
   const mode = controls?.query_mode?.value;
@@ -463,6 +464,24 @@ const config: ControlPanelConfig = {
               label: t('Hyperlink Columns'),
               description: t(
                 'Configure columns to display as hyperlinks using values from other columns as URLs',
+              ),
+              renderTrigger: true,
+              default: { enabled: false, configs: [] },
+              mapStateToProps: (state: any) => ({
+                columns: state.datasource?.columns || [],
+                queryResponse: state.chart?.queriesResponse?.[0] as
+                  | ChartDataResponseResult
+                  | undefined,
+              }),
+            },
+          },
+          {
+            name: 'action_button_configs',
+            config: {
+              type: ActionButtonConfigControl,
+              label: t('Action Buttons'),
+              description: t(
+                'Configure columns to display as action buttons with customizable styling and behavior',
               ),
               renderTrigger: true,
               default: { enabled: false, configs: [] },
