@@ -1,0 +1,56 @@
+{
+  "name": "@superset-ui/plugin-chart-carousel",
+  "version": "0.1.0",
+  "description": "Apache Superset Chart Plugin - Carousel",
+  "sideEffects": false,
+  "main": "lib/index.js",
+  "module": "esm/index.js",
+  "files": [
+    "lib",
+    "esm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apache/superset.git"
+  },
+  "keywords": [
+    "superset",
+    "carousel",
+    "gallery",
+    "images"
+  ],
+  "author": "Apache Software Foundation",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/apache/superset/issues"
+  },
+  "homepage": "https://github.com/apache/superset#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@superset-ui/core": "^0.19.0",
+    "@superset-ui/chart-controls": "^0.19.0",
+    "@superset-ui/plugin-chart-table": "^0.19.0"
+  },
+  "peerDependencies": {
+    "react": "^16.13.1 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.13.1 || ^17.0.0 || ^18.0.0"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "@types/react": "^16.9.0 || ^17.0.0 || ^18.0.0",
+    "@types/react-dom": "^16.9.0 || ^17.0.0 || ^18.0.0",
+    "typescript": "^4.1.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "@testing-library/react": "^13.0.0",
+    "@testing-library/jest-dom": "^5.16.0",
+    "@testing-library/user-event": "^14.0.0",
+    "jsdom": "^20.0.0"
+  }
+}
