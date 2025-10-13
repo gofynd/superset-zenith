@@ -190,6 +190,7 @@ export interface BaseFormData extends TimeRange, FormDataResidual {
   /** Dashboard menu visibility controls */
   show_fullscreen_menu?: boolean;
   show_data_menu?: boolean;
+  enable_drill_to_detail?: boolean;
   /** Download menu visibility controls */
   enable_export_csv?: boolean;
   enable_export_excel?: boolean;

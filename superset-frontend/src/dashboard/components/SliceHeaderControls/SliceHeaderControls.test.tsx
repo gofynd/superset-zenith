@@ -99,7 +99,7 @@ const createProps = (viz_type = 'sunburst_v2') =>
     chartStatus: 'rendered',
     showControls: true,
     supersetCanShare: true,
-    formData: { slice_id: 1, datasource: '58__table', viz_type: 'sunburst_v2' },
+    formData: { slice_id: 18, datasource: '58__table', viz_type: 'sunburst_v2' },
     exploreUrl: '/explore',
   }) as SliceHeaderControlsProps;
 
@@ -531,20 +531,96 @@ test('Should not show "View as table" even when show_data_menu is true but user 
   expect(screen.queryByText('View as table')).not.toBeInTheDocument();
 });
 
-test('Should handle both menu controls being disabled', () => {
+test('Should handle all menu controls being disabled', () => {
   const props = createProps();
   props.formData = {
     ...props.formData,
     show_fullscreen_menu: false,
     show_data_menu: false,
+    enable_drill_to_detail: false,
   };
-  renderWrapper(props);
+  renderWrapper(props, {
+    Admin: [
+      ['can_samples', 'Datasource'],
+      ['can_drill', 'Dashboard'],
+    ],
+  });
   expect(screen.queryByText('Enter fullscreen')).not.toBeInTheDocument();
   expect(screen.queryByText('Exit fullscreen')).not.toBeInTheDocument();
   expect(screen.queryByText('View as table')).not.toBeInTheDocument();
+  expect(screen.queryByText('Drill to detail')).not.toBeInTheDocument();
   
   // But other menu items should still be present
   expect(screen.getByText('Edit chart')).toBeInTheDocument();
+});
+
+// Tests for drill to detail menu visibility controls
+test('Should hide "Drill to detail" when enable_drill_to_detail is false', () => {
+  const props = {
+    ...createProps(),
+    supersetCanExplore: true,
+  };
+  props.formData = {
+    ...props.formData,
+    enable_drill_to_detail: false,
+  };
+  renderWrapper(props, {
+    Admin: [
+      ['can_samples', 'Datasource'],
+      ['can_drill', 'Dashboard'],
+    ],
+  });
+  expect(screen.queryByText('Drill to detail')).not.toBeInTheDocument();
+});
+
+test('Should show "Drill to detail" when enable_drill_to_detail is true and user has permissions', () => {
+  const props = {
+    ...createProps(),
+    supersetCanExplore: true,
+  };
+  props.slice.slice_id = 18;
+  props.formData = {
+    ...props.formData,
+    enable_drill_to_detail: true,
+  };
+  renderWrapper(props, {
+    Admin: [
+      ['can_samples', 'Datasource'],
+      ['can_drill', 'Dashboard'],
+    ],
+  });
+  expect(screen.getByText('Drill to detail')).toBeInTheDocument();
+});
+
+test('Should show "Drill to detail" when enable_drill_to_detail is undefined and user has permissions (default behavior)', () => {
+  const props = {
+    ...createProps(),
+    supersetCanExplore: true,
+  };
+  props.slice.slice_id = 18;
+  // Explicitly not setting enable_drill_to_detail to test default behavior
+  renderWrapper(props, {
+    Admin: [
+      ['can_samples', 'Datasource'],
+      ['can_drill', 'Dashboard'],
+    ],
+  });
+  expect(screen.getByText('Drill to detail')).toBeInTheDocument();
+});
+
+test('Should not show "Drill to detail" even when enable_drill_to_detail is true but user lacks permissions', () => {
+  const props = {
+    ...createProps(),
+    supersetCanExplore: false,
+  };
+  props.formData = {
+    ...props.formData,
+    enable_drill_to_detail: true,
+  };
+  renderWrapper(props, {
+    Admin: [['invalid_permission', 'Dashboard']],
+  });
+  expect(screen.queryByText('Drill to detail')).not.toBeInTheDocument();
 });
 
 test('Should not show the "Edit chart" button', () => {

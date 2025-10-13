@@ -246,13 +246,15 @@ const DrillDetailMenuItems = ({
     <>
       {drillToDetailMenuItem}
       {isContextMenu && drillToDetailByMenuItem}
-      <DrillDetailModal
-        chartId={chartId}
-        formData={formData}
-        initialFilters={modalFilters}
-        showModal={showModal}
-        onHideModal={closeModal}
-      />
+      {!drillDisabled && handlesDimensionContextMenu && (
+        <DrillDetailModal
+          chartId={chartId}
+          formData={formData}
+          initialFilters={modalFilters}
+          showModal={showModal}
+          onHideModal={closeModal}
+        />
+      )}
     </>
   );
 };
