@@ -127,6 +127,7 @@ const ChartContextMenu = (
   const showDrillToDetail =
     isFeatureEnabled(FeatureFlag.DrillToDetail) &&
     canDrillToDetail &&
+    (formData?.enable_drill_to_detail !== false) &&
     isDisplayed(ContextMenuItem.DrillToDetail);
 
   const showDrillBy =

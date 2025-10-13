@@ -59,12 +59,14 @@ describe('QueryFormData Download Controls', () => {
         viz_type: 'table',
         show_fullscreen_menu: false,
         show_data_menu: true,
+        enable_drill_to_detail: true,
         enable_export_csv: true,
         enable_download_image: false,
       };
 
       expect(formData.show_fullscreen_menu).toBe(false);
       expect(formData.show_data_menu).toBe(true);
+      expect(formData.enable_drill_to_detail).toBe(true);
       expect(formData.enable_export_csv).toBe(true);
       expect(formData.enable_download_image).toBe(false);
     });
@@ -95,6 +97,10 @@ describe('QueryFormData Download Controls', () => {
       formData.enable_download_image = false;
       formData.enable_download_image = undefined;
 
+      formData.enable_drill_to_detail = true;
+      formData.enable_drill_to_detail = false;
+      formData.enable_drill_to_detail = undefined;
+
       expect(true).toBe(true); // If we reach here, TypeScript compilation succeeded
     });
   });
@@ -112,12 +118,14 @@ describe('QueryFormData Download Controls', () => {
       const isExportFullCsvEnabled = formData.enable_export_full_csv !== false;
       const isExportFullExcelEnabled = formData.enable_export_full_excel !== false;
       const isDownloadImageEnabled = formData.enable_download_image !== false;
+      const isDrillToDetailEnabled = formData.enable_drill_to_detail !== false;
 
       expect(isExportCsvEnabled).toBe(true);
       expect(isExportExcelEnabled).toBe(true);
       expect(isExportFullCsvEnabled).toBe(true);
       expect(isExportFullExcelEnabled).toBe(true);
       expect(isDownloadImageEnabled).toBe(true);
+      expect(isDrillToDetailEnabled).toBe(true);
     });
 
     test('should respect explicit false values', () => {
@@ -129,6 +137,7 @@ describe('QueryFormData Download Controls', () => {
         enable_export_full_csv: false,
         enable_export_full_excel: false,
         enable_download_image: false,
+        enable_drill_to_detail: false,
       };
 
       const isExportCsvEnabled = formData.enable_export_csv !== false;
@@ -136,12 +145,14 @@ describe('QueryFormData Download Controls', () => {
       const isExportFullCsvEnabled = formData.enable_export_full_csv !== false;
       const isExportFullExcelEnabled = formData.enable_export_full_excel !== false;
       const isDownloadImageEnabled = formData.enable_download_image !== false;
+      const isDrillToDetailEnabled = formData.enable_drill_to_detail !== false;
 
       expect(isExportCsvEnabled).toBe(false);
       expect(isExportExcelEnabled).toBe(false);
       expect(isExportFullCsvEnabled).toBe(false);
       expect(isExportFullExcelEnabled).toBe(false);
       expect(isDownloadImageEnabled).toBe(false);
+      expect(isDrillToDetailEnabled).toBe(false);
     });
   });
 });

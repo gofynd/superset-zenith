@@ -845,7 +845,7 @@ const SliceHeaderControls = (props: SliceHeaderControlsPropsWithRouter) => {
         </Menu.Item>
       )}
 
-      {isFeatureEnabled(FeatureFlag.DrillToDetail) && canDrillToDetail && (
+      {isFeatureEnabled(FeatureFlag.DrillToDetail) && canDrillToDetail && (props.formData?.enable_drill_to_detail !== false) && (
         <DrillDetailMenuItems
           chartId={slice.slice_id}
           formData={props.formData}

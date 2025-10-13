@@ -395,6 +395,16 @@ const show_data_menu: SharedControlConfig<'CheckboxControl'> = {
   renderTrigger: true,
 };
 
+const enable_drill_to_detail: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable Drill to Detail'),
+  default: true,
+  description: t(
+    'Show the "Drill to Detail" option in the chart menu on dashboards',
+  ),
+  renderTrigger: true,
+};
+
 const enable_export_csv: SharedControlConfig<'CheckboxControl'> = {
   type: 'CheckboxControl',
   label: t('Enable Export to .CSV'),
@@ -506,6 +516,7 @@ export default {
   ai_custom_system_prompt,
   show_fullscreen_menu,
   show_data_menu,
+  enable_drill_to_detail,
   enable_export_csv,
   enable_export_excel,
   enable_export_full_csv,
