@@ -486,9 +486,10 @@ class ChartRenderer extends Component {
       vizType !== 'big_number_with_trendline' &&
       Boolean(currentFormData && currentFormData.enable_ai_insights);
     const defaultReserved = 64;
-    const bufferPx = 8;
+    // Account for AI summary margins: marginTop (8px) + marginBottom (12px) = 20px
+    const aiSummaryMargins = vizType === 'country_map' ? 0 : 20;
     const reserved = showAISummary
-      ? (this.state.aiBoxHeight || defaultReserved) + bufferPx
+      ? (this.state.aiBoxHeight || defaultReserved) + aiSummaryMargins
       : 0;
     const innerChartHeight = Math.max(50, (height || 0) - reserved);
 
