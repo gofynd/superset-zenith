@@ -106,6 +106,8 @@ export default function PopKPI(props: PopKPIProps) {
     enableDetailOnHover = true,
     metricName,
     yAxisFormat,
+    enableClickableCard = false,
+    redirectUrl,
   } = props;
 
   const [comparisonRange, setComparisonRange] = useState<string>('');
@@ -241,8 +243,32 @@ export default function PopKPI(props: PopKPIProps) {
   const { isOverflowing, symbolContainerRef, wrapperRef } =
     useOverflowDetection(flexGap);
 
+  const handleCardClick = () => {
+    if (enableClickableCard && redirectUrl) {
+      // Open URL in new tab
+      window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const containerStyle = {
+    ...wrapperDivStyles,
+    cursor: enableClickableCard && redirectUrl ? 'pointer' : 'default',
+  };
+
   return (
-    <div css={wrapperDivStyles} ref={wrapperRef}>
+    <div 
+      css={containerStyle} 
+      ref={wrapperRef}
+      onClick={enableClickableCard ? handleCardClick : undefined}
+      role={enableClickableCard ? 'button' : undefined}
+      tabIndex={enableClickableCard ? 0 : undefined}
+      onKeyDown={enableClickableCard ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      } : undefined}
+    >
       <NumbersContainer
         css={
           isOverflowing &&

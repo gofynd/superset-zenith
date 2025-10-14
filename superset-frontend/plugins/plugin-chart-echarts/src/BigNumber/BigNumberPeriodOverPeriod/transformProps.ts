@@ -90,6 +90,8 @@ export default function transformProps(chartProps: ChartProps) {
     comparisonColorEnabled,
     percentDifferenceFormat,
     enableDetailOnHover = true,
+    enableClickableCard = false,
+    urlColumn,
   } = formData;
   const { data: dataA = [] } = queriesData[0];
   const data = dataA;
@@ -194,6 +196,15 @@ export default function transformProps(chartProps: ChartProps) {
   valueDifference = numberFormatter(valueDifference);
   const percentDifference: string = formatPercentChange(percentDifferenceNum);
 
+  // Extract URL for clickable card feature
+  let redirectUrl: string | undefined;
+  if (enableClickableCard && urlColumn && data.length > 0) {
+    const urlValue = data[0][urlColumn];
+    if (urlValue && typeof urlValue === 'string') {
+      redirectUrl = urlValue;
+    }
+  }
+
   return {
     width,
     height,
@@ -217,7 +228,8 @@ export default function transformProps(chartProps: ChartProps) {
     shift: timeComparison,
     dashboardTimeRange: formData?.extraFormData?.time_range,
     enableDetailOnHover,
-    exactBigNumber,
     yAxisFormat,
+    enableClickableCard,
+    redirectUrl,
   };
 }

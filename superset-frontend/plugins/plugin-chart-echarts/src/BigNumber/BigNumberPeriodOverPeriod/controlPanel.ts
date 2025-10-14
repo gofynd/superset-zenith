@@ -107,6 +107,45 @@ const config: ControlPanelConfig = {
         ['currency_format'],
         [
           {
+            name: 'enable_clickable_card',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Enable clickable card'),
+              renderTrigger: true,
+              default: false,
+              description: t('Make the entire card clickable to redirect to a URL'),
+            },
+          },
+        ],
+        [
+          {
+            name: 'url_column',
+            config: {
+              type: 'SelectControl',
+              label: t('URL Column'),
+              renderTrigger: true,
+              clearable: true,
+              description: t('Select the column containing the redirect URL'),
+              visibility: ({ controls }) =>
+                controls?.enable_clickable_card?.value === true,
+              shouldMapStateToProps() {
+                return true;
+              },
+              mapStateToProps(explore, _, chart) {
+                const { colnames = [] } = chart?.queriesResponse?.[0] ?? {};
+                const columnOptions = colnames.map((colname: string) => ({
+                  value: colname,
+                  label: colname,
+                }));
+                return {
+                  choices: columnOptions,
+                };
+              },
+            },
+          },
+        ],
+        [
+          {
             ...headerFontSize,
             config: { ...headerFontSize.config, default: 0.2 },
           },

@@ -74,6 +74,8 @@ export default function transformProps(
     currencyFormat,
     timeRangeFixed,
     enableDetailOnHover = true,
+    enableClickableCard = false,
+    urlColumn,
   } = formData;
   const granularity = extractTimegrain(rawFormData);
   const {
@@ -97,6 +99,15 @@ export default function transformProps(
   let bigNumber = data.length === 0 ? null : data[0][metricName];
   let timestamp = data.length === 0 ? null : data[0][xAxisLabel];
   let bigNumberFallback;
+
+  // Extract URL for clickable card feature
+  let redirectUrl: string | undefined;
+  if (enableClickableCard && urlColumn && data.length > 0) {
+    const urlValue = data[0][urlColumn];
+    if (urlValue && typeof urlValue === 'string') {
+      redirectUrl = urlValue;
+    }
+  }
 
   // Process the main data first
   const metricColtypeIndex = colnames.findIndex(name => name === metricName);
@@ -159,10 +170,10 @@ export default function transformProps(
   }
 
   // Check for time-offset columns in the single query
-  const timeOffsetColumns =
-    queriesData[0]?.colnames?.filter(
-      (col: string) => col.includes('__') && col !== metricName,
-    ) || [];
+  // const timeOffsetColumns =
+  //   queriesData[0]?.colnames?.filter(
+  //     (col: string) => col.includes('__') && col !== metricName,
+  //   ) || [];
 
   if (queriesData.length > 0 && timeCompare && timeCompare !== 'NoComparison') {
     const queryData = queriesData[0].data;
@@ -377,5 +388,7 @@ export default function transformProps(
     enableDetailOnHover,
     metric: getMetricLabel(metric),
     yAxisFormat,
+    enableClickableCard,
+    redirectUrl,
   };
 }
