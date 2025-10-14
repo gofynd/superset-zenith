@@ -133,10 +133,7 @@ const config: ControlPanelConfig = {
               },
               mapStateToProps(explore, _, chart) {
                 const { colnames = [] } = chart?.queriesResponse?.[0] ?? {};
-                const columnOptions = colnames.map((colname: string) => ({
-                  value: colname,
-                  label: colname,
-                }));
+                const columnOptions = colnames.map((colname: string) => [colname, colname]);
                 return {
                   choices: columnOptions,
                 };
