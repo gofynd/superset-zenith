@@ -101,6 +101,7 @@ import {
   validateAndFormatUrl,
   getHyperlinkDisplayText,
 } from './utils/urlUtils';
+import ChipButton from './components/ChipButton';
 
 type ValueRange = [number, number];
 
@@ -1150,16 +1151,34 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                 >
                   {arrow && <span css={arrowStyles}>{arrow}</span>}
                   {hyperlinkUrl ? (
-                    <a
-                      href={hyperlinkUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="dt-hyperlink"
-                      onClick={e => e.stopPropagation()}
-                      style={getHyperlinkStyles(key)}
-                    >
-                      {renderHyperlinkContent(key, displayText)}
-                    </a>
+                    (() => {
+                      const config = getHyperlinkConfig(key);
+                      if (config?.styles.showAsButton) {
+                        const chipLabel = config.styles.chipLabel || displayText;
+                        return (
+                          <ChipButton
+                            href={hyperlinkUrl}
+                            label={chipLabel}
+                            color={config.styles.chipColor}
+                            showIcon={config.styles.redirectIcon}
+                            iconPosition={config.styles.iconPosition}
+                            onClick={e => e.stopPropagation()}
+                          />
+                        );
+                      }
+                      return (
+                        <a
+                          href={hyperlinkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="dt-hyperlink"
+                          onClick={e => e.stopPropagation()}
+                          style={getHyperlinkStyles(key)}
+                        >
+                          {renderHyperlinkContent(key, displayText)}
+                        </a>
+                      );
+                    })()
                   ) : (
                     text
                   )}
@@ -1168,16 +1187,34 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                 <>
                   {arrow && <span css={arrowStyles}>{arrow}</span>}
                   {hyperlinkUrl ? (
-                    <a
-                      href={hyperlinkUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="dt-hyperlink"
-                      onClick={e => e.stopPropagation()}
-                      style={getHyperlinkStyles(key)}
-                    >
-                      {renderHyperlinkContent(key, displayText)}
-                    </a>
+                    (() => {
+                      const config = getHyperlinkConfig(key);
+                      if (config?.styles.showAsButton) {
+                        const chipLabel = config.styles.chipLabel || displayText;
+                        return (
+                          <ChipButton
+                            href={hyperlinkUrl}
+                            label={chipLabel}
+                            color={config.styles.chipColor}
+                            showIcon={config.styles.redirectIcon}
+                            iconPosition={config.styles.iconPosition}
+                            onClick={e => e.stopPropagation()}
+                          />
+                        );
+                      }
+                      return (
+                        <a
+                          href={hyperlinkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="dt-hyperlink"
+                          onClick={e => e.stopPropagation()}
+                          style={getHyperlinkStyles(key)}
+                        >
+                          {renderHyperlinkContent(key, displayText)}
+                        </a>
+                      );
+                    })()
                   ) : (
                     text
                   )}

@@ -62,6 +62,10 @@ export interface HyperlinkConfig {
     fontWeight: 'normal' | 'bold' | 'light';
     fontStyle: 'normal' | 'italic';
     hoverEffect: boolean;
+    // New button/chip styling options
+    showAsButton: boolean;
+    chipColor: string;
+    chipLabel: string;
   };
 }
 

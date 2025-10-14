@@ -177,7 +177,21 @@ export default function HyperlinkConfigControl({
   // Migrate existing configs to include default styles
   const migrateConfig = (config: any): HyperlinkConfig => {
     if (config.styles) {
-      return config as HyperlinkConfig;
+      // Ensure new properties exist with defaults
+      const styles = {
+        hyperlinkColor: false,
+        underline: true,
+        redirectIcon: false,
+        iconPosition: 'right' as const,
+        fontWeight: 'normal' as const,
+        fontStyle: 'normal' as const,
+        hoverEffect: true,
+        showAsButton: false,
+        chipColor: '#1976d2',
+        chipLabel: '',
+        ...config.styles,
+      };
+      return { ...config, styles };
     }
     
     return {
@@ -190,6 +204,9 @@ export default function HyperlinkConfigControl({
         fontWeight: 'normal',
         fontStyle: 'normal',
         hoverEffect: true,
+        showAsButton: false,
+        chipColor: '#1976d2',
+        chipLabel: '',
       },
     };
   };
@@ -280,6 +297,9 @@ export default function HyperlinkConfigControl({
         fontWeight: 'normal',
         fontStyle: 'normal',
         hoverEffect: true,
+        showAsButton: false,
+        chipColor: '#1976d2',
+        chipLabel: '',
       },
     };
     
@@ -448,6 +468,45 @@ export default function HyperlinkConfigControl({
                               <Select.Option value="italic">{t('Italic')}</Select.Option>
                             </Select>
                           </div>
+                        </Space>
+                      </div>
+
+                      {/* Button/Chip Styling */}
+                      <div className="styling-group">
+                        <h4>{t('Button/Chip Styling')}</h4>
+                        <Space direction="vertical" size="small">
+                          <Checkbox
+                            checked={config.styles.showAsButton}
+                            onChange={(e) => handleStyleChange(index, 'showAsButton', e.target.checked)}
+                          >
+                            {t('Show as Button (Chip)')}
+                          </Checkbox>
+                          {config.styles.showAsButton && (
+                            <>
+                              <div className="style-field">
+                                <label>{t('Chip Color')}</label>
+                                <input
+                                  type="color"
+                                  value={config.styles.chipColor}
+                                  onChange={(e) => handleStyleChange(index, 'chipColor', e.target.value)}
+                                  style={{ width: 120, height: 32 }}
+                                />
+                              </div>
+                              <div className="style-field">
+                                <label>{t('Chip Label')}</label>
+                                <input
+                                  type="text"
+                                  value={config.styles.chipLabel}
+                                  onChange={(e) => handleStyleChange(index, 'chipLabel', e.target.value)}
+                                  placeholder={t('Enter custom label (optional)')}
+                                  style={{ width: 200 }}
+                                />
+                                <small style={{ color: '#666', fontSize: '11px' }}>
+                                  {t('Leave empty to use column value as label')}
+                                </small>
+                              </div>
+                            </>
+                          )}
                         </Space>
                       </div>
 

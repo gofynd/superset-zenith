@@ -144,5 +144,31 @@ export default styled.div`
     .dt-hyperlink:visited:not([style*="color"]) {
       color: ${theme.colors.primary.light1};
     }
+
+    /* Chip button styling for table cells */
+    .dt-cell-chip {
+      display: inline-flex;
+      align-items: center;
+      margin: 2px 0;
+    }
+
+    /* Ensure chip buttons don't break table layout */
+    .dt-cell-chip button {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Chip button hover effects in table context */
+    .dt-cell-chip button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Ensure proper spacing in table cells with chip buttons */
+    td .dt-cell-chip {
+      vertical-align: middle;
+    }
   `}
 `;
