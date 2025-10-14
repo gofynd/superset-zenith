@@ -102,8 +102,12 @@ const SHOULD_UPDATE_ON_PROP_CHANGES = Object.keys(propTypes).filter(
 const DEFAULT_HEADER_HEIGHT = 22;
 
 const ChartWrapper = styled.div`
-  overflow: hidden;
   position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
   &.dashboard-chart--overflowable {
     overflow: visible;
@@ -121,6 +125,7 @@ const SliceContainer = styled.div`
   display: flex;
   flex-direction: column;
   max-height: 100%;
+  overflow: hidden;
 `;
 
 class Chart extends Component {
@@ -248,8 +253,10 @@ class Chart extends Component {
 
   getChartHeight() {
     const headerHeight = this.getHeaderHeight();
+    // Add small buffer (4px) to prevent content cutoff due to rounding or minor spacing issues
+    const heightBuffer = 4;
     return Math.max(
-      this.state.height - headerHeight - this.state.descriptionHeight,
+      this.state.height - headerHeight - this.state.descriptionHeight - heightBuffer,
       20,
     );
   }
