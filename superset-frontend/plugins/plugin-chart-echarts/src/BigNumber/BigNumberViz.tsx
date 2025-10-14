@@ -76,16 +76,25 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     subheader: '',
     subheaderFontSize: PROPORTION.SUBHEADER,
     timeRangeFixed: false,
+    enableClickableCard: false,
   };
 
   getClassName() {
-    const { className, showTrendLine, bigNumberFallback } = this.props;
+    const { className, showTrendLine, bigNumberFallback, enableClickableCard } = this.props;
     const names = `superset-legacy-chart-big-number ${className} ${
       bigNumberFallback ? 'is-fallback-value' : ''
-    }`;
+    } ${enableClickableCard ? 'clickable-card' : ''}`;
     if (showTrendLine) return names;
     return `${names} no-trendline`;
   }
+
+  handleCardClick = () => {
+    const { enableClickableCard, redirectUrl } = this.props;
+    if (enableClickableCard && redirectUrl) {
+      // Open URL in new tab
+      window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   createTemporaryContainer() {
     const container = document.createElement('div');
@@ -327,15 +336,34 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       kickerFontSize,
       headerFontSize,
       subheaderFontSize,
+      enableClickableCard,
+      redirectUrl,
     } = this.props;
     const className = this.getClassName();
+
+    const containerStyle = {
+      position: 'relative' as const,
+      cursor: enableClickableCard && redirectUrl ? 'pointer' : 'default',
+    };
 
     if (showTrendLine) {
       const chartHeight = Math.floor(PROPORTION.TRENDLINE * height);
       const allTextHeight = height - chartHeight;
 
       return (
-        <div className={className} style={{ position: 'relative' }}>
+        <div 
+          className={className} 
+          style={containerStyle}
+          onClick={enableClickableCard ? this.handleCardClick : undefined}
+          role={enableClickableCard ? 'button' : undefined}
+          tabIndex={enableClickableCard ? 0 : undefined}
+          onKeyDown={enableClickableCard ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.handleCardClick();
+            }
+          } : undefined}
+        >
           <div className="text-container" style={{ height: allTextHeight }}>
             {this.renderFallbackWarning()}
             {this.renderKicker(
@@ -358,7 +386,19 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     }
 
     return (
-      <div className={className} style={{ height, position: 'relative' }}>
+      <div 
+        className={className} 
+        style={{ ...containerStyle, height }}
+        onClick={enableClickableCard ? this.handleCardClick : undefined}
+        role={enableClickableCard ? 'button' : undefined}
+        tabIndex={enableClickableCard ? 0 : undefined}
+        onKeyDown={enableClickableCard ? (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.handleCardClick();
+          }
+        } : undefined}
+      >
         {this.renderFallbackWarning()}
         {this.renderKicker((kickerFontSize || 0) * height)}
         {this.renderHeader(Math.ceil(headerFontSize * height))}
@@ -421,6 +461,27 @@ export default styled(BigNumberVis)`
       .header-line,
       .subheader-line {
         opacity: ${theme.opacity.mediumHeavy};
+      }
+    }
+
+    &.clickable-card {
+      transition: all 0.2s ease;
+      border-radius: ${theme.borderRadius}px;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background-color: ${theme.colors.grayscale.light5};
+      }
+      
+      &:focus {
+        outline: 2px solid ${theme.colors.primary.base};
+        outline-offset: 2px;
+      }
+      
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       }
     }
 

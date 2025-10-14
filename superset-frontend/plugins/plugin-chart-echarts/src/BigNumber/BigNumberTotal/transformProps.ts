@@ -55,6 +55,8 @@ export default function transformProps(
     conditionalFormatting,
     currencyFormat,
     enableDetailOnHover = true,
+    enableClickableCard = false,
+    urlColumn,
   } = formData;
   const refs: Refs = {};
   const { data = [], coltypes = [] } = queriesData[0];
@@ -63,6 +65,15 @@ export default function transformProps(
   const formattedSubheader = subheader;
   const bigNumber =
     data.length === 0 ? null : parseMetricValue(data[0][metricName]);
+
+  // Extract URL for clickable card feature
+  let redirectUrl: string | undefined;
+  if (enableClickableCard && urlColumn && data.length > 0) {
+    const urlValue = data[0][urlColumn];
+    if (urlValue && typeof urlValue === 'string') {
+      redirectUrl = urlValue;
+    }
+  }
 
   // Handle comparison data if available and time comparison is enabled
   let previousPeriodValue: number | null = null;
@@ -86,10 +97,10 @@ export default function transformProps(
   }
 
   // Check for time-offset columns in the single query
-  const timeOffsetColumns =
-    queriesData[0]?.colnames?.filter(
-      (col: string) => col.includes('__') && col !== metricName,
-    ) || [];
+  // const timeOffsetColumns =
+  //   queriesData[0]?.colnames?.filter(
+  //     (col: string) => col.includes('__') && col !== metricName,
+  //   ) || [];
 
   if (queriesData.length > 0 && timeCompare && timeCompare !== 'NoComparison') {
     const queryData = queriesData[0].data;
@@ -203,6 +214,8 @@ export default function transformProps(
     enableDetailOnHover,
     metric: getMetricLabel(metric),
     yAxisFormat,
+    enableClickableCard,
+    redirectUrl,
   };
 
   return returnProps;

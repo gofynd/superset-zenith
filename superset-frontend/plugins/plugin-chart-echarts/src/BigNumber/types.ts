@@ -39,6 +39,8 @@ export type BigNumberTotalFormData = QueryFormData & {
   yAxisFormat?: string;
   forceTimestampFormatting?: boolean;
   enableDetailOnHover?: boolean;
+  enableClickableCard?: boolean;
+  urlColumn?: string;
 };
 
 export type BigNumberWithTrendlineFormData = BigNumberTotalFormData & {
@@ -106,4 +108,7 @@ export type BigNumberVizProps = {
   enableDetailOnHover?: boolean;
   metric?: string;
   yAxisFormat?: string;
+  // Clickable card properties
+  enableClickableCard?: boolean;
+  redirectUrl?: string;
 };
