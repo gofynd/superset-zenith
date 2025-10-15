@@ -283,6 +283,127 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     return null;
   }
 
+  renderIcon() {
+    const { showIcon, iconUrl, iconSize = 'medium' } = this.props;
+    
+    if (!showIcon || !iconUrl) {
+      return null;
+    }
+
+    const sizeMap = {
+      small: '24px',
+      medium: '32px',
+      large: '40px',
+      xlarge: '48px',
+    };
+
+    const iconSizePx = sizeMap[iconSize] || sizeMap.medium;
+
+    return (
+      <div className="big-number-icon" style={{ 
+        position: 'absolute',
+        right: '16px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: iconSizePx,
+        height: iconSizePx,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f0f0f0',
+        borderRadius: '8px',
+        padding: '4px',
+      }}>
+        <img
+          src={iconUrl}
+          alt="Metric Icon"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+          onError={(e) => {
+            // Show error state instead of hiding
+            const target = e.target as HTMLImageElement;
+            const container = target.parentElement;
+            if (container) {
+              container.innerHTML = `
+                <div style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 100%;
+                  height: 100%;
+                  background-color: #ffebee;
+                  border: 1px solid #f44336;
+                  border-radius: 4px;
+                  color: #d32f2f;
+                  font-size: 10px;
+                  text-align: center;
+                  line-height: 1.2;
+                ">
+                  <div>⚠️<br/>Invalid<br/>Image</div>
+                </div>
+              `;
+            }
+          }}
+          onLoad={(e) => {
+            // Validate image dimensions when loaded
+            const target = e.target as HTMLImageElement;
+            const minDimension = 16; // Minimum 16x16 pixels
+            const maxDimension = 512; // Maximum 512x512 pixels
+            
+            if (target.naturalWidth < minDimension || target.naturalHeight < minDimension) {
+              const container = target.parentElement;
+              if (container) {
+                container.innerHTML = `
+                  <div style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    background-color: #fff3e0;
+                    border: 1px solid #ff9800;
+                    border-radius: 4px;
+                    color: #f57c00;
+                    font-size: 10px;
+                    text-align: center;
+                    line-height: 1.2;
+                  ">
+                    <div>⚠️<br/>Too<br/>Small</div>
+                  </div>
+                `;
+              }
+            } else if (target.naturalWidth > maxDimension || target.naturalHeight > maxDimension) {
+              const container = target.parentElement;
+              if (container) {
+                container.innerHTML = `
+                  <div style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    background-color: #fff3e0;
+                    border: 1px solid #ff9800;
+                    border-radius: 4px;
+                    color: #f57c00;
+                    font-size: 10px;
+                    text-align: center;
+                    line-height: 1.2;
+                  ">
+                    <div>⚠️<br/>Too<br/>Large</div>
+                  </div>
+                `;
+              }
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
   renderTrendline(maxHeight: number) {
     const { width, trendLineData, echartOptions, refs } = this.props;
 
@@ -381,6 +502,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
             )}
           </div>
           {this.renderTrendline(chartHeight)}
+          {this.renderIcon()}
         </div>
       );
     }
@@ -403,6 +525,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
         {this.renderKicker((kickerFontSize || 0) * height)}
         {this.renderHeader(Math.ceil(headerFontSize * height))}
         {this.renderSubheader(Math.ceil(subheaderFontSize * height))}
+        {this.renderIcon()}
       </div>
     );
   }
@@ -482,6 +605,20 @@ export default styled(BigNumberVis)`
       &:active {
         transform: translateY(0);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .big-number-icon {
+      z-index: 10;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-50%) scale(1.05);
+      }
+      
+      img {
+        transition: all 0.2s ease;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
       }
     }
 

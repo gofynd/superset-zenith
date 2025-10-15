@@ -101,3 +101,134 @@ export const enableDetailOnHover: CustomControlItem = {
     ),
   },
 };
+
+export const showIcon: CustomControlItem = {
+  name: 'show_icon',
+  config: {
+    type: 'CheckboxControl',
+    label: t('Show Icon'),
+    renderTrigger: true,
+    default: false,
+    description: t('Display an icon on the right side of the scorecard'),
+  },
+};
+
+export const iconType: CustomControlItem = {
+  name: 'icon_type',
+  config: {
+    type: 'SelectControl',
+    label: t('Icon Source'),
+    renderTrigger: true,
+    default: 'url',
+    choices: [
+      ['url', t('URL')],
+      ['upload', t('Upload')],
+    ],
+    visibility: ({ controls }) => controls?.show_icon?.value === true,
+    description: t('Choose how to provide the icon'),
+  },
+};
+
+export const iconUrl: CustomControlItem = {
+  name: 'icon_url',
+  config: {
+    type: 'TextControl',
+    label: t('Icon URL'),
+    renderTrigger: true,
+    default: '',
+    visibility: ({ controls }) => 
+      controls?.show_icon?.value === true && controls?.icon_type?.value === 'url',
+    description: t('Enter the URL of the icon image'),
+    validators: [
+      (value: string) => {
+        if (!value || value.trim() === '') return undefined;
+        
+        // Basic URL validation
+        try {
+          const url = new URL(value);
+          if (!['http:', 'https:'].includes(url.protocol)) {
+            return t('Please enter a valid HTTP or HTTPS URL.');
+          }
+        } catch {
+          return t('Please enter a valid URL.');
+        }
+        
+        // Check if URL ends with common image extensions
+        const imageExtensions = ['.png', '.jpg', '.jpeg', '.svg', '.gif', '.webp'];
+        const hasImageExtension = imageExtensions.some(ext => 
+          value.toLowerCase().includes(ext)
+        );
+        
+        if (!hasImageExtension) {
+          return t('URL should point to an image file (PNG, JPG, SVG, GIF, WebP).');
+        }
+        
+        return undefined;
+      }
+    ],
+  },
+};
+
+export const iconUpload: CustomControlItem = {
+  name: 'icon_upload',
+  config: {
+    type: 'FileControl',
+    label: t('Upload Icon'),
+    renderTrigger: true,
+    default: null,
+    visibility: ({ controls }) => 
+      controls?.show_icon?.value === true && controls?.icon_type?.value === 'upload',
+    description: t('Upload an icon image file (PNG, JPG, SVG, GIF). Max size: 2MB'),
+    accept: '.png,.jpg,.jpeg,.svg,.gif',
+    validators: [
+      (value: File | null) => {
+        if (!value) return undefined;
+        
+        // File type validation
+        const allowedTypes = [
+          'image/png',
+          'image/jpeg',
+          'image/jpg',
+          'image/svg+xml',
+          'image/gif'
+        ];
+        
+        if (!allowedTypes.includes(value.type)) {
+          return t('Invalid file type. Please upload a PNG, JPG, SVG, or GIF image.');
+        }
+        
+        // File size validation (2MB max)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (value.size > maxSize) {
+          return t('File size too large. Please upload an image smaller than 2MB.');
+        }
+        
+        // Additional validation for minimum size (prevent tiny images)
+        const minSize = 1024; // 1KB minimum
+        if (value.size < minSize) {
+          return t('File size too small. Please upload a valid image file.');
+        }
+        
+        return undefined;
+      }
+    ],
+  },
+};
+
+export const iconSize: CustomControlItem = {
+  name: 'icon_size',
+  config: {
+    type: 'SelectControl',
+    label: t('Icon Size'),
+    renderTrigger: true,
+    default: 'medium',
+    choices: [
+      ['small', t('Small')],
+      ['medium', t('Medium')],
+      ['large', t('Large')],
+      ['xlarge', t('Extra Large')],
+    ],
+    visibility: ({ controls }) => controls?.show_icon?.value === true,
+    description: t('Choose the size of the icon'),
+  },
+};

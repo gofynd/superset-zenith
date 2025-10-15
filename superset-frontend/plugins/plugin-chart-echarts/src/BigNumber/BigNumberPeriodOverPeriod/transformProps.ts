@@ -92,6 +92,11 @@ export default function transformProps(chartProps: ChartProps) {
     enableDetailOnHover = true,
     enableClickableCard = false,
     urlColumn,
+    showIcon = false,
+    iconType = 'url',
+    iconUrl = '',
+    iconUpload = null,
+    iconSize = 'medium',
   } = formData;
   const { data: dataA = [] } = queriesData[0];
   const data = dataA;
@@ -205,6 +210,38 @@ export default function transformProps(chartProps: ChartProps) {
     }
   }
 
+  // Handle icon URL - use uploaded file if available, otherwise use provided URL
+  let finalIconUrl = iconUrl;
+  if (showIcon && iconType === 'upload' && iconUpload) {
+    // Additional validation for uploaded files
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    const minSize = 1024; // 1KB
+    
+    if (!allowedTypes.includes(iconUpload.type)) {
+      console.warn('Invalid file type for icon upload:', iconUpload.type);
+      finalIconUrl = '';
+    } else if (iconUpload.size > maxSize) {
+      console.warn('Icon file too large:', iconUpload.size, 'bytes');
+      finalIconUrl = '';
+    } else if (iconUpload.size < minSize) {
+      console.warn('Icon file too small:', iconUpload.size, 'bytes');
+      finalIconUrl = '';
+    } else {
+      // Convert uploaded file to data URL
+      finalIconUrl = URL.createObjectURL(iconUpload);
+    }
+  } else if (showIcon && iconType === 'url' && iconUrl) {
+    // Validate URL format
+    try {
+      new URL(iconUrl);
+      finalIconUrl = iconUrl;
+    } catch {
+      console.warn('Invalid icon URL:', iconUrl);
+      finalIconUrl = '';
+    }
+  }
+
   return {
     width,
     height,
@@ -231,5 +268,9 @@ export default function transformProps(chartProps: ChartProps) {
     yAxisFormat,
     enableClickableCard,
     redirectUrl,
+    showIcon,
+    iconType,
+    iconUrl: finalIconUrl,
+    iconSize,
   };
 }
