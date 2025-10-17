@@ -157,11 +157,6 @@ export default {
                 ];
                 
                 const columnOptions = allColumns.map((colname: string) => [colname, colname]);
-                const { colnames = [] } = chart?.queriesResponse?.[0] ?? {};
-                const columnOptions = colnames.map((colname: string) => [
-                  colname,
-                  colname,
-                ]);
                 return {
                   choices: columnOptions,
                 };
