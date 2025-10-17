@@ -138,6 +138,15 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     console.log('   - All props:', this.props);
     
     if (enableClickableCard && redirectUrl) {
+      // Validate URL is http/https only (security check)
+      if (!redirectUrl.match(/^https?:\/\//)) {
+        console.error('❌ Invalid URL protocol - only http:// and https:// are allowed');
+        console.error('   - Attempted URL:', redirectUrl);
+        console.groupEnd();
+        return;
+      }
+      
+      console.log('✅ URL validation passed');
       console.log('✅ Opening URL:', redirectUrl);
       // Open URL in new tab
       window.open(redirectUrl, '_blank', 'noopener,noreferrer');
