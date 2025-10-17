@@ -74,7 +74,7 @@ export default function buildQuery(formData: QueryFormData) {
           })
         : [],
     );
-    return [
+    const queries = [
       {
         ...baseQueryObject,
         groupby,
@@ -84,6 +84,27 @@ export default function buildQuery(formData: QueryFormData) {
           : [],
       },
     ];
+    
+    // If clickable card is enabled and we have a URL column, add a second query
+    // to fetch the URL value without aggregation
+    const urlColumn = (formData as any).url_column;
+    if ((formData as any).enable_clickable_card && urlColumn) {
+      console.log('🔧 BuildQuery (PeriodOverPeriod): Adding separate URL query for:', urlColumn);
+      
+      // Create a second query to fetch just the URL column
+      const urlQueryObject = {
+        ...baseQueryObject,
+        columns: [urlColumn], // Just get the URL column
+        metrics: [], // No metrics needed
+        orderby: [], // No ordering
+        row_limit: 1, // Just need one row
+      };
+      
+      queries.push(urlQueryObject);
+      console.log('🔧 BuildQuery (PeriodOverPeriod): Total queries:', queries.length);
+    }
+
+    return queries;
   });
 
   return {

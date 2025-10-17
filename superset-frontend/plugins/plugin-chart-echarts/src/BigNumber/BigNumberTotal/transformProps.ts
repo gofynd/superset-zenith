@@ -57,6 +57,10 @@ export default function transformProps(
     enableDetailOnHover = true,
     enableClickableCard = false,
     urlColumn,
+    clickableCardUrl,
+    hoverBorderEnabled = false,
+    hoverBorderThickness = 2,
+    hoverBorderColor = '#1890ff',
   } = formData;
   const refs: Refs = {};
   const { data = [], coltypes = [] } = queriesData[0];
@@ -66,14 +70,98 @@ export default function transformProps(
   const bigNumber =
     data.length === 0 ? null : parseMetricValue(data[0][metricName]);
 
-  // Extract URL for clickable card feature
+  // Extract URL for clickable card feature - Dynamic URLs support
   let redirectUrl: string | undefined;
-  if (enableClickableCard && urlColumn && data.length > 0) {
-    const urlValue = data[0][urlColumn];
+  
+  console.group('🔧 BigNumber URL Extraction Debug (Dynamic URLs)');
+  console.log('1. Configuration Check:');
+  console.log('   - enableClickableCard:', enableClickableCard);
+  console.log('   - urlColumn:', urlColumn);
+  console.log('   - queriesData.length:', queriesData.length);
+  console.log('   - clickableCardUrl (manual):', clickableCardUrl);
+  
+  if (enableClickableCard) {
+    let urlValue: string | undefined;
+    
+    // Strategy 1: Use manual URL from formData (highest priority)
+    if (clickableCardUrl) {
+      console.log('2. Strategy 1: Using Manual URL from formData');
+      urlValue = clickableCardUrl;
+      console.log('   ✅ Using manual URL:', urlValue);
+    }
+    // Strategy 2: Try to get from second query (dynamic URL query)
+    else if (urlColumn && queriesData.length > 1) {
+      console.log('3. Strategy 2: Fetching from separate URL query (queriesData[1])');
+      const urlQueryData = queriesData[1];
+      console.log('   - URL query data:', urlQueryData);
+      console.log('   - URL query data.data:', urlQueryData?.data);
+      
+      if (urlQueryData?.data && urlQueryData.data.length > 0) {
+        const urlRow = urlQueryData.data[0];
+        console.log('   - URL row:', urlRow);
+        console.log('   - Available columns:', Object.keys(urlRow));
+        
+        // Try direct lookup
+        urlValue = urlRow[urlColumn];
+        console.log('   - Direct lookup urlRow["' + urlColumn + '"]:', urlValue);
+        
+        if (!urlValue) {
+          // If not found by exact name, try first available column value
+          const firstColumnValue = Object.values(urlRow)[0] as string;
+          console.log('   - Trying first column value:', firstColumnValue);
+          if (typeof firstColumnValue === 'string') {
+            urlValue = firstColumnValue;
+            console.log('   ✅ Using first column as URL:', urlValue);
+          }
+        }
+      } else {
+        console.warn('   ❌ No URL query data available (queriesData[1] is empty)');
+      }
+    }
+    // Strategy 3: Try to get from first query (backward compatibility)
+    else if (urlColumn && data.length > 0) {
+      console.log('4. Strategy 3: Trying from main query data[0] (backward compat)');
+      console.log('   - data[0]:', data[0]);
+      console.log('   - Available columns:', Object.keys(data[0] || {}));
+      
+      // Try direct lookup
+      urlValue = data[0][urlColumn];
+      console.log('   - Direct lookup data[0]["' + urlColumn + '"]:', urlValue);
+      
+      // If not found, try with common aggregation prefixes
+      if (!urlValue) {
+        console.log('   - Trying aggregation variations...');
+        const aggregations = ['MAX', 'MIN', 'ANY_VALUE', 'FIRST', 'LAST'];
+        for (const agg of aggregations) {
+          const aggColumnName = `${agg}(${urlColumn})`;
+          console.log('     - Trying:', aggColumnName);
+          if (data[0][aggColumnName]) {
+            urlValue = data[0][aggColumnName];
+            console.log('     ✅ Found at:', aggColumnName, '=', urlValue);
+            break;
+          }
+        }
+      }
+    }
+    
+    console.log('5. Final URL value:', urlValue);
+    console.log('   - Type:', typeof urlValue);
+    console.log('   - Is string?:', typeof urlValue === 'string');
+    
     if (urlValue && typeof urlValue === 'string') {
       redirectUrl = urlValue;
+      console.log('✅ URL extracted successfully:', redirectUrl);
+    } else {
+      console.warn('❌ URL extraction failed - value is not a valid string');
+      console.warn('   💡 Solution: Use "Manual URL" field or ensure URL column is in query results');
     }
+  } else {
+    console.log('❌ URL extraction skipped - enableClickableCard is false');
   }
+  
+  console.log('6. Final redirectUrl:', redirectUrl);
+  console.groupEnd();
+  
 
   // Handle comparison data if available and time comparison is enabled
   let previousPeriodValue: number | null = null;
@@ -216,7 +304,20 @@ export default function transformProps(
     yAxisFormat,
     enableClickableCard,
     redirectUrl,
+    hoverBorderEnabled,
+    hoverBorderThickness: typeof hoverBorderThickness === 'string' 
+      ? parseInt(hoverBorderThickness, 10) || 2 
+      : hoverBorderThickness,
+    hoverBorderColor,
   };
+
+  console.group('📦 BigNumber transformProps Return');
+  console.log('Returning props to component:');
+  console.log('   - enableClickableCard:', returnProps.enableClickableCard);
+  console.log('   - redirectUrl:', returnProps.redirectUrl);
+  console.log('   - bigNumber:', returnProps.bigNumber);
+  console.log('Full returnProps:', returnProps);
+  console.groupEnd();
 
   return returnProps;
 }
