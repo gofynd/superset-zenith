@@ -27,6 +27,11 @@ import {
   headerFontSize,
   subheaderFontSize,
   enableDetailOnHover,
+  showIcon,
+  iconType,
+  iconUrl,
+  iconUpload,
+  iconSize,
 } from '../sharedControls';
 import { ColorSchemeEnum } from './types';
 
@@ -226,6 +231,11 @@ const config: ControlPanelConfig = {
             },
           },
         ],
+        [showIcon],
+        [iconType],
+        [iconUrl],
+        [iconUpload],
+        [iconSize],
         [enableDetailOnHover],
         [
           {

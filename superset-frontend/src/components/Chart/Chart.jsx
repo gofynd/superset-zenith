@@ -117,9 +117,10 @@ const Styles = styled.div`
   .slice_container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
 
     height: ${p => p.height}px;
+    overflow: hidden;
 
     .pivot_table tbody tr {
       font-feature-settings: 'tnum' 1;

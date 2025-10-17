@@ -41,6 +41,12 @@ export type BigNumberTotalFormData = QueryFormData & {
   enableDetailOnHover?: boolean;
   enableClickableCard?: boolean;
   urlColumn?: string;
+  // Icon properties
+  showIcon?: boolean;
+  iconType?: 'upload' | 'url';
+  iconUrl?: string;
+  iconUpload?: File | null;
+  iconSize?: 'small' | 'medium' | 'large' | 'xlarge';
 };
 
 export type BigNumberWithTrendlineFormData = BigNumberTotalFormData & {
@@ -114,4 +120,10 @@ export type BigNumberVizProps = {
   hoverBorderEnabled?: boolean;
   hoverBorderThickness?: number;
   hoverBorderColor?: string;
+  // Icon properties
+  showIcon?: boolean;
+  iconType?: 'upload' | 'url';
+  iconUrl?: string;
+  iconUpload?: File | null;
+  iconSize?: 'small' | 'medium' | 'large' | 'xlarge';
 };

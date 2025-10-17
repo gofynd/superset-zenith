@@ -30,6 +30,11 @@ import {
   headerFontSize,
   subheaderFontSize,
   enableDetailOnHover,
+  showIcon,
+  iconType,
+  iconUrl,
+  iconUpload,
+  iconSize,
 } from '../sharedControls';
 
 export default {
@@ -119,7 +124,9 @@ export default {
               label: t('Enable clickable card'),
               renderTrigger: true,
               default: false,
-              description: t('Make the entire card clickable to redirect to a URL'),
+              description: t(
+                'Make the entire card clickable to redirect to a URL',
+              ),
             },
           },
         ],
@@ -150,6 +157,11 @@ export default {
                 ];
                 
                 const columnOptions = allColumns.map((colname: string) => [colname, colname]);
+                const { colnames = [] } = chart?.queriesResponse?.[0] ?? {};
+                const columnOptions = colnames.map((colname: string) => [
+                  colname,
+                  colname,
+                ]);
                 return {
                   choices: columnOptions,
                 };
@@ -216,6 +228,11 @@ export default {
             },
           },
         ],
+        [showIcon],
+        [iconType],
+        [iconUrl],
+        [iconUpload],
+        [iconSize],
         ['y_axis_format'],
         ['currency_format'],
         [
@@ -275,6 +292,9 @@ export default {
                         .map((colname: string) => ({
                           value: colname,
                           label: (verboseMap as Record<string, string>)[colname] ?? colname,
+                          label:
+                            (verboseMap as Record<string, string>)[colname] ??
+                            colname,
                         }))
                     : [];
                 return {

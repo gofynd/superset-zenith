@@ -31,6 +31,11 @@ import {
   headerFontSize,
   subheaderFontSize,
   enableDetailOnHover,
+  showIcon,
+  iconType,
+  iconUrl,
+  iconUpload,
+  iconSize,
 } from '../sharedControls';
 
 const config: ControlPanelConfig = {
@@ -289,6 +294,11 @@ const config: ControlPanelConfig = {
             },
           },
         ],
+        [showIcon],
+        [iconType],
+        [iconUrl],
+        [iconUpload],
+        [iconSize],
         ['y_axis_format'],
         ['currency_format'],
         [
