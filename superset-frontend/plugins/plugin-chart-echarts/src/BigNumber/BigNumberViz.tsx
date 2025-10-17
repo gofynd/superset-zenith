@@ -79,6 +79,9 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     enableClickableCard: false,
   };
 
+  // Use a ref to store the computed header font size for icon sizing
+  private computedHeaderFontSize: number = 0;
+
   getClassName() {
     const { className, showTrendLine, bigNumberFallback, enableClickableCard, hoverBorderEnabled } = this.props;
     const hoverBorderClass = enableClickableCard && hoverBorderEnabled ? 'hover-border-enabled' : '';
@@ -263,6 +266,9 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     });
     container.remove();
 
+    // Store the computed font size for icon sizing (using class property to avoid setState during render)
+    this.computedHeaderFontSize = fontSize;
+
     const onContextMenu = (e: MouseEvent<HTMLDivElement>) => {
       if (this.props.onContextMenu) {
         e.preventDefault();
@@ -354,14 +360,21 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       return null;
     }
 
-    const sizeMap = {
-      small: '24px',
-      medium: '32px',
-      large: '40px',
-      xlarge: '48px',
+    // Calculate icon size as a multiplier of the computed header font size
+    // This ensures the icon scales proportionally with the text
+    const sizeMultipliers = {
+      small: 0.8,   // 80% of text height
+      medium: 1.0,  // 100% of text height (matches text)
+      large: 1.2,   // 120% of text height
+      xlarge: 1.5,  // 150% of text height
     };
 
-    const iconSizePx = sizeMap[iconSize] || sizeMap.medium;
+    const multiplier = sizeMultipliers[iconSize] || sizeMultipliers.medium;
+    
+    // Use computed font size if available, otherwise fall back to fixed sizes
+    const iconSizePx = this.computedHeaderFontSize > 0 
+      ? `${this.computedHeaderFontSize * multiplier}px`
+      : `${32 * multiplier}px`; // Fallback to 32px base if font size not yet computed
 
     return (
       <div className="big-number-icon" style={{ 
