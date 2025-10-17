@@ -138,13 +138,25 @@ export default {
               label: t('URL Column'),
               renderTrigger: true,
               clearable: true,
-              description: t('Select the column containing the redirect URL'),
+              description: t('Select the column containing the redirect URL (or use Manual URL below)'),
               visibility: ({ controls }) =>
                 controls?.enable_clickable_card?.value === true,
               shouldMapStateToProps() {
                 return true;
               },
               mapStateToProps(explore, _, chart) {
+                // Get columns from both query response and datasource
+                const responseColumns = chart?.queriesResponse?.[0]?.colnames || [];
+                const datasourceColumns = explore?.datasource?.columns?.map(
+                  (col: any) => col.column_name
+                ) || [];
+                
+                // Combine and deduplicate columns
+                const allColumns = [
+                  ...new Set([...responseColumns, ...datasourceColumns])
+                ];
+                
+                const columnOptions = allColumns.map((colname: string) => [colname, colname]);
                 const { colnames = [] } = chart?.queriesResponse?.[0] ?? {};
                 const columnOptions = colnames.map((colname: string) => [
                   colname,
@@ -154,6 +166,65 @@ export default {
                   choices: columnOptions,
                 };
               },
+            },
+          },
+        ],
+        [
+          {
+            name: 'clickable_card_url',
+            config: {
+              type: 'TextControl',
+              label: t('Manual URL (Optional)'),
+              renderTrigger: true,
+              description: t('Manually specify the redirect URL. This overrides the URL Column if set. Example: https://dashboard.com/details'),
+              visibility: ({ controls }) =>
+                controls?.enable_clickable_card?.value === true,
+              placeholder: 'https://your-dashboard.com/page',
+            },
+          },
+        ],
+        [
+          {
+            name: 'hover_border_enabled',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Show border on hover'),
+              renderTrigger: true,
+              default: false,
+              description: t('Show a colored border when hovering over clickable card'),
+              visibility: ({ controls }) =>
+                controls?.enable_clickable_card?.value === true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'hover_border_thickness',
+            config: {
+              type: 'TextControl',
+              label: t('Border thickness (px)'),
+              renderTrigger: true,
+              default: '2',
+              description: t('Border thickness in pixels'),
+              visibility: ({ controls }) =>
+                controls?.enable_clickable_card?.value === true &&
+                controls?.hover_border_enabled?.value === true,
+            },
+          },
+        ],
+        [
+          {
+            name: 'hover_border_color',
+            config: {
+              type: 'TextControl',
+              label: t('Border color'),
+              renderTrigger: true,
+              default: '#1890ff',
+              description: t('Border color (hex code, e.g. #1890ff)'),
+              visibility: ({ controls }) =>
+                controls?.enable_clickable_card?.value === true &&
+                controls?.hover_border_enabled?.value === true,
+              placeholder: '#1890ff',
             },
           },
         ],
@@ -218,8 +289,9 @@ export default {
                           (colname: string, index: number) =>
                             coltypes[index] === GenericDataType.Numeric,
                         )
-                        .map(colname => ({
+                        .map((colname: string) => ({
                           value: colname,
+                          label: (verboseMap as Record<string, string>)[colname] ?? colname,
                           label:
                             (verboseMap as Record<string, string>)[colname] ??
                             colname,

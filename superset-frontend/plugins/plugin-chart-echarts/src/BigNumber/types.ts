@@ -117,6 +117,9 @@ export type BigNumberVizProps = {
   // Clickable card properties
   enableClickableCard?: boolean;
   redirectUrl?: string;
+  hoverBorderEnabled?: boolean;
+  hoverBorderThickness?: number;
+  hoverBorderColor?: string;
   // Icon properties
   showIcon?: boolean;
   iconType?: 'upload' | 'url';

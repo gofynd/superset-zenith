@@ -80,20 +80,84 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
   };
 
   getClassName() {
-    const { className, showTrendLine, bigNumberFallback, enableClickableCard } = this.props;
+    const { className, showTrendLine, bigNumberFallback, enableClickableCard, hoverBorderEnabled } = this.props;
+    const hoverBorderClass = enableClickableCard && hoverBorderEnabled ? 'hover-border-enabled' : '';
     const names = `superset-legacy-chart-big-number ${className} ${
       bigNumberFallback ? 'is-fallback-value' : ''
-    } ${enableClickableCard ? 'clickable-card' : ''}`;
+    } ${enableClickableCard ? 'clickable-card' : ''} ${hoverBorderClass}`;
     if (showTrendLine) return names;
     return `${names} no-trendline`;
   }
+  
+  componentDidMount() {
+    this.injectDashboardHolderStyles();
+  }
+  
+  componentDidUpdate() {
+    this.injectDashboardHolderStyles();
+  }
+  
+  injectDashboardHolderStyles() {
+    const { enableClickableCard, redirectUrl, hoverBorderEnabled, hoverBorderThickness = 2, hoverBorderColor = '#1890ff' } = this.props;
+    
+    if (!enableClickableCard || !redirectUrl || !hoverBorderEnabled) {
+      return;
+    }
+    
+    // Check if style already exists
+    const styleId = 'bignumber-dashboard-holder-hover-style';
+    if (document.getElementById(styleId)) {
+      return;
+    }
+    
+    // Inject global CSS to style the parent dashboard-component-chart-holder
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .dashboard-component-chart-holder:has(.hover-border-enabled) {
+        border: ${hoverBorderThickness}px solid transparent !important;
+        border-radius: 4px;
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+      }
+      
+      .dashboard-component-chart-holder:has(.hover-border-enabled):hover {
+        border-color: ${hoverBorderColor} !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
   handleCardClick = () => {
+    console.group('🖱️ BigNumber Card Click Handler');
     const { enableClickableCard, redirectUrl } = this.props;
+    
+    console.log('Props received:');
+    console.log('   - enableClickableCard:', enableClickableCard);
+    console.log('   - redirectUrl:', redirectUrl);
+    console.log('   - All props:', this.props);
+    
     if (enableClickableCard && redirectUrl) {
+      // Validate URL is http/https only (security check)
+      if (!redirectUrl.match(/^https?:\/\//)) {
+        console.error('❌ Invalid URL protocol - only http:// and https:// are allowed');
+        console.error('   - Attempted URL:', redirectUrl);
+        console.groupEnd();
+        return;
+      }
+      
+      console.log('✅ URL validation passed');
+      console.log('✅ Opening URL:', redirectUrl);
       // Open URL in new tab
       window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+      console.log('✅ window.open() called');
+    } else {
+      console.warn('❌ Click ignored because:');
+      if (!enableClickableCard) console.warn('   - enableClickableCard is false');
+      if (!redirectUrl) console.warn('   - redirectUrl is missing/undefined');
     }
+    
+    console.groupEnd();
   };
 
   createTemporaryContainer() {
@@ -459,13 +523,30 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       subheaderFontSize,
       enableClickableCard,
       redirectUrl,
+      hoverBorderEnabled = false,
+      hoverBorderThickness = 2,
+      hoverBorderColor = '#1890ff',
     } = this.props;
     const className = this.getClassName();
 
-    const containerStyle = {
+    console.group('🎨 BigNumber Render');
+    console.log('Render props:');
+    console.log('   - enableClickableCard:', enableClickableCard);
+    console.log('   - redirectUrl:', redirectUrl);
+    console.log('   - hoverBorderEnabled:', hoverBorderEnabled);
+    console.log('   - hoverBorderThickness:', hoverBorderThickness);
+    console.log('   - hoverBorderColor:', hoverBorderColor);
+    console.log('   - className:', className);
+    
+    const containerStyle: React.CSSProperties = {
       position: 'relative' as const,
       cursor: enableClickableCard && redirectUrl ? 'pointer' : 'default',
     };
+    
+    console.log('Container style:');
+    console.log('   - cursor:', containerStyle.cursor);
+    console.log('   - Will attach click handler?:', !!enableClickableCard);
+    console.groupEnd();
 
     if (showTrendLine) {
       const chartHeight = Math.floor(PROPORTION.TRENDLINE * height);
@@ -532,7 +613,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
 }
 
 export default styled(BigNumberVis)`
-  ${({ theme }) => `
+  ${({ theme, hoverBorderEnabled, hoverBorderThickness = 2, hoverBorderColor = '#1890ff', enableClickableCard, redirectUrl }) => `
     font-family: ${theme.typography.families.sansSerif};
     position: relative;
     display: flex;
@@ -588,23 +669,9 @@ export default styled(BigNumberVis)`
     }
 
     &.clickable-card {
-      transition: all 0.2s ease;
-      border-radius: ${theme.borderRadius}px;
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        background-color: ${theme.colors.grayscale.light5};
-      }
-      
       &:focus {
         outline: 2px solid ${theme.colors.primary.base};
         outline-offset: 2px;
-      }
-      
-      &:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       }
     }
 
