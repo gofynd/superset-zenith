@@ -134,6 +134,36 @@ const ComparisonIndicator = styled.div<{
   `}
 `;
 
+const ChartIconContainer = styled.div<{
+  iconSize: number;
+  bgColor: string;
+}>`
+  ${({ iconSize, bgColor }) => `
+    width: ${iconSize}px !important;
+    height: ${iconSize}px !important;
+    min-width: ${iconSize}px !important;
+    min-height: ${iconSize}px !important;
+    background-color: ${bgColor} !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: 8px !important;
+    padding: ${iconSize * 0.2}px !important;
+    vertical-align: middle !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    
+    img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important;
+      display: block !important;
+    }
+  `}
+`;
+
 const shimmer = keyframes`
   0% { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
@@ -394,22 +424,82 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       </>
     );
   }
+  // Extract icon settings from formData for BigNumber charts
+  const isBigNumberChart = slice?.viz_type?.toLowerCase().includes('big_number');
+  const showIcon = formData?.show_icon ?? formData?.showIcon;
+  const iconUrl = formData?.icon_url ?? formData?.iconUrl;
+  const iconSize = formData?.icon_size ?? formData?.iconSize ?? 'medium';
+  const iconBackgroundColorRaw = formData?.icon_background_color ?? formData?.iconBackgroundColor ?? '#e8eaf6';
+  
+  // Convert color object to CSS string if needed
+  const convertColorToString = (color: any): string => {
+    if (typeof color === 'string') {
+      return color;
+    }
+    if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+      const { r, g, b, a = 1 } = color;
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+    return '#e8eaf6'; // fallback
+  };
+  
+  const iconBackgroundColor = convertColorToString(iconBackgroundColorRaw);
+
+  // Render icon for BigNumber charts
+  const renderChartIcon = () => {
+    if (!isBigNumberChart || !showIcon || !iconUrl) {
+      return null;
+    }
+
+    // Icon size mapping - matches the chart configuration
+    const sizeMap = {
+      small: 24,
+      medium: 32,
+      large: 40,
+      xlarge: 48,
+    };
+    const iconSizePx = sizeMap[iconSize as keyof typeof sizeMap] ?? sizeMap.medium;
+
+    return (
+      <ChartIconContainer
+        iconSize={iconSizePx}
+        bgColor={iconBackgroundColor}
+        className="chart-title-icon"
+      >
+        <img
+          src={iconUrl}
+          alt="Chart Icon"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            const container = target.parentElement;
+            if (container) {
+              container.style.display = 'none';
+            }
+          }}
+        />
+      </ChartIconContainer>
+    );
+  };
+
   return (
     <ChartHeaderStyles data-test="slice-header" ref={innerRef}>
       <div className="header-title" ref={headerRef}>
         <Tooltip title={headerTooltip}>
-          <EditableTitle
-            title={
-              sliceName ||
-              (editMode
-                ? '---' // this makes an empty title clickable
-                : '')
-            }
-            canEdit={editMode}
-            onSaveTitle={updateSliceName}
-            showTooltip={false}
-            url={canExplore ? exploreUrl : undefined}
-          />
+          <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+            {renderChartIcon()}
+            <EditableTitle
+              title={
+                sliceName ||
+                (editMode
+                  ? '---' // this makes an empty title clickable
+                  : '')
+              }
+              canEdit={editMode}
+              onSaveTitle={updateSliceName}
+              showTooltip={false}
+              url={canExplore ? exploreUrl : undefined}
+            />
+          </div>
         </Tooltip>
         <div
           css={theme => css`
