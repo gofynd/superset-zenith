@@ -36,6 +36,7 @@ import {
   iconUrl,
   iconUpload,
   iconSize,
+  iconBackgroundColor,
 } from '../sharedControls';
 
 const config: ControlPanelConfig = {
@@ -299,6 +300,7 @@ const config: ControlPanelConfig = {
         [iconUrl],
         [iconUpload],
         [iconSize],
+        [iconBackgroundColor],
         ['y_axis_format'],
         ['currency_format'],
         [

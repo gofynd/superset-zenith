@@ -35,6 +35,7 @@ import {
   iconUrl,
   iconUpload,
   iconSize,
+  iconBackgroundColor,
 } from '../sharedControls';
 
 export default {
@@ -228,6 +229,7 @@ export default {
         [iconUrl],
         [iconUpload],
         [iconSize],
+        [iconBackgroundColor],
         ['y_axis_format'],
         ['currency_format'],
         [
@@ -286,7 +288,6 @@ export default {
                         )
                         .map((colname: string) => ({
                           value: colname,
-                          label: (verboseMap as Record<string, string>)[colname] ?? colname,
                           label:
                             (verboseMap as Record<string, string>)[colname] ??
                             colname,

@@ -126,4 +126,5 @@ export type BigNumberVizProps = {
   iconUrl?: string;
   iconUpload?: File | null;
   iconSize?: 'small' | 'medium' | 'large' | 'xlarge';
+  iconBackgroundColor?: string;
 };

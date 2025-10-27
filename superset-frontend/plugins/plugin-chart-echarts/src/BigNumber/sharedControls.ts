@@ -232,3 +232,15 @@ export const iconSize: CustomControlItem = {
     description: t('Choose the size of the icon'),
   },
 };
+
+export const iconBackgroundColor: CustomControlItem = {
+  name: 'icon_background_color',
+  config: {
+    type: 'ColorPickerControl',
+    label: t('Icon Background Color'),
+    renderTrigger: true,
+    default: '#e8eaf6',
+    visibility: ({ controls }) => controls?.show_icon?.value === true,
+    description: t('Choose the background color for the icon container'),
+  },
+};
