@@ -137,31 +137,42 @@ const ComparisonIndicator = styled.div<{
 const ChartIconContainer = styled.div<{
   iconSize: number;
   bgColor: string;
+  iconShape: 'circle' | 'square' | 'rounded';
 }>`
-  ${({ iconSize, bgColor }) => `
-    width: ${iconSize}px !important;
-    height: ${iconSize}px !important;
-    min-width: ${iconSize}px !important;
-    min-height: ${iconSize}px !important;
-    background-color: ${bgColor} !important;
-    border-radius: 50% !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin-right: 8px !important;
-    padding: ${iconSize * 0.2}px !important;
-    vertical-align: middle !important;
-    flex-shrink: 0 !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
-    
-    img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: contain !important;
-      display: block !important;
+  ${({ iconSize, bgColor, iconShape }) => {
+    // Determine border radius based on shape
+    let borderRadius = '50%'; // circle (default)
+    if (iconShape === 'square') {
+      borderRadius = '0';
+    } else if (iconShape === 'rounded') {
+      borderRadius = '8px';
     }
-  `}
+    
+    return `
+      width: ${iconSize}px !important;
+      height: ${iconSize}px !important;
+      min-width: ${iconSize}px !important;
+      min-height: ${iconSize}px !important;
+      background-color: ${bgColor} !important;
+      border-radius: ${borderRadius} !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin-right: 8px !important;
+      padding: ${iconSize * 0.2}px !important;
+      vertical-align: middle !important;
+      flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      
+      img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        display: block !important;
+      }
+    `;
+  }}
 `;
 
 const shimmer = keyframes`
@@ -430,6 +441,7 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   const iconUrl = formData?.icon_url ?? formData?.iconUrl;
   const iconSize = formData?.icon_size ?? formData?.iconSize ?? 'medium';
   const iconBackgroundColorRaw = formData?.icon_background_color ?? formData?.iconBackgroundColor ?? '#e8eaf6';
+  const iconShape = formData?.icon_shape ?? formData?.iconShape ?? 'circle';
   
   // Convert color object to CSS string if needed
   const convertColorToString = (color: any): string => {
@@ -464,6 +476,7 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       <ChartIconContainer
         iconSize={iconSizePx}
         bgColor={iconBackgroundColor}
+        iconShape={iconShape as 'circle' | 'square' | 'rounded'}
         className="chart-title-icon"
       >
         <img

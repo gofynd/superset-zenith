@@ -86,6 +86,7 @@ export default function transformProps(
     iconUpload = null,
     iconSize = 'medium',
     iconBackgroundColor = '#e8eaf6',
+    iconShape = 'circle',
   } = formData;
   const granularity = extractTimegrain(rawFormData);
   const {
@@ -481,5 +482,6 @@ export default function transformProps(
     iconUrl: finalIconUrl,
     iconSize,
     iconBackgroundColor,
+    iconShape,
   };
 }

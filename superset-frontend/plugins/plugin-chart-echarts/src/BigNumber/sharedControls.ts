@@ -244,3 +244,21 @@ export const iconBackgroundColor: CustomControlItem = {
     description: t('Choose the background color for the icon container'),
   },
 };
+
+export const iconShape: CustomControlItem = {
+  name: 'icon_shape',
+  config: {
+    type: 'SelectControl',
+    label: t('Icon Shape'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'circle',
+    options: [
+      { label: t('Circle'), value: 'circle' },
+      { label: t('Square'), value: 'square' },
+      { label: t('Rounded Square'), value: 'rounded' },
+    ],
+    visibility: ({ controls }) => controls?.show_icon?.value === true,
+    description: t('Choose the shape of the icon background container'),
+  },
+};

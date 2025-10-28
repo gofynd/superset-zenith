@@ -33,6 +33,7 @@ import {
   iconUpload,
   iconSize,
   iconBackgroundColor,
+  iconShape,
 } from '../sharedControls';
 import { ColorSchemeEnum } from './types';
 
@@ -238,6 +239,7 @@ const config: ControlPanelConfig = {
         [iconUpload],
         [iconSize],
         [iconBackgroundColor],
+        [iconShape],
         [enableDetailOnHover],
         [
           {

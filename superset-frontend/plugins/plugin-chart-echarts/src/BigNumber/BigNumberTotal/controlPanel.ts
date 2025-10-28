@@ -36,6 +36,7 @@ import {
   iconUpload,
   iconSize,
   iconBackgroundColor,
+  iconShape,
 } from '../sharedControls';
 
 export default {
@@ -230,6 +231,7 @@ export default {
         [iconUpload],
         [iconSize],
         [iconBackgroundColor],
+        [iconShape],
         ['y_axis_format'],
         ['currency_format'],
         [
