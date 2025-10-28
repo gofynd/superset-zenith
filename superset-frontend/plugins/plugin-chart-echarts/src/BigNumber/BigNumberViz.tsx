@@ -386,9 +386,6 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       subheaderFontSize,
       enableClickableCard,
       redirectUrl,
-      hoverBorderEnabled = false,
-      hoverBorderThickness = 2,
-      hoverBorderColor = '#1890ff',
     } = this.props;
     const className = this.getClassName();
     
