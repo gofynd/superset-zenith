@@ -455,6 +455,16 @@ const enable_download_image: SharedControlConfig<'CheckboxControl'> = {
   renderTrigger: true,
 };
 
+const show_three_dot_menu: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Show Three Dot Menu'),
+  default: true,
+  description: t(
+    'Show the three dot menu (chart controls) on dashboards. When disabled, all menu options will be hidden.',
+  ),
+  renderTrigger: true,
+};
+
 const temporal_columns_lookup: SharedControlConfig<'HiddenControl'> = {
   type: 'HiddenControl',
   initialValue: (control: ControlState, state: ControlPanelState | null) =>
@@ -514,6 +524,7 @@ export default {
   sort_by_metric,
   enable_ai_insights,
   ai_custom_system_prompt,
+  show_three_dot_menu,
   show_fullscreen_menu,
   show_data_menu,
   enable_drill_to_detail,

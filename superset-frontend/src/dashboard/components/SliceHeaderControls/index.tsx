@@ -950,6 +950,9 @@ const SliceHeaderControls = (props: SliceHeaderControlsPropsWithRouter) => {
     </Menu>
   );
 
+  // Check if three dot menu is disabled in formData
+  const showThreeDotMenu = props.formData?.show_three_dot_menu !== false;
+
   return (
     <>
       {isFullSize && (
@@ -961,38 +964,40 @@ const SliceHeaderControls = (props: SliceHeaderControlsPropsWithRouter) => {
         />
       )}
 
-      <NoAnimationDropdown
-        overlay={menu}
-        overlayStyle={dropdownOverlayStyle}
-        trigger={['click']}
-        placement="bottomRight"
-        visible={dropdownIsOpen}
-        onVisibleChange={status => toggleDropdown({ close: !status })}
-        onKeyDown={e =>
-          handleDropdownNavigation(
-            e,
-            dropdownIsOpen,
-            menu,
-            toggleDropdown,
-            setSelectedKeys,
-            setOpenKeys,
-          )
-        }
-      >
-        <span
-          css={() => css`
-            display: flex;
-            align-items: center;
-          `}
-          id={`slice_${slice.slice_id}-controls`}
-          role="button"
-          aria-label="More Options"
-          aria-haspopup="true"
-          tabIndex={0}
+      {showThreeDotMenu && (
+        <NoAnimationDropdown
+          overlay={menu}
+          overlayStyle={dropdownOverlayStyle}
+          trigger={['click']}
+          placement="bottomRight"
+          visible={dropdownIsOpen}
+          onVisibleChange={status => toggleDropdown({ close: !status })}
+          onKeyDown={e =>
+            handleDropdownNavigation(
+              e,
+              dropdownIsOpen,
+              menu,
+              toggleDropdown,
+              setSelectedKeys,
+              setOpenKeys,
+            )
+          }
         >
-          <VerticalDotsTrigger />
-        </span>
-      </NoAnimationDropdown>
+          <span
+            css={() => css`
+              display: flex;
+              align-items: center;
+            `}
+            id={`slice_${slice.slice_id}-controls`}
+            role="button"
+            aria-label="More Options"
+            aria-haspopup="true"
+            tabIndex={0}
+          >
+            <VerticalDotsTrigger />
+          </span>
+        </NoAnimationDropdown>
+      )}
       {canEditCrossFilters && scopingModal}
     </>
   );

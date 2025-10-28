@@ -28,6 +28,7 @@ export const datasourceAndVizType: ControlPanelSectionConfig = {
     ['viz_type'],
     ['enable_ai_insights'],
     ['ai_custom_system_prompt'],
+    ['show_three_dot_menu'],
     ['show_fullscreen_menu', 'show_data_menu'],
     ['enable_drill_to_detail'],
     ['enable_export_csv', 'enable_export_excel'],
