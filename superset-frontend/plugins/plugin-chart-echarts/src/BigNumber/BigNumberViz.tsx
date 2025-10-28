@@ -100,13 +100,15 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
   injectDashboardHolderStyles() {
     const { enableClickableCard, redirectUrl, hoverBorderEnabled, hoverBorderThickness = 2, hoverBorderColor = '#1890ff' } = this.props;
     
-    if (!enableClickableCard || !redirectUrl || !hoverBorderEnabled) {
-      return;
+    const styleId = 'bignumber-dashboard-holder-hover-style';
+    
+    // Remove existing style if present to allow updates
+    const existingStyle = document.getElementById(styleId);
+    if (existingStyle) {
+      existingStyle.remove();
     }
     
-    // Check if style already exists
-    const styleId = 'bignumber-dashboard-holder-hover-style';
-    if (document.getElementById(styleId)) {
+    if (!enableClickableCard || !redirectUrl || !hoverBorderEnabled) {
       return;
     }
     
