@@ -127,4 +127,5 @@ export type BigNumberVizProps = {
   iconUpload?: File | null;
   iconSize?: 'small' | 'medium' | 'large' | 'xlarge';
   iconBackgroundColor?: string;
+  iconShape?: 'circle' | 'square' | 'rounded';
 };

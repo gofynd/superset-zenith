@@ -67,6 +67,7 @@ export default function transformProps(
     iconUpload = null,
     iconSize = 'medium',
     iconBackgroundColor = '#e8eaf6',
+    iconShape = 'circle',
   } = formData;
   const refs: Refs = {};
   const { data = [], coltypes = [] } = queriesData[0];
@@ -308,6 +309,7 @@ export default function transformProps(
     iconUrl: finalIconUrl,
     iconSize,
     iconBackgroundColor,
+    iconShape,
   };
 
   return returnProps;

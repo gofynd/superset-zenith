@@ -102,6 +102,7 @@ export default function transformProps(chartProps: ChartProps) {
     iconUpload = null,
     iconSize = 'medium',
     iconBackgroundColor = '#e8eaf6',
+    iconShape = 'circle',
   } = formData;
   const { data: dataA = [] } = queriesData[0];
   const data = dataA;
@@ -322,5 +323,6 @@ export default function transformProps(chartProps: ChartProps) {
     iconUrl: finalIconUrl,
     iconSize,
     iconBackgroundColor,
+    iconShape,
   };
 }
