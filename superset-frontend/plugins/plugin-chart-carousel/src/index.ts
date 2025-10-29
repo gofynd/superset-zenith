@@ -19,7 +19,7 @@
 import { Behavior, ChartMetadata, ChartPlugin, t } from '@superset-ui/core';
 import transformProps from './transformProps';
 import controlPanel from './controlPanel';
-// import buildQuery from '../plugin-chart-table/src/buildQuery';
+import buildQuery from './buildQuery';
 import { CarouselChartFormData, CarouselChartProps } from './types';
 
 // Import images for examples
@@ -68,7 +68,7 @@ export default class CarouselChartPlugin extends ChartPlugin<
       metadata,
       transformProps,
       controlPanel,
-      // buildQuery: undefined, // Use default buildQuery
+      buildQuery,
     });
   }
 }

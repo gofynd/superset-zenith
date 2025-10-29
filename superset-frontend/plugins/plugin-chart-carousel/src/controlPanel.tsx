@@ -84,8 +84,16 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               label: t('Image URL Column'),
-              description: t('Column containing image URLs'),
+              description: t('Column containing image URLs (required for carousel view)'),
               default: null,
+              validators: [
+                (value: any, formData: any) => {
+                  if (formData?.view_mode === 'carousel' && !value) {
+                    return t('Image URL column is required for carousel view');
+                  }
+                  return false;
+                },
+              ],
               mapStateToProps: ({ datasource }) => ({
                 choices: datasource?.columns || [],
               }),
@@ -101,8 +109,16 @@ const config: ControlPanelConfig = {
             config: {
               type: 'SelectControl',
               label: t('Name Column'),
-              description: t('Column containing image names/titles'),
+              description: t('Column containing image names/titles (required for carousel view)'),
               default: null,
+              validators: [
+                (value: any, formData: any) => {
+                  if (formData?.view_mode === 'carousel' && !value) {
+                    return t('Name column is required for carousel view');
+                  }
+                  return false;
+                },
+              ],
               mapStateToProps: ({ datasource }) => ({
                 choices: datasource?.columns || [],
               }),
