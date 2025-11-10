@@ -30,7 +30,6 @@ import { useUiConfig } from 'src/components/UiConfigContext';
 import { Tooltip } from 'src/components/Tooltip';
 import { useSelector } from 'react-redux';
 import EditableTitle from 'src/components/EditableTitle';
-import { Skeleton } from 'src/components';
 import SliceHeaderControls, {
   SliceHeaderControlsProps,
 } from 'src/dashboard/components/SliceHeaderControls';
@@ -77,61 +76,90 @@ const CrossFilterIcon = styled(Icons.ApartmentOutlined)`
 
 const ComparisonIndicator = styled.div<{
   indicatorColor: string;
+  bgColor?: string;
+  shape?: 'pill' | 'square';
+  size?: 'large' | 'small';
 }>`
-  ${({ theme, indicatorColor }) => `
-    display: inline-flex !important;
-    align-items: center;
-    gap: ${theme.gridUnit / 2}px;
-    font-size: ${theme.typography.sizes.s}px;
-    font-weight: ${theme.typography.weights.medium};
-    color: ${indicatorColor} !important;
-    cursor: default;
-    white-space: nowrap;
-    position: relative;
-    
-    /* Aggressively remove ALL possible borders and backgrounds */
-    background: none !important;
-    background-color: transparent !important;
-    background-image: none !important;
-    border: 0 !important;
-    border-width: 0 !important;
-    border-style: none !important;
-    border-color: transparent !important;
-    border-top: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    border-left: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    outline: none !important;
-    
-    /* Override specific gray border that's being applied */
-    border: 0px solid transparent !important;
-    
-    /* Target any child elements that might have borders */
-    * {
-      border: none !important;
-      background: none !important;
-      box-shadow: none !important;
+  ${({ indicatorColor, bgColor, shape = 'pill', size = 'large' }) => {
+    // Determine border radius based on shape
+    let borderRadius = '9999px'; // pill (fully rounded)
+    if (shape === 'square') {
+      borderRadius = '4px'; // square (slightly rounded corners)
     }
-    
-    /* Target the specific class to ensure override */
-    &.superset-comparison-indicator-no-border {
+
+    const isSmall = size === 'small';
+    const padding = isSmall ? '3px 6px' : '4px 8px';
+    const fontSize = isSmall ? '10px' : '14px';
+    const gap = isSmall ? '2px' : '2px';
+
+    return `
+      display: inline-flex !important;
+      align-items: center;
+      gap: ${gap};
+      font-weight: 500;
+      color: ${indicatorColor} !important;
+      cursor: default;
+      white-space: nowrap;
+      position: relative;
+      border-radius: ${borderRadius} !important;
+      margin: 0 !important;
       border: 0 !important;
-      background: transparent !important;
-      background-color: transparent !important;
-      padding: 0 !important;
+      background-color: ${bgColor ? bgColor : 'rgba(0, 0, 0, 0)'} !important;
+      padding: ${padding} !important;
       box-shadow: none !important;
       outline: none !important;
+      font-size: ${fontSize} !important;
+      
+      /* Prevent tooltip-induced layout shifts */
+      &.ant-tooltip-open {
+        display: inline-flex !important;
+        position: relative !important;
+      }
+    `;
+  }}
+`;
+
+const TrendIconContainer = styled.span<{
+  bgColor: string;
+  iconShape: 'circle' | 'square' | 'rounded';
+  iconSize: number;
+}>`
+  ${({ bgColor, iconShape, iconSize }) => {
+    // Determine border radius based on shape
+    let borderRadius = '50%'; // circle (default)
+    if (iconShape === 'square') {
+      borderRadius = '0';
+    } else if (iconShape === 'rounded') {
+      borderRadius = '8px';
     }
-    
-    /* Prevent tooltip-induced layout shifts */
-    &.ant-tooltip-open {
+
+    return `
       display: inline-flex !important;
-      position: relative !important;
-    }
-  `}
+      align-items: center !important;
+      justify-content: center !important;
+      height: ${iconSize}px !important;
+      min-height: ${iconSize}px !important;
+      max-height: ${iconSize}px !important;
+      width: auto !important;
+      min-width: ${iconSize}px !important;
+      ${bgColor !== 'transparent' ? `background-color: ${bgColor} !important;` : ''}
+      border-radius: ${borderRadius} !important;
+      padding: 0 !important;
+      margin-right: ${iconSize * 0.25}px !important;
+      vertical-align: middle !important;
+      flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+
+      img {
+        height: 100% !important;
+        width: auto !important;
+        max-width: none !important;
+        object-fit: contain !important;
+        display: block !important;
+      }
+    `;
+  }}
 `;
 
 const ChartIconContainer = styled.div<{
@@ -344,6 +372,12 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       return null;
     }
 
+    // Check trend comparison position - only render in slice header if position is 'top'
+    const trendComparisonPosition = formData?.trend_comparison_position ?? formData?.trendComparisonPosition ?? 'top';
+    if (trendComparisonPosition !== 'top') {
+      return null; // Don't render in slice header if position is 'middle'
+    }
+
     const { percentageChange, comparisonIndicator } = bigNumberComparisonData;
     // console.log('✅ Rendering comparison indicator:', {
     //   percentageChange,
@@ -355,17 +389,71 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       NumberFormats.PERCENT_SIGNED_1_POINT,
     );
 
+    // Extract uptrend/downtrend icon properties from formData
+    const isUptrend = comparisonIndicator === 'positive';
+    const uptrendIconType = formData?.uptrend_icon_type ?? formData?.uptrendIconType;
+    const uptrendIconUrl = formData?.uptrend_icon_url ?? formData?.uptrendIconUrl;
+    const uptrendIconBackgroundColorRaw = formData?.uptrend_icon_background_color ?? formData?.uptrendIconBackgroundColor;
+    const uptrendIconTextColorRaw = formData?.uptrend_icon_text_color ?? formData?.uptrendIconTextColor;
+    const uptrendIconShape = formData?.uptrend_icon_shape ?? formData?.uptrendIconShape ?? 'circle';
+    const downtrendIconType = formData?.downtrend_icon_type ?? formData?.downtrendIconType;
+    const downtrendIconUrl = formData?.downtrend_icon_url ?? formData?.downtrendIconUrl;
+    const downtrendIconBackgroundColorRaw = formData?.downtrend_icon_background_color ?? formData?.downtrendIconBackgroundColor;
+    const downtrendIconTextColorRaw = formData?.downtrend_icon_text_color ?? formData?.downtrendIconTextColor;
+    const downtrendIconShape = formData?.downtrend_icon_shape ?? formData?.downtrendIconShape ?? 'circle';
+    const trendComparisonShape = formData?.trend_comparison_shape ?? formData?.trendComparisonShape ?? 'pill';
+    const trendComparisonSize = formData?.trend_comparison_size ?? formData?.trendComparisonSize ?? 'large';
+
+    // Convert color object to CSS string if needed
+    const convertColorToString = (color: any): string | null => {
+      if (!color) return null;
+      if (typeof color === 'string') {
+        return color;
+      }
+      if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+        const { r, g, b, a = 0 } = color; // Default to transparent (a = 0)
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      }
+      return null;
+    };
+
+    const uptrendIconBackgroundColor = convertColorToString(uptrendIconBackgroundColorRaw);
+    const downtrendIconBackgroundColor = convertColorToString(downtrendIconBackgroundColorRaw);
+    const uptrendIconTextColor = convertColorToString(uptrendIconTextColorRaw);
+    const downtrendIconTextColor = convertColorToString(downtrendIconTextColorRaw);
+
+    // Check if custom icon is provided
+    const hasCustomIcon = isUptrend
+      ? (uptrendIconUrl && uptrendIconType)
+      : (downtrendIconUrl && downtrendIconType);
+
+    // Get background color for the trend component (not just the icon)
+    // Only apply if explicitly provided (not default)
+    const trendBgColor = isUptrend ? uptrendIconBackgroundColor : downtrendIconBackgroundColor;
+    const hasTrendBgColor = trendBgColor !== null && trendBgColor !== undefined && (typeof trendBgColor === 'string' ? trendBgColor.trim() !== '' : true);
+
+    // Get text color for the trend component - use custom if provided, otherwise use default
     let indicatorColor: string;
-    let arrowIcon: string;
+    let arrowIcon: string | React.ReactNode;
 
     switch (comparisonIndicator) {
       case 'positive':
-        indicatorColor = '#28a745'; // green
-        arrowIcon = '↗';
+        indicatorColor = uptrendIconTextColor || '#28a745'; // Use custom text color or green (default)
+        if (hasCustomIcon) {
+          // Custom icon will be rendered separately
+          arrowIcon = null;
+        } else {
+          arrowIcon = '↗';
+        }
         break;
       case 'negative':
-        indicatorColor = '#dc3545'; // red
-        arrowIcon = '↘';
+        indicatorColor = downtrendIconTextColor || '#dc3545'; // Use custom text color or red (default)
+        if (hasCustomIcon) {
+          // Custom icon will be rendered separately
+          arrowIcon = null;
+        } else {
+          arrowIcon = '↘';
+        }
         break;
       case 'neutral':
         indicatorColor = '#ffc107'; // orange
@@ -394,22 +482,38 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     // });
     // console.groupEnd();
 
+    const iconSize = trendComparisonSize === 'small' ? 15 : 20;
+
     return (
       <Tooltip title={tooltipText} placement="top">
         <ComparisonIndicator
           indicatorColor={indicatorColor}
+          bgColor={hasTrendBgColor ? trendBgColor : undefined}
+          shape={trendComparisonShape}
+          size={trendComparisonSize}
           className="superset-comparison-indicator-no-border"
-          style={{
-            border: 'none !important',
-            background: 'transparent !important',
-            backgroundColor: 'transparent !important',
-            padding: '0 !important',
-            boxShadow: 'none !important',
-            position: 'relative !important',
-            display: 'inline-flex !important',
-          }}
         >
-          <span>{arrowIcon}</span>
+          {hasCustomIcon ? (
+            <TrendIconContainer
+              bgColor="transparent" // Icon container should be transparent since bg is on parent
+              iconShape={isUptrend ? uptrendIconShape : downtrendIconShape}
+              iconSize={iconSize} // Adjust icon size based on trend comparison size
+            >
+              <img
+                src={isUptrend ? uptrendIconUrl : downtrendIconUrl}
+                alt={isUptrend ? 'Uptrend' : 'Downtrend'}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const container = target.parentElement;
+                  if (container) {
+                    container.style.display = 'none';
+                  }
+                }}
+              />
+            </TrendIconContainer>
+          ) : (
+            <span>{arrowIcon}</span>
+          )}
           <span>{formattedPercentage}</span>
         </ComparisonIndicator>
       </Tooltip>
@@ -442,6 +546,7 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   const iconSize = formData?.icon_size ?? formData?.iconSize ?? 'medium';
   const iconBackgroundColorRaw = formData?.icon_background_color ?? formData?.iconBackgroundColor ?? '#e8eaf6';
   const iconShape = formData?.icon_shape ?? formData?.iconShape ?? 'circle';
+  const iconPosition = formData?.icon_position ?? formData?.iconPosition ?? 'top-left';
   
   // Convert color object to CSS string if needed
   const convertColorToString = (color: any): string => {
@@ -457,9 +562,10 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   
   const iconBackgroundColor = convertColorToString(iconBackgroundColorRaw);
 
-  // Render icon for BigNumber charts
+  // Render icon for BigNumber charts - only render top-left in title
   const renderChartIcon = () => {
-    if (!isBigNumberChart || !showIcon || !iconUrl) {
+    // Only render icon in title if it's top-left position
+    if (!isBigNumberChart || !showIcon || !iconUrl || iconPosition !== 'top-left') {
       return null;
     }
 

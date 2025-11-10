@@ -85,6 +85,48 @@ const SymbolWrapper = styled.span<PopKPIComparisonSymbolStyleProps>`
   `}
 `;
 
+// Trend icon container styled component (similar to ChartIconContainer)
+const TrendIconContainer = styled.span<{
+  bgColor: string;
+  iconShape: 'circle' | 'square' | 'rounded';
+  iconSize: number;
+}>`
+  ${({ bgColor, iconShape, iconSize }) => {
+    // Determine border radius based on shape
+    let borderRadius = '50%'; // circle (default)
+    if (iconShape === 'square') {
+      borderRadius = '0';
+    } else if (iconShape === 'rounded') {
+      borderRadius = '8px';
+    }
+    
+    return css`
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: ${iconSize}px !important;
+      height: ${iconSize}px !important;
+      min-width: ${iconSize}px !important;
+      min-height: ${iconSize}px !important;
+      background-color: ${bgColor} !important;
+      border-radius: ${borderRadius} !important;
+      padding: ${iconSize * 0.2}px !important;
+      margin-left: ${iconSize * 0.25}px !important;
+      vertical-align: middle !important;
+      flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      
+      img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        display: block !important;
+      }
+    `;
+  }}
+`;
+
 export default function PopKPI(props: PopKPIProps) {
   const {
     height,
@@ -108,6 +150,14 @@ export default function PopKPI(props: PopKPIProps) {
     yAxisFormat,
     enableClickableCard = false,
     redirectUrl,
+    uptrendIconType,
+    uptrendIconUrl,
+    uptrendIconBackgroundColor,
+    uptrendIconShape = 'circle',
+    downtrendIconType,
+    downtrendIconUrl,
+    downtrendIconBackgroundColor,
+    downtrendIconShape = 'circle',
   } = props;
 
   const [comparisonRange, setComparisonRange] = useState<string>('');
@@ -294,11 +344,47 @@ export default function PopKPI(props: PopKPIProps) {
           ) : (
             bigNumber
           )}
-          {percentDifferenceNumber !== 0 && (
-            <span css={arrowIndicatorStyle}>
-              {percentDifferenceNumber > 0 ? '↑' : '↓'}
-            </span>
-          )}
+          {percentDifferenceNumber !== 0 && (() => {
+            const isUptrend = percentDifferenceNumber > 0;
+            const hasCustomIcon = isUptrend 
+              ? (uptrendIconUrl && uptrendIconType)
+              : (downtrendIconUrl && downtrendIconType);
+            
+            // Use custom icon if provided, otherwise use default arrow
+            if (hasCustomIcon) {
+              const iconUrl = isUptrend ? uptrendIconUrl : downtrendIconUrl;
+              const bgColor = isUptrend ? (uptrendIconBackgroundColor || 'transparent') : (downtrendIconBackgroundColor || 'transparent');
+              const iconShape = isUptrend ? uptrendIconShape : downtrendIconShape;
+              const iconSize = 24; // Small size for trend icons
+              
+              return (
+                <TrendIconContainer
+                  bgColor={bgColor}
+                  iconShape={iconShape}
+                  iconSize={iconSize}
+                >
+                  <img
+                    src={iconUrl}
+                    alt={isUptrend ? 'Uptrend' : 'Downtrend'}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const container = target.parentElement;
+                      if (container) {
+                        container.style.display = 'none';
+                      }
+                    }}
+                  />
+                </TrendIconContainer>
+              );
+            }
+            
+            // Default arrow indicator
+            return (
+              <span css={arrowIndicatorStyle}>
+                {isUptrend ? '↑' : '↓'}
+              </span>
+            );
+          })()}
         </div>
 
         <div

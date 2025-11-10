@@ -40,6 +40,7 @@ import SliceHeader from '../SliceHeader';
 import MissingChart from '../MissingChart';
 import { slicePropShape, chartPropShape } from '../../util/propShapes';
 import { getMetricLabel } from '@superset-ui/core';
+import { css } from '@superset-ui/core';
 // import { getBigNumberComparisonData } from '../../util/getBigNumberComparisonData';
 
 const propTypes = {
@@ -126,6 +127,50 @@ const SliceContainer = styled.div`
   flex-direction: column;
   max-height: 100%;
   overflow: hidden;
+  position: relative;
+`;
+
+// ChartIconContainer styled component for middle-right positioning
+// Positioned relative to SliceContainer which contains both header and chart body
+const ChartIconContainer = styled.div`
+  ${({ iconSize, bgColor, iconShape }) => {
+    // Determine border radius based on shape
+    let borderRadius = '50%'; // circle (default)
+    if (iconShape === 'square') {
+      borderRadius = '0';
+    } else if (iconShape === 'rounded') {
+      borderRadius = '8px';
+    }
+    
+    return css`
+      position: absolute !important;
+      top: 50% !important;
+      right: 0 !important;
+      transform: translateY(-50%) !important;
+      width: ${iconSize}px !important;
+      height: ${iconSize}px !important;
+      min-width: ${iconSize}px !important;
+      min-height: ${iconSize}px !important;
+      background-color: ${bgColor} !important;
+      border-radius: ${borderRadius} !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: ${iconSize * 0.2}px !important;
+      vertical-align: middle !important;
+      flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      z-index: 99 !important;
+      
+      img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        display: block !important;
+      }
+    `;
+  }}
 `;
 
 class Chart extends Component {
@@ -631,7 +676,83 @@ class Chart extends Component {
             title={slice.slice_name}
           />
         </ChartWrapper>
+
+        {this.renderMiddleRightIcon(chartStatus, isLoading)}
       </SliceContainer>
+    );
+  }
+
+  renderMiddleRightIcon(chartStatus, isLoading) {
+    const { slice, formData, chart } = this.props;
+    
+    // Only render icon when chart is ready (same conditions as chart content)
+    // Check if chart exists, is not loading, and has data
+    if (!chart || isLoading || chartStatus === 'loading' || chartStatus === 'error') {
+      return null;
+    }
+    
+    // Check if queriesResponse exists and has data (same as chart content rendering)
+    const { queriesResponse } = chart;
+    if (!queriesResponse || queriesResponse.length === 0) {
+      return null;
+    }
+    
+    // Extract icon settings from formData for BigNumber charts
+    const isBigNumberChart = slice?.viz_type?.toLowerCase().includes('big_number');
+    const showIcon = formData?.show_icon ?? formData?.showIcon;
+    const iconUrl = formData?.icon_url ?? formData?.iconUrl;
+    const iconSize = formData?.icon_size ?? formData?.iconSize ?? 'medium';
+    const iconBackgroundColorRaw = formData?.icon_background_color ?? formData?.iconBackgroundColor ?? '#e8eaf6';
+    const iconShape = formData?.icon_shape ?? formData?.iconShape ?? 'circle';
+    const iconPosition = formData?.icon_position ?? formData?.iconPosition ?? 'top-left';
+    
+    // Only render middle-right icon here (top-left is handled in SliceHeader)
+    if (!isBigNumberChart || !showIcon || !iconUrl || iconPosition !== 'middle-right') {
+      return null;
+    }
+    
+    // Convert color object to CSS string if needed
+    const convertColorToString = (color) => {
+      if (typeof color === 'string') {
+        return color;
+      }
+      if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+        const { r, g, b, a = 1 } = color;
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      }
+      return '#e8eaf6'; // fallback
+    };
+    
+    const iconBackgroundColor = convertColorToString(iconBackgroundColorRaw);
+    
+    // Size mapping - matches SliceHeader ChartIconContainer
+    const sizeMap = {
+      small: 24,
+      medium: 32,
+      large: 40,
+      xlarge: 48,
+    };
+    const iconSizePx = sizeMap[iconSize] ?? sizeMap.medium;
+    
+    return (
+      <ChartIconContainer
+        iconSize={iconSizePx}
+        bgColor={iconBackgroundColor}
+        iconShape={iconShape}
+        className="chart-title-icon"
+      >
+        <img
+          src={iconUrl}
+          alt="Chart Icon"
+          onError={(e) => {
+            const target = e.target;
+            const container = target.parentElement;
+            if (container) {
+              container.style.display = 'none';
+            }
+          }}
+        />
+      </ChartIconContainer>
     );
   }
 }
