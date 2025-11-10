@@ -109,7 +109,6 @@ const TrendIconContainer = styled.span<{
       max-height: ${iconSize}px !important;
       width: auto !important;
       min-width: ${iconSize}px !important;
-      height: ${iconSize}px !important;
       ${bgColor !== 'transparent' ? `background-color: ${bgColor} !important;` : ''}
       border-radius: ${borderRadius} !important;
       padding: 0 !important;

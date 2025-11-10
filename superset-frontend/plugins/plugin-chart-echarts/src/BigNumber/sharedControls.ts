@@ -141,7 +141,7 @@ export const iconUrl: CustomControlItem = {
     description: t('Enter the URL of the icon image'),
     validators: [
       (value: string) => {
-        if (!value || value.trim() === '') return true;
+        if (!value || value.trim() === '') return undefined;
         
         // Basic URL validation
         try {
@@ -163,7 +163,7 @@ export const iconUrl: CustomControlItem = {
           return t('URL should point to an image file (PNG, JPG, SVG, GIF, WebP).');
         }
         
-        return true;
+        return undefined;
       }
     ],
   },
@@ -182,7 +182,7 @@ export const iconUpload: CustomControlItem = {
     accept: '.png,.jpg,.jpeg,.svg,.gif',
     validators: [
       (value: File | null) => {
-        if (!value) return true;
+        if (!value) return undefined;
         
         // File type validation
         const allowedTypes = [
@@ -209,7 +209,7 @@ export const iconUpload: CustomControlItem = {
           return t('File size too small. Please upload a valid image file.');
         }
         
-        return true;
+        return undefined;
       }
     ],
   },
@@ -320,7 +320,7 @@ export const uptrendIconUpload: CustomControlItem = {
     description: t('Upload an image file for the uptrend icon'),
     validators: [
       (value: File | null) => {
-        if (!value) return true;
+        if (!value) return undefined;
         
         // File type validation
         const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
@@ -340,7 +340,7 @@ export const uptrendIconUpload: CustomControlItem = {
           return t('File size too small. Please upload a valid image file.');
         }
         
-        return true;
+        return undefined;
       }
     ],
   },
@@ -425,7 +425,7 @@ export const downtrendIconUpload: CustomControlItem = {
     description: t('Upload an image file for the downtrend icon'),
     validators: [
       (value: File | null) => {
-        if (!value) return true;
+        if (!value) return undefined;
         
         // File type validation
         const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
@@ -445,7 +445,7 @@ export const downtrendIconUpload: CustomControlItem = {
           return t('File size too small. Please upload a valid image file.');
         }
         
-        return true;
+        return undefined;
       }
     ],
   },
@@ -537,3 +537,4 @@ export const trendComparisonSize: CustomControlItem = {
     description: t('Choose the size of the trend comparison indicator'),
   },
 };
+
