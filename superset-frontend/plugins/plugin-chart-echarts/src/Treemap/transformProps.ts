@@ -19,6 +19,7 @@
 import {
   CategoricalColorNamespace,
   getColumnLabel,
+  getContrastingColor,
   getMetricLabel,
   getNumberFormatter,
   getTimeFormatter,
@@ -173,15 +174,30 @@ export default function transformProps(
         }),
       });
       const newPath = path.concat(name);
+      const backgroundColor = colorFn(name, sliceId);
+      let labelColor = theme.colors.grayscale.dark2;
+      if (backgroundColor) {
+        try {
+          labelColor = getContrastingColor(backgroundColor);
+        } catch (error) {
+          labelColor = theme.colors.grayscale.dark2;
+        }
+      }
       let item: TreemapSeriesNodeItemOption = {
         name,
         value,
         colorSaturation: COLOR_SATURATION,
         itemStyle: {
           borderColor: BORDER_COLOR,
-          color: colorFn(name, sliceId),
+          color: backgroundColor,
           borderWidth: BORDER_WIDTH,
           gapWidth: GAP_WIDTH,
+        },
+        label: {
+          color: labelColor,
+        },
+        upperLabel: {
+          color: labelColor,
         },
       };
       if (treeNode.children?.length) {
@@ -211,18 +227,31 @@ export default function transformProps(
       return item;
     });
 
+  const rootColor = colorFn(`${metricLabel}`, sliceId);
+  let rootLabelColor = theme.colors.grayscale.dark2;
+  if (rootColor) {
+    try {
+      rootLabelColor = getContrastingColor(rootColor);
+    } catch (error) {
+      rootLabelColor = theme.colors.grayscale.dark2;
+    }
+  }
+
   const transformedData: TreemapSeriesNodeItemOption[] = [
     {
       name: metricLabel,
       colorSaturation: COLOR_SATURATION,
       itemStyle: {
         borderColor: BORDER_COLOR,
-        color: colorFn(`${metricLabel}`, sliceId),
+        color: rootColor,
         borderWidth: BORDER_WIDTH,
         gapWidth: GAP_WIDTH,
       },
       upperLabel: {
         show: false,
+      },
+      label: {
+        color: rootLabelColor,
       },
       children: traverse(treeData, []),
     },
@@ -264,7 +293,6 @@ export default function transformProps(
         show: showLabels,
         position: labelPosition,
         formatter,
-        color: theme.colors.grayscale.dark2,
         fontSize: LABEL_FONTSIZE,
       },
       upperLabel: {

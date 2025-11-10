@@ -85,9 +85,135 @@ export default function transformProps(
     iconUrl = '',
     iconUpload = null,
     iconSize = 'medium',
-    iconBackgroundColor = '#e8eaf6',
+    iconBackgroundColor: iconBackgroundColorRaw = '#e8eaf6',
     iconShape = 'circle',
+    iconPosition = 'top-left',
+    // Uptrend/Downtrend icon properties
+    uptrendIconType = 'url',
+    uptrendIconUrl = '',
+    uptrendIconUpload = null,
+    uptrendIconBackgroundColor: uptrendIconBackgroundColorRaw,
+    uptrendIconTextColor: uptrendIconTextColorRaw,
+    uptrendIconShape = 'circle',
+    downtrendIconType = 'url',
+    downtrendIconUrl = '',
+    downtrendIconUpload = null,
+    downtrendIconBackgroundColor: downtrendIconBackgroundColorRaw,
+    downtrendIconTextColor: downtrendIconTextColorRaw,
+    downtrendIconShape = 'circle',
+    trendComparisonPosition = 'top',
+    trendComparisonShape = 'pill',
+    trendComparisonSize = 'large',
+    // Also check snake_case keys (formData might use snake_case)
+    show_icon,
+    icon_url,
+    icon_size,
+    icon_background_color,
+    icon_shape,
+    icon_position,
+    uptrend_icon_type,
+    uptrend_icon_url,
+    uptrend_icon_upload,
+    uptrend_icon_background_color,
+    uptrend_icon_text_color,
+    uptrend_icon_shape,
+    downtrend_icon_type,
+    downtrend_icon_url,
+    downtrend_icon_upload,
+    downtrend_icon_background_color,
+    downtrend_icon_text_color,
+    downtrend_icon_shape,
+    trend_comparison_position,
+    trend_comparison_shape,
+    trend_comparison_size,
   } = formData;
+  
+  // Handle both camelCase and snake_case keys
+  const finalShowIcon = showIcon ?? show_icon ?? false;
+  const finalIconUrl = iconUrl || icon_url || '';
+  const finalIconSize = iconSize || icon_size || 'medium';
+  const finalIconShape = iconShape || icon_shape || 'circle';
+  const finalIconPosition = iconPosition || icon_position || 'top-left';
+  
+  // Handle iconBackgroundColor - check both camelCase and snake_case, and convert color object to string
+  let finalIconBackgroundColor = iconBackgroundColorRaw || icon_background_color || '#e8eaf6';
+  if (typeof finalIconBackgroundColor === 'object' && finalIconBackgroundColor !== null) {
+    // Convert color object to CSS string (from ColorPickerControl)
+    if ('r' in finalIconBackgroundColor && 'g' in finalIconBackgroundColor && 'b' in finalIconBackgroundColor) {
+      const { r, g, b, a = 1 } = finalIconBackgroundColor as { r: number; g: number; b: number; a?: number };
+      finalIconBackgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+      finalIconBackgroundColor = '#e8eaf6'; // fallback
+    }
+  } else if (typeof finalIconBackgroundColor !== 'string') {
+    finalIconBackgroundColor = '#e8eaf6'; // fallback
+  }
+  
+  // Handle uptrend icon properties
+  const finalUptrendIconType = uptrendIconType || uptrend_icon_type || 'url';
+  let finalUptrendIconUrl = uptrendIconUrl || uptrend_icon_url || '';
+  const finalUptrendIconShape = uptrendIconShape || uptrend_icon_shape || 'circle';
+  let finalUptrendIconBackgroundColor = uptrendIconBackgroundColorRaw || uptrend_icon_background_color;
+  if (typeof finalUptrendIconBackgroundColor === 'object' && finalUptrendIconBackgroundColor !== null) {
+    if ('r' in finalUptrendIconBackgroundColor && 'g' in finalUptrendIconBackgroundColor && 'b' in finalUptrendIconBackgroundColor) {
+      const { r, g, b, a = 0 } = finalUptrendIconBackgroundColor as { r: number; g: number; b: number; a?: number };
+      finalUptrendIconBackgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+      finalUptrendIconBackgroundColor = 'transparent';
+    }
+  } else if (typeof finalUptrendIconBackgroundColor !== 'string') {
+    finalUptrendIconBackgroundColor = 'transparent';
+  }
+
+  // Handle uptrend text color
+  let finalUptrendIconTextColor = uptrendIconTextColorRaw || uptrend_icon_text_color;
+  if (typeof finalUptrendIconTextColor === 'object' && finalUptrendIconTextColor !== null) {
+    if ('r' in finalUptrendIconTextColor && 'g' in finalUptrendIconTextColor && 'b' in finalUptrendIconTextColor) {
+      const { r, g, b, a = 1 } = finalUptrendIconTextColor as { r: number; g: number; b: number; a?: number };
+      finalUptrendIconTextColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+      finalUptrendIconTextColor = undefined;
+    }
+  } else if (typeof finalUptrendIconTextColor !== 'string' && finalUptrendIconTextColor !== undefined) {
+    finalUptrendIconTextColor = undefined;
+  }
+  
+  // Handle downtrend icon properties
+  const finalDowntrendIconType = downtrendIconType || downtrend_icon_type || 'url';
+  let finalDowntrendIconUrl = downtrendIconUrl || downtrend_icon_url || '';
+  const finalDowntrendIconShape = downtrendIconShape || downtrend_icon_shape || 'circle';
+  let finalDowntrendIconBackgroundColor = downtrendIconBackgroundColorRaw || downtrend_icon_background_color;
+  if (typeof finalDowntrendIconBackgroundColor === 'object' && finalDowntrendIconBackgroundColor !== null) {
+    if ('r' in finalDowntrendIconBackgroundColor && 'g' in finalDowntrendIconBackgroundColor && 'b' in finalDowntrendIconBackgroundColor) {
+      const { r, g, b, a = 0 } = finalDowntrendIconBackgroundColor as { r: number; g: number; b: number; a?: number };
+      finalDowntrendIconBackgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+      finalDowntrendIconBackgroundColor = 'transparent';
+    }
+  } else if (typeof finalDowntrendIconBackgroundColor !== 'string') {
+    finalDowntrendIconBackgroundColor = 'transparent';
+  }
+
+  // Handle downtrend text color
+  let finalDowntrendIconTextColor = downtrendIconTextColorRaw || downtrend_icon_text_color;
+  if (typeof finalDowntrendIconTextColor === 'object' && finalDowntrendIconTextColor !== null) {
+    if ('r' in finalDowntrendIconTextColor && 'g' in finalDowntrendIconTextColor && 'b' in finalDowntrendIconTextColor) {
+      const { r, g, b, a = 1 } = finalDowntrendIconTextColor as { r: number; g: number; b: number; a?: number };
+      finalDowntrendIconTextColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+      finalDowntrendIconTextColor = undefined;
+    }
+  } else if (typeof finalDowntrendIconTextColor !== 'string' && finalDowntrendIconTextColor !== undefined) {
+    finalDowntrendIconTextColor = undefined;
+  }
+
+  const finalTrendComparisonPosition =
+    trendComparisonPosition || trend_comparison_position || 'top';
+  const finalTrendComparisonShape =
+    trendComparisonShape || trend_comparison_shape || 'pill';
+  const finalTrendComparisonSize =
+    trendComparisonSize || trend_comparison_size || 'large';
+  
   const granularity = extractTimegrain(rawFormData);
   const {
     data = [],
@@ -414,30 +540,70 @@ export default function transformProps(
   const { onContextMenu } = hooks;
 
   // Handle icon URL - use uploaded file if available, otherwise use provided URL
-  let finalIconUrl = iconUrl;
-  if (showIcon && iconType === 'upload' && iconUpload) {
+  let processedIconUrl = finalIconUrl || '';
+  if (finalShowIcon && iconType === 'upload' && iconUpload) {
     // Additional validation for uploaded files
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
     const maxSize = 2 * 1024 * 1024; // 2MB
     const minSize = 1024; // 1KB
     
     if (!allowedTypes.includes(iconUpload.type)) {
-      finalIconUrl = '';
+      processedIconUrl = '';
     } else if (iconUpload.size > maxSize) {
-      finalIconUrl = '';
+      processedIconUrl = '';
     } else if (iconUpload.size < minSize) {
-      finalIconUrl = '';
+      processedIconUrl = '';
     } else {
       // Convert uploaded file to data URL
-      finalIconUrl = URL.createObjectURL(iconUpload);
+      processedIconUrl = URL.createObjectURL(iconUpload);
     }
-  } else if (showIcon && iconType === 'url' && iconUrl) {
+  } else if (finalShowIcon && iconType === 'url' && finalIconUrl) {
     // Validate URL format
     try {
-      new URL(iconUrl);
-      finalIconUrl = iconUrl;
+      new URL(finalIconUrl);
+      processedIconUrl = finalIconUrl;
     } catch {
-      finalIconUrl = '';
+      processedIconUrl = '';
+    }
+  }
+  
+  // Handle uptrend icon URL
+  let processedUptrendIconUrl = finalUptrendIconUrl || '';
+  if (finalUptrendIconType === 'upload' && (uptrendIconUpload || uptrend_icon_upload)) {
+    const uploadFile = uptrendIconUpload || uptrend_icon_upload;
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
+    const maxSize = 2 * 1024 * 1024;
+    const minSize = 1024;
+    
+    if (uploadFile && allowedTypes.includes(uploadFile.type) && uploadFile.size >= minSize && uploadFile.size <= maxSize) {
+      processedUptrendIconUrl = URL.createObjectURL(uploadFile);
+    }
+  } else if (finalUptrendIconType === 'url' && finalUptrendIconUrl) {
+    try {
+      new URL(finalUptrendIconUrl);
+      processedUptrendIconUrl = finalUptrendIconUrl;
+    } catch {
+      processedUptrendIconUrl = '';
+    }
+  }
+  
+  // Handle downtrend icon URL
+  let processedDowntrendIconUrl = finalDowntrendIconUrl || '';
+  if (finalDowntrendIconType === 'upload' && (downtrendIconUpload || downtrend_icon_upload)) {
+    const uploadFile = downtrendIconUpload || downtrend_icon_upload;
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
+    const maxSize = 2 * 1024 * 1024;
+    const minSize = 1024;
+    
+    if (uploadFile && allowedTypes.includes(uploadFile.type) && uploadFile.size >= minSize && uploadFile.size <= maxSize) {
+      processedDowntrendIconUrl = URL.createObjectURL(uploadFile);
+    }
+  } else if (finalDowntrendIconType === 'url' && finalDowntrendIconUrl) {
+    try {
+      new URL(finalDowntrendIconUrl);
+      processedDowntrendIconUrl = finalDowntrendIconUrl;
+    } catch {
+      processedDowntrendIconUrl = '';
     }
   }
 
@@ -477,11 +643,26 @@ export default function transformProps(
       ? parseInt(hoverBorderThickness, 10) || 2 
       : hoverBorderThickness,
     hoverBorderColor,
-    showIcon,
+    showIcon: finalShowIcon,
     iconType,
-    iconUrl: finalIconUrl,
-    iconSize,
-    iconBackgroundColor,
-    iconShape,
+    iconUrl: processedIconUrl,
+    iconSize: finalIconSize,
+    iconBackgroundColor: finalIconBackgroundColor,
+    iconShape: finalIconShape,
+    iconPosition: finalIconPosition,
+    // Uptrend/Downtrend icon properties
+    uptrendIconType: finalUptrendIconType,
+    uptrendIconUrl: processedUptrendIconUrl,
+    uptrendIconBackgroundColor: finalUptrendIconBackgroundColor,
+    uptrendIconTextColor: finalUptrendIconTextColor,
+    uptrendIconShape: finalUptrendIconShape,
+    downtrendIconType: finalDowntrendIconType,
+    downtrendIconUrl: processedDowntrendIconUrl,
+    downtrendIconBackgroundColor: finalDowntrendIconBackgroundColor,
+    downtrendIconTextColor: finalDowntrendIconTextColor,
+    downtrendIconShape: finalDowntrendIconShape,
+    trendComparisonPosition: finalTrendComparisonPosition,
+    trendComparisonShape: finalTrendComparisonShape,
+    trendComparisonSize: finalTrendComparisonSize,
   };
 }

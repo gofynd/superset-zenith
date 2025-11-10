@@ -141,7 +141,7 @@ export const iconUrl: CustomControlItem = {
     description: t('Enter the URL of the icon image'),
     validators: [
       (value: string) => {
-        if (!value || value.trim() === '') return undefined;
+        if (!value || value.trim() === '') return true;
         
         // Basic URL validation
         try {
@@ -163,7 +163,7 @@ export const iconUrl: CustomControlItem = {
           return t('URL should point to an image file (PNG, JPG, SVG, GIF, WebP).');
         }
         
-        return undefined;
+        return true;
       }
     ],
   },
@@ -182,7 +182,7 @@ export const iconUpload: CustomControlItem = {
     accept: '.png,.jpg,.jpeg,.svg,.gif',
     validators: [
       (value: File | null) => {
-        if (!value) return undefined;
+        if (!value) return true;
         
         // File type validation
         const allowedTypes = [
@@ -209,7 +209,7 @@ export const iconUpload: CustomControlItem = {
           return t('File size too small. Please upload a valid image file.');
         }
         
-        return undefined;
+        return true;
       }
     ],
   },
@@ -260,5 +260,280 @@ export const iconShape: CustomControlItem = {
     ],
     visibility: ({ controls }) => controls?.show_icon?.value === true,
     description: t('Choose the shape of the icon background container'),
+  },
+};
+
+export const iconPosition: CustomControlItem = {
+  name: 'icon_position',
+  config: {
+    type: 'SelectControl',
+    label: t('Icon position'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'top-left',
+    choices: [
+      ['top-left', t('Top Left')],
+      ['middle-right', t('Middle Right')],
+    ],
+    visibility: ({ controls }) => controls?.show_icon?.value === true,
+    description: t('Choose the position of the icon'),
+  },
+};
+
+// Uptrend icon controls
+export const uptrendIconType: CustomControlItem = {
+  name: 'uptrend_icon_type',
+  config: {
+    type: 'SelectControl',
+    label: t('Uptrend Icon Type'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'url',
+    options: [
+      { value: 'url', label: t('URL') },
+      { value: 'upload', label: t('Upload'), disabled: true },
+    ],
+    description: t('Choose how to provide the uptrend icon'),
+  },
+};
+
+export const uptrendIconUrl: CustomControlItem = {
+  name: 'uptrend_icon_url',
+  config: {
+    type: 'TextControl',
+    label: t('Uptrend Icon URL'),
+    renderTrigger: true,
+    default: '',
+    visibility: ({ controls }) => controls?.uptrend_icon_type?.value === 'url',
+    description: t('Enter the URL for the uptrend icon image'),
+  },
+};
+
+export const uptrendIconUpload: CustomControlItem = {
+  name: 'uptrend_icon_upload',
+  config: {
+    type: 'FileControl',
+    label: t('Upload Uptrend Icon'),
+    renderTrigger: true,
+    accept: 'image/*',
+    visibility: ({ controls }) => controls?.uptrend_icon_type?.value === 'upload',
+    description: t('Upload an image file for the uptrend icon'),
+    validators: [
+      (value: File | null) => {
+        if (!value) return true;
+        
+        // File type validation
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
+        if (!allowedTypes.includes(value.type)) {
+          return t('Invalid file type. Please upload a PNG, JPEG, SVG, or GIF image.');
+        }
+        
+        // File size validation (2MB max)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (value.size > maxSize) {
+          return t('File size too large. Please upload an image smaller than 2MB.');
+        }
+        
+        // Additional validation for minimum size (prevent tiny images)
+        const minSize = 1024; // 1KB minimum
+        if (value.size < minSize) {
+          return t('File size too small. Please upload a valid image file.');
+        }
+        
+        return true;
+      }
+    ],
+  },
+};
+
+export const uptrendIconBackgroundColor: CustomControlItem = {
+  name: 'uptrend_icon_background_color',
+  config: {
+    type: 'ColorPickerControl',
+    label: t('Uptrend Icon Background Color'),
+    renderTrigger: true,
+    default: { r: 0, g: 0, b: 0, a: 0 }, // Transparent (black transparent)
+    description: t('Choose the background color for the uptrend trend component'),
+  },
+};
+
+export const uptrendIconTextColor: CustomControlItem = {
+  name: 'uptrend_icon_text_color',
+  config: {
+    type: 'ColorPickerControl',
+    label: t('Uptrend Icon Text Color'),
+    renderTrigger: true,
+    default: '#28a745', // Green (default for positive)
+    description: t('Choose the text color for the uptrend trend component'),
+  },
+};
+
+export const uptrendIconShape: CustomControlItem = {
+  name: 'uptrend_icon_shape',
+  config: {
+    type: 'SelectControl',
+    label: t('Uptrend Icon Shape'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'circle',
+    options: [
+      { label: t('Circle'), value: 'circle' },
+      { label: t('Square'), value: 'square' },
+      { label: t('Rounded Square'), value: 'rounded' },
+    ],
+    description: t('Choose the shape of the uptrend icon background container'),
+  },
+};
+
+// Downtrend icon controls
+export const downtrendIconType: CustomControlItem = {
+  name: 'downtrend_icon_type',
+  config: {
+    type: 'SelectControl',
+    label: t('Downtrend Icon Type'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'url',
+    options: [
+      { value: 'url', label: t('URL') },
+      { value: 'upload', label: t('Upload'), disabled: true },
+    ],
+    description: t('Choose how to provide the downtrend icon'),
+  },
+};
+
+export const downtrendIconUrl: CustomControlItem = {
+  name: 'downtrend_icon_url',
+  config: {
+    type: 'TextControl',
+    label: t('Downtrend Icon URL'),
+    renderTrigger: true,
+    default: '',
+    visibility: ({ controls }) => controls?.downtrend_icon_type?.value === 'url',
+    description: t('Enter the URL for the downtrend icon image'),
+  },
+};
+
+export const downtrendIconUpload: CustomControlItem = {
+  name: 'downtrend_icon_upload',
+  config: {
+    type: 'FileControl',
+    label: t('Upload Downtrend Icon'),
+    renderTrigger: true,
+    accept: 'image/*',
+    visibility: ({ controls }) => controls?.downtrend_icon_type?.value === 'upload',
+    description: t('Upload an image file for the downtrend icon'),
+    validators: [
+      (value: File | null) => {
+        if (!value) return true;
+        
+        // File type validation
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
+        if (!allowedTypes.includes(value.type)) {
+          return t('Invalid file type. Please upload a PNG, JPEG, SVG, or GIF image.');
+        }
+        
+        // File size validation (2MB max)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (value.size > maxSize) {
+          return t('File size too large. Please upload an image smaller than 2MB.');
+        }
+        
+        // Additional validation for minimum size (prevent tiny images)
+        const minSize = 1024; // 1KB minimum
+        if (value.size < minSize) {
+          return t('File size too small. Please upload a valid image file.');
+        }
+        
+        return true;
+      }
+    ],
+  },
+};
+
+export const downtrendIconBackgroundColor: CustomControlItem = {
+  name: 'downtrend_icon_background_color',
+  config: {
+    type: 'ColorPickerControl',
+    label: t('Downtrend Icon Background Color'),
+    renderTrigger: true,
+    default: { r: 0, g: 0, b: 0, a: 0 }, // Transparent (black transparent)
+    description: t('Choose the background color for the downtrend trend component'),
+  },
+};
+
+export const downtrendIconTextColor: CustomControlItem = {
+  name: 'downtrend_icon_text_color',
+  config: {
+    type: 'ColorPickerControl',
+    label: t('Downtrend Icon Text Color'),
+    renderTrigger: true,
+    default: '#dc3545', // Red (default for negative)
+    description: t('Choose the text color for the downtrend trend component'),
+  },
+};
+
+export const downtrendIconShape: CustomControlItem = {
+  name: 'downtrend_icon_shape',
+  config: {
+    type: 'SelectControl',
+    label: t('Downtrend Icon Shape'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'circle',
+    options: [
+      { label: t('Circle'), value: 'circle' },
+      { label: t('Square'), value: 'square' },
+      { label: t('Rounded Square'), value: 'rounded' },
+    ],
+    description: t('Choose the shape of the downtrend icon background container'),
+  },
+};
+
+export const trendComparisonPosition: CustomControlItem = {
+  name: 'trend_comparison_position',
+  config: {
+    type: 'SelectControl',
+    label: t('Trend comparison position'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'top',
+    choices: [
+      ['top', t('Top')],
+      ['middle', t('Middle')],
+    ],
+    description: t('Choose where to display the trend comparison indicator'),
+  },
+};
+
+export const trendComparisonShape: CustomControlItem = {
+  name: 'trend_comparison_shape',
+  config: {
+    type: 'SelectControl',
+    label: t('Trend comparison shape'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'pill',
+    choices: [
+      ['pill', t('Pill')],
+      ['square', t('Square')],
+    ],
+    description: t('Choose the shape of the trend comparison indicator'),
+  },
+};
+
+export const trendComparisonSize: CustomControlItem = {
+  name: 'trend_comparison_size',
+  config: {
+    type: 'SelectControl',
+    label: t('Trend comparison size'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'large',
+    choices: [
+      ['large', t('Large')],
+      ['small', t('Small')],
+    ],
+    description: t('Choose the size of the trend comparison indicator'),
   },
 };

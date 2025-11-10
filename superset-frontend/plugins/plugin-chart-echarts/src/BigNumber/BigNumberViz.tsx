@@ -29,11 +29,106 @@ import {
   NumberFormats,
 } from '@superset-ui/core';
 import { Tooltip } from '@superset-ui/chart-controls';
+import React from 'react';
 import Echart from '../components/Echart';
 import { BigNumberVizProps } from './types';
 import { EventHandlers } from '../types';
 
 const defaultNumberFormatter = getNumberFormatter();
+
+// Styled components for comparison indicator (middle position) - exact copy from SliceHeader
+const ComparisonIndicator = styled.div<{
+  indicatorColor: string;
+  bgColor?: string;
+  shape?: 'pill' | 'square';
+  size?: 'large' | 'small';
+}>`
+  ${({ indicatorColor, bgColor, shape = 'pill', size = 'large' }) => {
+    // Determine border radius based on shape
+    let borderRadius = '9999px'; // pill (fully rounded)
+    if (shape === 'square') {
+      borderRadius = '4px'; // square (slightly rounded corners)
+    }
+
+    const isSmall = size === 'small';
+    const padding = isSmall ? '3px 6px' : '4px 8px';
+    const fontSize = isSmall ? '10px' : '14px';
+    const gap = isSmall ? '2px' : '2px';
+
+    return `
+      display: inline-flex !important;
+      align-items: center;
+      gap: ${gap};
+      font-weight: 500;
+      color: ${indicatorColor} !important;
+      cursor: default;
+      white-space: nowrap;
+      position: static !important;
+      border-radius: ${borderRadius} !important;
+      margin: 0 !important;
+      border: 0 !important;
+      background-color: ${bgColor ? bgColor : 'rgba(0, 0, 0, 0)'} !important;
+      padding: ${padding} !important;
+      box-shadow: none !important;
+      outline: none !important;
+      line-height: 1 !important;
+      vertical-align: baseline !important;
+      flex-shrink: 0 !important;
+      font-size: ${fontSize} !important;
+      
+      /* Prevent tooltip-induced layout shifts */
+      &.ant-tooltip-open {
+        display: inline-flex !important;
+        position: static !important;
+      }
+    `;
+  }}
+`;
+
+// TrendIconContainer - exact copy from SliceHeader
+const TrendIconContainer = styled.span<{
+  bgColor: string;
+  iconShape: 'circle' | 'square' | 'rounded';
+  iconSize: number;
+}>`
+  ${({ bgColor, iconShape, iconSize }) => {
+    // Determine border radius based on shape
+    let borderRadius = '50%'; // circle (default)
+    if (iconShape === 'square') {
+      borderRadius = '0';
+    } else if (iconShape === 'rounded') {
+      borderRadius = '8px';
+    }
+
+    return `
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: ${iconSize}px !important;
+      min-height: ${iconSize}px !important;
+      max-height: ${iconSize}px !important;
+      width: auto !important;
+      min-width: ${iconSize}px !important;
+      height: ${iconSize}px !important;
+      ${bgColor !== 'transparent' ? `background-color: ${bgColor} !important;` : ''}
+      border-radius: ${borderRadius} !important;
+      padding: 0 !important;
+      margin-right: ${iconSize * 0.25}px !important;
+      vertical-align: middle !important;
+      flex-shrink: 0 !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+
+      img {
+        height: 100% !important;
+        width: auto !important;
+        max-width: none !important;
+        object-fit: contain !important;
+        display: block !important;
+      }
+    `;
+  }}
+`;
 
 // Function to detect if a metric is using percentage formatting
 const isPercentageFormat = (yAxisFormat?: string): boolean => {
@@ -205,6 +300,153 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     );
   }
 
+  renderComparisonIndicator(fontSize?: number) {
+    const {
+      percentageChange,
+      comparisonIndicator,
+      trendComparisonPosition = 'top',
+      trendComparisonShape = 'pill',
+      trendComparisonSize = 'large',
+      uptrendIconType,
+      uptrendIconUrl,
+      uptrendIconBackgroundColor,
+      uptrendIconTextColor,
+      uptrendIconShape = 'circle',
+      downtrendIconType,
+      downtrendIconUrl,
+      downtrendIconBackgroundColor,
+      downtrendIconTextColor,
+      downtrendIconShape = 'circle',
+    } = this.props;
+
+    // Only render if position is 'middle'
+    if (trendComparisonPosition !== 'middle') {
+      return null;
+    }
+
+    // Check if we have comparison data
+    if (
+      percentageChange === undefined ||
+      percentageChange === null ||
+      comparisonIndicator === undefined
+    ) {
+      return null;
+    }
+
+    const formatPercentChange = getNumberFormatter(
+      NumberFormats.PERCENT_SIGNED_1_POINT,
+    );
+
+    // Convert color object to CSS string if needed
+    const convertColorToString = (color: any): string | null => {
+      if (!color) return null;
+      if (typeof color === 'string') {
+        return color;
+      }
+      if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+        const { r, g, b, a = 0 } = color;
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      }
+      return null;
+    };
+
+    const isUptrend = comparisonIndicator === 'positive';
+    const uptrendIconBackgroundColorConverted = convertColorToString(uptrendIconBackgroundColor);
+    const downtrendIconBackgroundColorConverted = convertColorToString(downtrendIconBackgroundColor);
+    const uptrendIconTextColorConverted = convertColorToString(uptrendIconTextColor);
+    const downtrendIconTextColorConverted = convertColorToString(downtrendIconTextColor);
+
+    // Check if custom icon is provided
+    const hasCustomIcon = isUptrend
+      ? (uptrendIconUrl && uptrendIconType)
+      : (downtrendIconUrl && downtrendIconType);
+
+    // Get background color for the trend component
+    const trendBgColor = isUptrend
+      ? uptrendIconBackgroundColorConverted
+      : downtrendIconBackgroundColorConverted;
+    const hasTrendBgColor =
+      trendBgColor !== null &&
+      trendBgColor !== undefined &&
+      (typeof trendBgColor === 'string' ? trendBgColor.trim() !== '' : true);
+
+    // Get text color for the trend component - use custom if provided, otherwise use default
+    let indicatorColor: string;
+    let arrowIcon: string | React.ReactNode;
+
+    switch (comparisonIndicator) {
+      case 'positive':
+        indicatorColor = uptrendIconTextColorConverted || '#28a745'; // Use custom text color or green (default)
+        if (hasCustomIcon) {
+          arrowIcon = null;
+        } else {
+          arrowIcon = '↗';
+        }
+        break;
+      case 'negative':
+        indicatorColor = downtrendIconTextColorConverted || '#dc3545'; // Use custom text color or red (default)
+        if (hasCustomIcon) {
+          arrowIcon = null;
+        } else {
+          arrowIcon = '↘';
+        }
+        break;
+      case 'neutral':
+        indicatorColor = '#ffc107'; // orange
+        arrowIcon = '−';
+        break;
+      default:
+        return null;
+    }
+
+    const tooltipText = t('Period-over-period comparison');
+    let formattedPercentage: string;
+    if (Number.isNaN(percentageChange) || percentageChange === undefined) {
+      formattedPercentage = '0%';
+    } else if (percentageChange === 0) {
+      formattedPercentage = '0%';
+    } else {
+      formattedPercentage = formatPercentChange(percentageChange);
+    }
+
+    const iconSize = trendComparisonSize === 'small' ? 15 : 20;
+
+    return (
+      <Tooltip title={tooltipText} placement="top">
+        <ComparisonIndicator
+          indicatorColor={indicatorColor}
+          bgColor={hasTrendBgColor ? trendBgColor : undefined}
+          shape={trendComparisonShape}
+          size={trendComparisonSize}
+          className="superset-comparison-indicator-no-border"
+        >
+          {hasCustomIcon ? (
+            <TrendIconContainer
+              bgColor="transparent"
+              iconShape={isUptrend ? uptrendIconShape : downtrendIconShape}
+              iconSize={iconSize}
+            >
+              <img
+                src={isUptrend ? uptrendIconUrl : downtrendIconUrl}
+                alt={isUptrend ? 'Uptrend' : 'Downtrend'}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const container = target.parentElement;
+                  if (container) {
+                    container.style.display = 'none';
+                  }
+                }}
+              />
+            </TrendIconContainer>
+          ) : (
+            <span>{arrowIcon}</span>
+          )}
+          <span>{formattedPercentage}</span>
+        </ComparisonIndicator>
+      </Tooltip>
+    );
+  }
+
   renderHeader(maxHeight: number) {
     const {
       bigNumber,
@@ -268,10 +510,13 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
           fontSize,
           height: 'auto',
           color: numberColor,
+          gap: '8px', // Add gap between number and comparison indicator
+          flexWrap: 'nowrap',
         }}
         onContextMenu={onContextMenu}
       >
-        {text}
+        <span style={{ fontSize, lineHeight: 1, flexShrink: 0 }}>{text}</span>
+        {this.renderComparisonIndicator(fontSize)}
       </div>
     );
 
@@ -376,6 +621,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       )
     );
   }
+
 
   render() {
     const {
@@ -494,8 +740,8 @@ export default styled(BigNumberVis)`
       white-space: nowrap;
       margin-bottom:${theme.gridUnit * 2}px;
       span {
-        position: absolute;
-        bottom: 0;
+        position: static;
+        bottom: auto;
       }
     }
 

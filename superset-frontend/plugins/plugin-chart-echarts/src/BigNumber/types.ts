@@ -47,6 +47,30 @@ export type BigNumberTotalFormData = QueryFormData & {
   iconUrl?: string;
   iconUpload?: File | null;
   iconSize?: 'small' | 'medium' | 'large' | 'xlarge';
+  iconPosition?: 'top-left' | 'middle-right';
+  // Uptrend/Downtrend icon properties (for time comparison)
+  uptrendIconType?: 'upload' | 'url';
+  uptrendIconUrl?: string;
+  uptrendIconUpload?: File | null;
+  uptrendIconBackgroundColor?: string;
+  uptrendIconTextColor?: string;
+  uptrendIconShape?: 'circle' | 'square' | 'rounded';
+  downtrendIconType?: 'upload' | 'url';
+  downtrendIconUrl?: string;
+  downtrendIconUpload?: File | null;
+  downtrendIconBackgroundColor?: string;
+  downtrendIconTextColor?: string;
+  downtrendIconShape?: 'circle' | 'square' | 'rounded';
+  // Trend comparison position
+  trendComparisonPosition?: 'top' | 'middle';
+  // Trend comparison shape
+  trendComparisonShape?: 'pill' | 'square';
+  // Trend comparison size
+  trendComparisonSize?: 'large' | 'small';
+  // Comparison properties for time comparison
+  previousPeriodValue?: number | null;
+  percentageChange?: number;
+  comparisonIndicator?: 'positive' | 'negative' | 'neutral';
 };
 
 export type BigNumberWithTrendlineFormData = BigNumberTotalFormData & {
@@ -128,4 +152,22 @@ export type BigNumberVizProps = {
   iconSize?: 'small' | 'medium' | 'large' | 'xlarge';
   iconBackgroundColor?: string;
   iconShape?: 'circle' | 'square' | 'rounded';
+  iconPosition?: 'top-left' | 'middle-right';
+  // Uptrend/Downtrend icon properties (for time comparison)
+  uptrendIconType?: 'upload' | 'url';
+  uptrendIconUrl?: string;
+  uptrendIconBackgroundColor?: string;
+  uptrendIconTextColor?: string;
+  uptrendIconShape?: 'circle' | 'square' | 'rounded';
+  downtrendIconType?: 'upload' | 'url';
+  downtrendIconUrl?: string;
+  downtrendIconBackgroundColor?: string;
+  downtrendIconTextColor?: string;
+  downtrendIconShape?: 'circle' | 'square' | 'rounded';
+  // Trend comparison position
+  trendComparisonPosition?: 'top' | 'middle';
+  // Trend comparison shape
+  trendComparisonShape?: 'pill' | 'square';
+  // Trend comparison size
+  trendComparisonSize?: 'large' | 'small';
 };

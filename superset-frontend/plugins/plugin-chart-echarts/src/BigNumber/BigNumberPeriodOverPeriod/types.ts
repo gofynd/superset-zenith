@@ -71,6 +71,15 @@ export type PopKPIProps = PopKPIStylesProps &
     yAxisFormat?: string;
     enableClickableCard?: boolean;
     redirectUrl?: string;
+    // Uptrend/Downtrend icon properties
+    uptrendIconType?: 'upload' | 'url';
+    uptrendIconUrl?: string;
+    uptrendIconBackgroundColor?: string;
+    uptrendIconShape?: 'circle' | 'square' | 'rounded';
+    downtrendIconType?: 'upload' | 'url';
+    downtrendIconUrl?: string;
+    downtrendIconBackgroundColor?: string;
+    downtrendIconShape?: 'circle' | 'square' | 'rounded';
   };
 
 export enum ColorSchemeEnum {
