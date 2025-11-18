@@ -34,17 +34,25 @@ import { getFilterBarTestId } from '../utils';
 interface ActionButtonsProps {
   width?: number;
   onClearAll: () => void;
+  onRefreshAll: () => void;
   dataMaskSelected: DataMaskState;
   dataMaskApplied: DataMaskStateWithId;
   filterBarOrientation?: FilterBarOrientation;
 }
 
+const REFRESH_ICON_URL =
+  'https://cdn.pixelbin.io/v2/fynd-console/original/fds/icons/ic_refresh.svg';
+
 const containerStyle = (theme: SupersetTheme) => css`
   display: flex;
+  align-items: center;
 
+  && > .filter-refresh-button,
   && > .filter-clear-all-button {
     color: ${theme.colors.grayscale.base};
     margin-left: 0;
+    display: inline-flex;
+    align-items: center;
     &:hover {
       color: ${theme.colors.primary.dark1};
     }
@@ -92,6 +100,7 @@ const horizontalStyle = (theme: SupersetTheme) => css`
 const ActionButtons = ({
   width = OPEN_FILTER_BAR_WIDTH,
   onClearAll,
+  onRefreshAll,
   dataMaskApplied,
   dataMaskSelected,
   filterBarOrientation = FilterBarOrientation.Vertical,
@@ -116,6 +125,24 @@ const ActionButtons = ({
       ]}
       data-test="filterbar-action-buttons"
     >
+      <Button
+        buttonStyle="link"
+        buttonSize="small"
+        className="filter-clear-all-button"
+        onClick={onRefreshAll}
+        {...getFilterBarTestId('refresh-button')}
+      >
+        <img
+          src={REFRESH_ICON_URL}
+          alt={t('Refresh all charts')}
+          css={css`
+            height: 14px;
+            width: 14px;
+            margin-right: 4px;
+          `}
+        />
+        {t('Refresh')}
+      </Button>
       <Button
         disabled={!isClearAllEnabled}
         buttonStyle="link"

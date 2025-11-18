@@ -50,7 +50,12 @@ import { getUrlParam } from 'src/utils/urlUtils';
 import { useTabId } from 'src/hooks/useTabId';
 import { logEvent } from 'src/logger/actions';
 import { LOG_ACTIONS_CHANGE_DASHBOARD_FILTER } from 'src/logger/LogUtils';
-import { FilterBarOrientation, RootState } from 'src/dashboard/types';
+import { onRefresh } from 'src/dashboard/actions/dashboardState';
+import {
+  ChartsState,
+  FilterBarOrientation,
+  RootState,
+} from 'src/dashboard/types';
 import { UserWithPermissionsAndRoles } from 'src/types/bootstrapTypes';
 
 import { FiltersBarProps } from './types';
@@ -150,6 +155,7 @@ const FilterBar: FC<FiltersBarProps> = ({
   const dashboardId = useSelector<any, number>(
     ({ dashboardInfo }) => dashboardInfo?.id,
   );
+  const charts = useSelector<RootState, ChartsState>(({ charts }) => charts);
   const previousDashboardId = usePrevious(dashboardId);
   const canEdit = useSelector<RootState, boolean>(
     ({ dashboardInfo }) => dashboardInfo.dash_edit_perm,
@@ -247,6 +253,17 @@ const FilterBar: FC<FiltersBarProps> = ({
     });
   }, [dataMaskSelected, dispatch]);
 
+  const handleRefreshAll = useCallback(() => {
+    if (!dashboardId) {
+      return;
+    }
+    const chartList = Object.keys(charts || {});
+    if (!chartList.length) {
+      return;
+    }
+    dispatch(onRefresh(chartList, true, 0, dashboardId));
+  }, [charts, dashboardId, dispatch]);
+
   const handleClearAll = useCallback(() => {
     const clearDataMaskIds: string[] = [];
 
@@ -315,6 +332,7 @@ const FilterBar: FC<FiltersBarProps> = ({
       filterBarOrientation={orientation}
       width={verticalConfig?.width}
       onClearAll={handleClearAll}
+      onRefreshAll={handleRefreshAll}
       dataMaskSelected={dataMaskSelected}
       dataMaskApplied={dataMaskApplied}
     />
