@@ -124,6 +124,7 @@ const plugins = [
     'process.env.ZEN_SENTRY_DSN': JSON.stringify(process.env.ZEN_SENTRY_DSN),
     'process.env.ZEN_SENTRY_ENVIRONMENT': JSON.stringify(process.env.ZEN_SENTRY_ENVIRONMENT),
     'process.env.ZEN_SENTRY_RELEASE': JSON.stringify(process.env.ZEN_SENTRY_RELEASE),
+    'process.env.AI_SUMMARY_ENDPOINT': JSON.stringify(process.env.AI_SUMMARY_ENDPOINT),
   }),
 
   new CopyPlugin({

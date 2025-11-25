@@ -37,9 +37,20 @@ Object.defineProperty(window, 'location', {
 });
 
 describe('aiSummary utilities', () => {
+  const originalEnv = process.env.AI_SUMMARY_ENDPOINT;
+
   beforeEach(() => {
     jest.clearAllMocks();
     window.location.search = '';
+  });
+
+  afterEach(() => {
+    // Restore original environment variable
+    if (originalEnv !== undefined) {
+      process.env.AI_SUMMARY_ENDPOINT = originalEnv;
+    } else {
+      delete process.env.AI_SUMMARY_ENDPOINT;
+    }
   });
 
   describe('extractRawDataSample', () => {
@@ -158,6 +169,70 @@ describe('aiSummary utilities', () => {
       expect(result).toBe('This chart shows sales data trends over time.');
     });
 
+    it('should use custom endpoint from environment variable', async () => {
+      const customEndpoint = 'https://custom.api.example.com/ai/summary';
+      process.env.AI_SUMMARY_ENDPOINT = customEndpoint;
+
+      mockFetch.mockResolvedValueOnce(mockSuccessResponse as any);
+
+      const input: ChartSummaryInput = {
+        vizType: 'line',
+        title: 'Test Chart',
+        dataSample: [{ x: 1, y: 2 }],
+      };
+
+      await generateSummary(input);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        customEndpoint,
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      );
+    });
+
+    it('should use default endpoint when environment variable is not set', async () => {
+      delete process.env.AI_SUMMARY_ENDPOINT;
+
+      mockFetch.mockResolvedValueOnce(mockSuccessResponse as any);
+
+      const input: ChartSummaryInput = {
+        vizType: 'bar',
+        title: 'Test Chart',
+        dataSample: [{ category: 'A', value: 100 }],
+      };
+
+      await generateSummary(input);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.intelligence.fynd.com/service/panel/analytics/ai/sql-helper/explain-chart',
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      );
+    });
+
+    it('should use default endpoint when environment variable is empty string', async () => {
+      process.env.AI_SUMMARY_ENDPOINT = '';
+
+      mockFetch.mockResolvedValueOnce(mockSuccessResponse as any);
+
+      const input: ChartSummaryInput = {
+        vizType: 'pie',
+        title: 'Test Chart',
+        dataSample: [{ slice: 'A', value: 50 }],
+      };
+
+      await generateSummary(input);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.intelligence.fynd.com/service/panel/analytics/ai/sql-helper/explain-chart',
+        expect.objectContaining({
+          method: 'POST',
+        }),
+      );
+    });
+
     it('should handle undefined title and description', async () => {
       mockFetch.mockResolvedValueOnce(mockSuccessResponse as any);
 
@@ -258,7 +333,7 @@ describe('aiSummary utilities', () => {
         return 123 as any;
       });
 
-      mockFetch.mockImplementation(() => new Promise(() => {})); // Never resolves
+      mockFetch.mockImplementation(() => new Promise(() => { })); // Never resolves
 
       const input: ChartSummaryInput = {
         vizType: 'bar',
