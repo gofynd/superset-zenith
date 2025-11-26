@@ -13,5 +13,7 @@ export ZEN_SENTRY_RELEASE=superset@4.1.3
 # Run dev server on custom host and port
 export ASSET_BASE_URL=/superset
 export DEV_SERVER_HOST=localdev.intelligence.fynd.com
+export AI_SUMMARY_ENDPOINT=https://dummyjson.com/c/bc46-ae16-4ffc-80b1
+
 # npm run dev-server -- --port=9001
 npm run dev-server -- --port=9001 --host=localdev.intelligence.fynd.com

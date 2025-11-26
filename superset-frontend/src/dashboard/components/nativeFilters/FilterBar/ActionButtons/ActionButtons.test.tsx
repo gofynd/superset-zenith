@@ -23,6 +23,7 @@ import ActionButtons from './index';
 
 const createProps = () => ({
   onClearAll: jest.fn(),
+  onRefreshAll: jest.fn(),
   dataMaskSelected: {
     DefaultsID: {
       filterState: {
@@ -72,6 +73,14 @@ test('should call onClearAll when clear all button is clicked', () => {
   expect(mockedProps.onClearAll).not.toHaveBeenCalled();
   userEvent.click(clearBtn);
   expect(mockedProps.onClearAll).toHaveBeenCalled();
+});
+
+test('should call onRefreshAll when refresh button is clicked', () => {
+  const mockedProps = createProps();
+  render(<ActionButtons {...mockedProps} />, { useRedux: true });
+  const refreshBtn = screen.getByText('Refresh');
+  userEvent.click(refreshBtn);
+  expect(mockedProps.onRefreshAll).toHaveBeenCalledTimes(1);
 });
 
 describe('custom width', () => {

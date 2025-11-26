@@ -3,9 +3,9 @@
  *
  * Lightweight AI summary helper for charts.
  * - Prefers summarizing structured data; can optionally include a snapshot image.
- * - Uses a pluggable backend endpoint if provided via options or at runtime
- *   as window['__AI_SUMMARY_ENDPOINT__'].
- * - If the endpoint fails or is missing, returns a small generic 3-line summary.
+ * - Uses the endpoint configured via the AI_SUMMARY_ENDPOINT environment variable.
+ *   Falls back to the default Fynd Intelligence API endpoint if not configured.
+ * - If the endpoint fails or is missing, throws an error.
  */
 
 import { ensureIsArray } from '@superset-ui/core';
@@ -95,6 +95,7 @@ export async function generateSummary(
   options?: GenerateSummaryOptions,
 ): Promise<string> {
   const endpoint =
+    process.env.AI_SUMMARY_ENDPOINT ||
     'https://api.intelligence.fynd.com/service/panel/analytics/ai/sql-helper/explain-chart';
 
   // Build payload for custom API
