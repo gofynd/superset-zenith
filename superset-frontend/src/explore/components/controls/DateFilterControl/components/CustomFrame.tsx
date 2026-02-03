@@ -27,7 +27,6 @@ import { DatePicker } from 'src/components/DatePicker';
 import { InfoTooltipWithTrigger } from '@superset-ui/chart-controls';
 import { getCurrentTimezone } from 'src/utils/dateUtils';
 import {
-  MOMENT_FORMAT,
   customTimeRangeEncode,
   LOCALE_MAPPING,
 } from 'src/explore/components/controls/DateFilterControl/utils';
@@ -53,6 +52,22 @@ export function CustomFrame(props: FrameComponentProps) {
   };
 
   if (!matchedFlag) {
+    // Default to Today (Start of Day to End of Day) when switching to Custom from non-custom
+    // We generate the UTC string corresponding to the user's Local Start/End of Day
+    const todayStart = moment()
+      .tz(timezone)
+      .startOf('day')
+      .utc()
+      .toISOString();
+    const todayEnd = moment()
+      .tz(timezone)
+      .endOf('day')
+      .utc()
+      .toISOString();
+
+    customRange.sinceDatetime = todayStart;
+    customRange.untilDatetime = todayEnd;
+
     props.onChange(customTimeRangeEncode(customRange));
   }
   const { sinceDatetime, untilDatetime } = customRange;
@@ -80,14 +95,15 @@ export function CustomFrame(props: FrameComponentProps) {
 
   // Helper functions for timezone-aware date handling
   const convertToTimezone = (datetime: string): Moment => {
-    // The datetime string is in UTC format, so we need to parse it as UTC first
-    // then convert to the target timezone for display
+    // The datetime string is in UTC format (or assumed UTC if no offset), so we parse it as UTC
+    // then convert to the target timezone for display in the picker
     return moment.utc(datetime).tz(timezone);
   };
 
   const convertFromTimezone = (momentDate: Moment): string => {
-    // Convert the moment date to the target timezone and format it
-    return momentDate.clone().tz(timezone).format(MOMENT_FORMAT);
+    // Convert the picker's local moment date to UTC for storage
+    // We expect the stored string to be a UTC timestamp
+    return momentDate.clone().utc().toISOString();
   };
 
   return (

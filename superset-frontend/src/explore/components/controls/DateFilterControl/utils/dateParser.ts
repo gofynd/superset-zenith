@@ -18,7 +18,7 @@
  */
 import moment, { Moment } from 'moment';
 import { CustomRangeType } from 'src/explore/components/controls/DateFilterControl/types';
-import { MOMENT_FORMAT } from './constants';
+
 
 /**
  * RegExp to test a string for a full ISO 8601 Date
@@ -47,11 +47,11 @@ export const dttmToMoment = (dttm: string): Moment => {
 };
 
 export const dttmToString = (dttm: string): string =>
-  dttmToMoment(dttm).format(MOMENT_FORMAT);
+  dttmToMoment(dttm).toISOString();
 
 export const customTimeRangeEncode = (customRange: CustomRangeType): string => {
   const { sinceDatetime, untilDatetime } = customRange;
-  
+
   // Since we only support 'specific' mode now, always use the datetime values
   const since = dttmToString(sinceDatetime);
   const until = dttmToString(untilDatetime);
