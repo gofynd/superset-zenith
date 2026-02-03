@@ -60,6 +60,34 @@ const StyledRangeType = styled(Select)`
   width: 272px;
 `;
 
+const TimezoneChip = styled.div`
+  ${({ theme }) => css`
+    display: inline-flex;
+    align-items: center;
+    padding: ${theme.gridUnit * 0.75}px ${theme.gridUnit * 1.5}px;
+    background-color: ${theme.colors.grayscale.light4};
+    border: 1px solid ${theme.colors.grayscale.light2};
+    border-radius: 4px;
+    font-size: ${theme.typography.sizes.xs}px;
+    font-weight: ${theme.typography.weights.normal};
+    color: ${theme.colors.grayscale.base};
+    white-space: nowrap;
+    line-height: 1.2;
+  `}
+`;
+
+const TimezoneChipContainer = styled.div`
+  ${({ theme }) => css`
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    height: ${theme.gridUnit * 8}px;
+  `}
+`;
+
 const ContentStyleWrapper = styled.div`
   ${({ theme }) => css`
     .ant-row {
@@ -162,13 +190,35 @@ const getTooltipTitle = (
 const getTimezoneFromUrl = getCurrentTimezone;
 
 // Format datetime for user-friendly display (only for UI, not API)
-function formatDateTimeForDisplay(s: string, toTZ = 'Asia/Kolkata') {
+function formatDateTimeForDisplay(
+  s: string,
+  toTZ = 'Asia/Kolkata',
+  use24HourFormat = false,
+) {
   // Pattern for full ISO datetime stamps
   const isoRe =
     /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?/g;
 
   // Pattern for date-only formats (YYYY-MM-DD)
   const dateOnlyRe = /\d{4}-\d{2}-\d{2}(?!\d)/g;
+
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: toTZ,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  };
+
+  if (use24HourFormat) {
+    options.hour = '2-digit';
+    options.minute = '2-digit';
+    options.second = '2-digit';
+    options.hour12 = false;
+  } else {
+    options.hour = 'numeric';
+    options.minute = '2-digit';
+    options.hour12 = true;
+  }
 
   // Try full datetime format first
   const isoMatches = [...s.matchAll(isoRe)].map(m => m[0]);
@@ -179,15 +229,7 @@ function formatDateTimeForDisplay(s: string, toTZ = 'Asia/Kolkata') {
       const dt = new Date(src);
 
       // Format as user-friendly string in target zone
-      return new Intl.DateTimeFormat('en-US', {
-        timeZone: toTZ,
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }).format(dt);
+      return new Intl.DateTimeFormat('en-US', options).format(dt);
     };
 
     const formattedStart = formatForDisplay(isoMatches[0]);
@@ -205,15 +247,7 @@ function formatDateTimeForDisplay(s: string, toTZ = 'Asia/Kolkata') {
       // Convert date-only to datetime at start of day in target timezone
       const dt = new Date(`${dateStr}T00:00:00`);
 
-      return new Intl.DateTimeFormat('en-US', {
-        timeZone: toTZ,
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }).format(dt);
+      return new Intl.DateTimeFormat('en-US', options).format(dt);
     };
 
     const formattedStart = formatDateOnly(dateMatches[0]);
@@ -260,8 +294,8 @@ function convertRangeUTCToTZ(range: string, tz: string): string {
   const endUTC = parseNaiveUTC(parts[1]);
   if (!startUTC || !endUTC) return range;
 
-  const startStr = startUTC.setZone(tz).toFormat('yyyy-MM-dd HH:mm:ss ZZ');
-  const endStr = endUTC.setZone(tz).toFormat('yyyy-MM-dd HH:mm:ss ZZ');
+  const startStr = startUTC.setZone(tz).toFormat("yyyy-MM-dd'T'HH:mm:ssZZ");
+  const endStr = endUTC.setZone(tz).toFormat("yyyy-MM-dd'T'HH:mm:ssZZ");
   return `${startStr} to ${endStr}`;
 }
 
@@ -291,6 +325,11 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
 
   // Backend evaluates to UTC; we convert to the URL tz or default 'Asia/Kolkata' for display.
   const urlTZ = getTimezoneFromUrl();
+  const DISABLE_TIMEZONE_CHIP = true;
+
+  // Get timezone for chip display (only show if not UTC)
+  const timezone = getCurrentTimezone();
+  const showTimezone = DISABLE_TIMEZONE_CHIP ? false : timezone && timezone !== 'UTC' && timezone !== 'Etc/UTC';
 
   useEffect(() => {
     if (value === NO_TIME_RANGE) {
@@ -323,7 +362,11 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
 
         // Format ADR for user-friendly display (for "Actual time range" section)
         const formattedADR = convertedADR
-          ? formatDateTimeForDisplay(convertedADR, urlTZ)
+          ? formatDateTimeForDisplay(
+            convertedADR,
+            urlTZ,
+            guessedFrame === 'Custom',
+          )
           : convertedADR;
 
         if (
@@ -373,7 +416,11 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
                 : actualRange;
               // Format the preview ADR for user-friendly display
               const formattedPreviewADR = previewADR
-                ? formatDateTimeForDisplay(previewADR, urlTZ)
+                ? formatDateTimeForDisplay(
+                  previewADR,
+                  urlTZ,
+                  frame === 'Custom',
+                )
                 : previewADR;
               setEvalResponse(formattedPreviewADR || '');
               setValidTimeRange(true);
@@ -384,7 +431,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       }
     },
     SLOW_DEBOUNCE,
-    [timeRangeValue, lastFetchedTimeRange, urlTZ],
+    [timeRangeValue, lastFetchedTimeRange, urlTZ, frame],
   );
 
   function onSave() {
@@ -423,7 +470,14 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   }
 
   const overlayContent = (
-    <ContentStyleWrapper>
+    <ContentStyleWrapper style={{ position: 'relative' }}>
+      {showTimezone && (
+        <TimezoneChipContainer>
+          <TimezoneChip>
+            {timezone}
+          </TimezoneChip>
+        </TimezoneChipContainer>
+      )}
       <div className="control-label">{t('RANGE TYPE')}</div>
       <StyledRangeType
         ariaLabel={t('RANGE TYPE')}
