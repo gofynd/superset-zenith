@@ -174,69 +174,13 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
   };
 
   getClassName() {
-    const { className, showTrendLine, bigNumberFallback, enableClickableCard, hoverBorderEnabled } = this.props;
-    const hoverBorderClass = enableClickableCard && hoverBorderEnabled ? 'hover-border-enabled' : '';
+    const { className, showTrendLine, bigNumberFallback } = this.props;
     const names = `superset-legacy-chart-big-number ${className} ${
       bigNumberFallback ? 'is-fallback-value' : ''
-    } ${enableClickableCard ? 'clickable-card' : ''} ${hoverBorderClass}`;
+    }`;
     if (showTrendLine) return names;
     return `${names} no-trendline`;
   }
-  
-  componentDidMount() {
-    this.injectDashboardHolderStyles();
-  }
-  
-  componentDidUpdate() {
-    this.injectDashboardHolderStyles();
-  }
-  
-  injectDashboardHolderStyles() {
-    const { enableClickableCard, redirectUrl, hoverBorderEnabled, hoverBorderThickness = 2, hoverBorderColor = '#1890ff' } = this.props;
-    
-    const styleId = 'bignumber-dashboard-holder-hover-style';
-    
-    // Remove existing style if present to allow updates
-    const existingStyle = document.getElementById(styleId);
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-    
-    if (!enableClickableCard || !redirectUrl || !hoverBorderEnabled) {
-      return;
-    }
-    
-    // Inject global CSS to style the parent dashboard-component-chart-holder
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-      .dashboard-component-chart-holder:has(.hover-border-enabled) {
-        border: ${hoverBorderThickness}px solid transparent !important;
-        border-radius: 4px;
-        transition: border-color 0.2s ease;
-        box-sizing: border-box;
-      }
-      
-      .dashboard-component-chart-holder:has(.hover-border-enabled):hover {
-        border-color: ${hoverBorderColor} !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  handleCardClick = () => {
-    const { enableClickableCard, redirectUrl } = this.props;
-    
-    if (enableClickableCard && redirectUrl) {
-      // Validate URL is http/https only (security check)
-      if (!redirectUrl.match(/^https?:\/\//)) {
-        return;
-      }
-      
-      // Open URL in new tab
-      window.open(redirectUrl, '_blank', 'noopener,noreferrer');
-    }
-  };
 
   createTemporaryContainer() {
     const container = document.createElement('div');
@@ -629,14 +573,11 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       kickerFontSize,
       headerFontSize,
       subheaderFontSize,
-      enableClickableCard,
-      redirectUrl,
     } = this.props;
     const className = this.getClassName();
     
     const containerStyle: React.CSSProperties = {
       position: 'relative' as const,
-      cursor: enableClickableCard && redirectUrl ? 'pointer' : 'default',
     };
 
     if (showTrendLine) {
@@ -647,15 +588,6 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
         <div 
           className={className} 
           style={containerStyle}
-          onClick={enableClickableCard ? this.handleCardClick : undefined}
-          role={enableClickableCard ? 'button' : undefined}
-          tabIndex={enableClickableCard ? 0 : undefined}
-          onKeyDown={enableClickableCard ? (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              this.handleCardClick();
-            }
-          } : undefined}
         >
           <div className="text-container" style={{ height: allTextHeight }}>
             {this.renderFallbackWarning()}
@@ -682,15 +614,6 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       <div 
         className={className} 
         style={{ ...containerStyle, height }}
-        onClick={enableClickableCard ? this.handleCardClick : undefined}
-        role={enableClickableCard ? 'button' : undefined}
-        tabIndex={enableClickableCard ? 0 : undefined}
-        onKeyDown={enableClickableCard ? (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            this.handleCardClick();
-          }
-        } : undefined}
       >
         {this.renderFallbackWarning()}
         {this.renderKicker((kickerFontSize || 0) * height)}
@@ -702,7 +625,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
 }
 
 export default styled(BigNumberVis)`
-  ${({ theme, hoverBorderEnabled, hoverBorderThickness = 2, hoverBorderColor = '#1890ff', enableClickableCard, redirectUrl }) => `
+  ${({ theme }) => `
     font-family: ${theme.typography.families.sansSerif};
     position: relative;
     display: flex;
@@ -754,13 +677,6 @@ export default styled(BigNumberVis)`
       .header-line,
       .subheader-line {
         opacity: ${theme.opacity.mediumHeavy};
-      }
-    }
-
-    &.clickable-card {
-      &:focus {
-        outline: 2px solid ${theme.colors.primary.base};
-        outline-offset: 2px;
       }
     }
 
