@@ -381,6 +381,25 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           setTooltipTitle(
             getTooltipTitle(labelIsTruncated, value, formattedADR),
           );
+        } else if (guessedFrame === 'Custom') {
+          setActualTimeRange(formattedADR || '');
+          setEvalResponse(formattedADR || '');
+          const customTooltipText = formattedADR 
+            ? `${formattedADR}`
+            : null;
+          setTooltipTitle(
+            labelIsTruncated && formattedADR
+              ? (
+                  <div
+                    css={(theme: SupersetTheme) => css`
+                      margin-top: ${theme.gridUnit}px;
+                    `}
+                  >
+                    {formattedADR}
+                  </div>
+                )
+              : customTooltipText
+          );
         } else {
           // Pill shows ADR (user-friendly formatted); tooltip shows HRT (value)
           // "Actual time range" shows formatted ADR
