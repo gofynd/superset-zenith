@@ -44,6 +44,10 @@ export default function transformProps(
     hooks,
     datasource: { currencyFormats = {}, columnFormats = {} },
   } = chartProps;
+  
+  // Get description from chartProps (passed from ChartRenderer)
+  const description = (chartProps as any).description || formData?.description || '';
+  
   const {
     headerFontSize,
     metric = 'value',
@@ -61,6 +65,7 @@ export default function transformProps(
     hoverBorderEnabled = false,
     hoverBorderThickness = 2,
     hoverBorderColor = '#1890ff',
+    infoIconUrl = '',
     showIcon = false,
     iconType = 'url',
     iconUrl = '',
@@ -470,6 +475,8 @@ export default function transformProps(
       ? parseInt(hoverBorderThickness, 10) || 2 
       : hoverBorderThickness,
     hoverBorderColor,
+    infoIconUrl: infoIconUrl || '',
+    description,
     showIcon: finalShowIcon,
     iconType,
     iconUrl: processedIconUrl,

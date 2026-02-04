@@ -49,6 +49,48 @@ const config: ControlPanelConfig = {
       expanded: true,
       controlSetRows: [
         ['color_scheme'],
+        [
+          {
+            name: 'info_icon_url',
+            config: {
+              type: 'TextControl',
+              label: t('Info icon URL'),
+              renderTrigger: true,
+              description: t('URL for the info icon that shows chart description on hover'),
+              placeholder: 'https://example.com/info-icon.svg',
+            },
+          },
+        ],
+        [
+          {
+            name: 'info_icon_width',
+            config: {
+              type: 'TextControl',
+              label: t('Info icon width'),
+              renderTrigger: true,
+              description: t('Width of the info icon in px'),
+              placeholder: '14',
+              visibility: ({ controls }) => {
+                const urlValue = controls?.info_icon_url?.value;
+                return !!(urlValue && (typeof urlValue === 'string' ? urlValue.trim() : urlValue));
+              },
+            },
+          },
+          {
+            name: 'info_icon_height',
+            config: {
+              type: 'TextControl',
+              label: t('Info icon height'),
+              renderTrigger: true,
+              description: t('Height of the info icon in px'),
+              placeholder: '14',
+              visibility: ({ controls }) => {
+                const urlValue = controls?.info_icon_url?.value;
+                return !!(urlValue && (typeof urlValue === 'string' ? urlValue.trim() : urlValue));
+              },
+            },
+          },
+        ],
         [<ControlSubSectionHeader>{t('Labels')}</ControlSubSectionHeader>],
         [
           {

@@ -41,6 +41,7 @@ export type BigNumberTotalFormData = QueryFormData & {
   enableDetailOnHover?: boolean;
   enableClickableCard?: boolean;
   urlColumn?: string;
+  infoIconUrl?: string;
   // Icon properties
   showIcon?: boolean;
   iconType?: 'upload' | 'url';
@@ -144,6 +145,9 @@ export type BigNumberVizProps = {
   hoverBorderEnabled?: boolean;
   hoverBorderThickness?: number;
   hoverBorderColor?: string;
+  // Info icon properties
+  infoIconUrl?: string;
+  description?: string;
   // Icon properties
   showIcon?: boolean;
   iconType?: 'upload' | 'url';
