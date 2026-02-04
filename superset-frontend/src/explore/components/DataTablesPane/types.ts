@@ -54,6 +54,7 @@ export interface ResultsPaneProps {
   // reload OriginalFormattedTimeColumns from localStorage when isVisible is true
   isVisible: boolean;
   canDownload: boolean;
+  useTitleCase?: boolean;
 }
 
 export interface SamplesPaneProps {
@@ -93,4 +94,5 @@ export interface SingleQueryResultPaneProp extends QueryResultInterface {
   // reload OriginalFormattedTimeColumns from localStorage when isVisible is true
   isVisible: boolean;
   canDownload: boolean;
+  useTitleCase?: boolean;
 }

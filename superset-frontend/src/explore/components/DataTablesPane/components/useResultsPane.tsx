@@ -48,6 +48,7 @@ export const useResultsPane = ({
   isVisible,
   dataSize = 50,
   canDownload,
+  useTitleCase = false,
 }: ResultsPaneProps): ReactElement[] => {
   const metadata = getChartMetadataRegistry().get(
     queryFormData?.viz_type || queryFormData?.vizType,
@@ -152,6 +153,7 @@ export const useResultsPane = ({
         key={idx}
         isVisible={isVisible}
         canDownload={canDownload}
+        useTitleCase={useTitleCase}
       />
     ));
 };
