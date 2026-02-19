@@ -316,6 +316,12 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       downtrendIconBackgroundColor,
       downtrendIconTextColor,
       downtrendIconShape = 'circle',
+      showNeutralTrendChip = true,
+      neutralIconType,
+      neutralIconUrl,
+      neutralIconBackgroundColor = '#FEF0E7',
+      neutralIconTextColor = '#F06D0F',
+      neutralIconShape = 'circle',
     } = this.props;
 
     // Only render if position is 'middle'
@@ -329,6 +335,10 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       percentageChange === null ||
       comparisonIndicator === undefined
     ) {
+      return null;
+    }
+
+    if (comparisonIndicator === 'neutral' && !showNeutralTrendChip) {
       return null;
     }
 
@@ -350,20 +360,28 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
     };
 
     const isUptrend = comparisonIndicator === 'positive';
+    const isNeutral = comparisonIndicator === 'neutral';
     const uptrendIconBackgroundColorConverted = convertColorToString(uptrendIconBackgroundColor);
     const downtrendIconBackgroundColorConverted = convertColorToString(downtrendIconBackgroundColor);
+    const neutralIconBackgroundColorConverted = convertColorToString(neutralIconBackgroundColor);
     const uptrendIconTextColorConverted = convertColorToString(uptrendIconTextColor);
     const downtrendIconTextColorConverted = convertColorToString(downtrendIconTextColor);
+    const neutralIconTextColorConverted = convertColorToString(neutralIconTextColor);
 
     // Check if custom icon is provided
     const hasCustomIcon = isUptrend
       ? (uptrendIconUrl && uptrendIconType)
-      : (downtrendIconUrl && downtrendIconType);
+      : isNeutral
+        ? (neutralIconType !== 'never' && neutralIconUrl && neutralIconType)
+        : (downtrendIconUrl && downtrendIconType);
+    const hideNeutralIcon = isNeutral && neutralIconType === 'never';
 
     // Get background color for the trend component
     const trendBgColor = isUptrend
       ? uptrendIconBackgroundColorConverted
-      : downtrendIconBackgroundColorConverted;
+      : isNeutral
+        ? neutralIconBackgroundColorConverted
+        : downtrendIconBackgroundColorConverted;
     const hasTrendBgColor =
       trendBgColor !== null &&
       trendBgColor !== undefined &&
@@ -391,8 +409,12 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
         }
         break;
       case 'neutral':
-        indicatorColor = '#ffc107'; // orange
-        arrowIcon = '−';
+        indicatorColor = neutralIconTextColorConverted || '#F06D0F';
+        if (hideNeutralIcon || hasCustomIcon) {
+          arrowIcon = null;
+        } else {
+          arrowIcon = '−';
+        }
         break;
       default:
         return null;
@@ -422,12 +444,12 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
           {hasCustomIcon ? (
             <TrendIconContainer
               bgColor="transparent"
-              iconShape={isUptrend ? uptrendIconShape : downtrendIconShape}
+              iconShape={isUptrend ? uptrendIconShape : isNeutral ? neutralIconShape : downtrendIconShape}
               iconSize={iconSize}
             >
               <img
-                src={isUptrend ? uptrendIconUrl : downtrendIconUrl}
-                alt={isUptrend ? 'Uptrend' : 'Downtrend'}
+                src={isUptrend ? uptrendIconUrl : isNeutral ? neutralIconUrl : downtrendIconUrl}
+                alt={isUptrend ? 'Uptrend' : isNeutral ? 'Neutral' : 'Downtrend'}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   const container = target.parentElement;
@@ -437,9 +459,9 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
                 }}
               />
             </TrendIconContainer>
-          ) : (
+          ) : arrowIcon ? (
             <span>{arrowIcon}</span>
-          )}
+          ) : null}
           <span>{formattedPercentage}</span>
         </ComparisonIndicator>
       </Tooltip>

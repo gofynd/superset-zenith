@@ -61,6 +61,13 @@ export type BigNumberTotalFormData = QueryFormData & {
   downtrendIconBackgroundColor?: string;
   downtrendIconTextColor?: string;
   downtrendIconShape?: 'circle' | 'square' | 'rounded';
+  showNeutralTrendChip?: boolean;
+  neutralIconType?: 'upload' | 'url' | 'never';
+  neutralIconUrl?: string;
+  neutralIconUpload?: File | null;
+  neutralIconBackgroundColor?: string;
+  neutralIconTextColor?: string;
+  neutralIconShape?: 'circle' | 'square' | 'rounded';
   // Trend comparison position
   trendComparisonPosition?: 'top' | 'middle';
   // Trend comparison shape
@@ -164,6 +171,12 @@ export type BigNumberVizProps = {
   downtrendIconBackgroundColor?: string;
   downtrendIconTextColor?: string;
   downtrendIconShape?: 'circle' | 'square' | 'rounded';
+  showNeutralTrendChip?: boolean;
+  neutralIconType?: 'upload' | 'url' | 'never';
+  neutralIconUrl?: string;
+  neutralIconBackgroundColor?: string;
+  neutralIconTextColor?: string;
+  neutralIconShape?: 'circle' | 'square' | 'rounded';
   // Trend comparison position
   trendComparisonPosition?: 'top' | 'middle';
   // Trend comparison shape
