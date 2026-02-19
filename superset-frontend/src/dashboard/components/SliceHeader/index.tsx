@@ -389,8 +389,15 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       NumberFormats.PERCENT_SIGNED_1_POINT,
     );
 
+    const showNeutralTrendChip =
+      formData?.show_neutral_trend_chip ?? formData?.showNeutralTrendChip ?? true;
+    if (comparisonIndicator === 'neutral' && !showNeutralTrendChip) {
+      return null;
+    }
+
     // Extract uptrend/downtrend icon properties from formData
     const isUptrend = comparisonIndicator === 'positive';
+    const isNeutral = comparisonIndicator === 'neutral';
     const uptrendIconType = formData?.uptrend_icon_type ?? formData?.uptrendIconType;
     const uptrendIconUrl = formData?.uptrend_icon_url ?? formData?.uptrendIconUrl;
     const uptrendIconBackgroundColorRaw = formData?.uptrend_icon_background_color ?? formData?.uptrendIconBackgroundColor;
@@ -401,6 +408,17 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     const downtrendIconBackgroundColorRaw = formData?.downtrend_icon_background_color ?? formData?.downtrendIconBackgroundColor;
     const downtrendIconTextColorRaw = formData?.downtrend_icon_text_color ?? formData?.downtrendIconTextColor;
     const downtrendIconShape = formData?.downtrend_icon_shape ?? formData?.downtrendIconShape ?? 'circle';
+    const neutralIconType = formData?.neutral_icon_type ?? formData?.neutralIconType;
+    const neutralIconUrl = formData?.neutral_icon_url ?? formData?.neutralIconUrl;
+    const neutralIconBackgroundColorRaw =
+      formData?.neutral_icon_background_color ??
+      formData?.neutralIconBackgroundColor ??
+      '#FEF0E7';
+    const neutralIconTextColorRaw =
+      formData?.neutral_icon_text_color ??
+      formData?.neutralIconTextColor ??
+      '#F06D0F';
+    const neutralIconShape = formData?.neutral_icon_shape ?? formData?.neutralIconShape ?? 'circle';
     const trendComparisonShape = formData?.trend_comparison_shape ?? formData?.trendComparisonShape ?? 'pill';
     const trendComparisonSize = formData?.trend_comparison_size ?? formData?.trendComparisonSize ?? 'large';
 
@@ -419,17 +437,26 @@ const SliceHeader: FC<SliceHeaderProps> = ({
 
     const uptrendIconBackgroundColor = convertColorToString(uptrendIconBackgroundColorRaw);
     const downtrendIconBackgroundColor = convertColorToString(downtrendIconBackgroundColorRaw);
+    const neutralIconBackgroundColor = convertColorToString(neutralIconBackgroundColorRaw);
     const uptrendIconTextColor = convertColorToString(uptrendIconTextColorRaw);
     const downtrendIconTextColor = convertColorToString(downtrendIconTextColorRaw);
+    const neutralIconTextColor = convertColorToString(neutralIconTextColorRaw);
 
     // Check if custom icon is provided
     const hasCustomIcon = isUptrend
       ? (uptrendIconUrl && uptrendIconType)
-      : (downtrendIconUrl && downtrendIconType);
+      : isNeutral
+        ? (neutralIconType !== 'never' && neutralIconUrl && neutralIconType)
+        : (downtrendIconUrl && downtrendIconType);
+    const hideNeutralIcon = isNeutral && neutralIconType === 'never';
 
     // Get background color for the trend component (not just the icon)
     // Only apply if explicitly provided (not default)
-    const trendBgColor = isUptrend ? uptrendIconBackgroundColor : downtrendIconBackgroundColor;
+    const trendBgColor = isUptrend
+      ? uptrendIconBackgroundColor
+      : isNeutral
+        ? neutralIconBackgroundColor
+        : downtrendIconBackgroundColor;
     const hasTrendBgColor = trendBgColor !== null && trendBgColor !== undefined && (typeof trendBgColor === 'string' ? trendBgColor.trim() !== '' : true);
 
     // Get text color for the trend component - use custom if provided, otherwise use default
@@ -456,8 +483,12 @@ const SliceHeader: FC<SliceHeaderProps> = ({
         }
         break;
       case 'neutral':
-        indicatorColor = '#ffc107'; // orange
-        arrowIcon = '−';
+        indicatorColor = neutralIconTextColor || '#F06D0F';
+        if (hideNeutralIcon || hasCustomIcon) {
+          arrowIcon = null;
+        } else {
+          arrowIcon = '−';
+        }
         break;
       default:
         return null;
@@ -496,12 +527,12 @@ const SliceHeader: FC<SliceHeaderProps> = ({
           {hasCustomIcon ? (
             <TrendIconContainer
               bgColor="transparent" // Icon container should be transparent since bg is on parent
-              iconShape={isUptrend ? uptrendIconShape : downtrendIconShape}
+              iconShape={isUptrend ? uptrendIconShape : isNeutral ? neutralIconShape : downtrendIconShape}
               iconSize={iconSize} // Adjust icon size based on trend comparison size
             >
               <img
-                src={isUptrend ? uptrendIconUrl : downtrendIconUrl}
-                alt={isUptrend ? 'Uptrend' : 'Downtrend'}
+                src={isUptrend ? uptrendIconUrl : isNeutral ? neutralIconUrl : downtrendIconUrl}
+                alt={isUptrend ? 'Uptrend' : isNeutral ? 'Neutral' : 'Downtrend'}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   const container = target.parentElement;
@@ -511,9 +542,9 @@ const SliceHeader: FC<SliceHeaderProps> = ({
                 }}
               />
             </TrendIconContainer>
-          ) : (
+          ) : arrowIcon ? (
             <span>{arrowIcon}</span>
-          )}
+          ) : null}
           <span>{formattedPercentage}</span>
         </ComparisonIndicator>
       </Tooltip>
