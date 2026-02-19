@@ -490,6 +490,120 @@ export const downtrendIconShape: CustomControlItem = {
   },
 };
 
+// Neutral trend controls
+export const showNeutralTrendChip: CustomControlItem = {
+  name: 'show_neutral_trend_chip',
+  config: {
+    type: 'CheckboxControl',
+    label: t('Show Neutral Trend Chip'),
+    renderTrigger: true,
+    default: true,
+    description: t('Toggle visibility of the neutral trend comparison chip'),
+  },
+};
+
+export const neutralIconType: CustomControlItem = {
+  name: 'neutral_icon_type',
+  config: {
+    type: 'SelectControl',
+    label: t('Neutral Icon Type'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'url',
+    options: [
+      { value: 'url', label: t('URL') },
+      { value: 'upload', label: t('Upload'), disabled: true },
+      { value: 'never', label: t('None') },
+    ],
+    description: t('Choose how to provide the neutral icon'),
+  },
+};
+
+export const neutralIconUrl: CustomControlItem = {
+  name: 'neutral_icon_url',
+  config: {
+    type: 'TextControl',
+    label: t('Neutral Icon URL'),
+    renderTrigger: true,
+    default: '',
+    visibility: ({ controls }) => controls?.neutral_icon_type?.value === 'url',
+    description: t('Enter the URL for the neutral icon image'),
+  },
+};
+
+export const neutralIconUpload: CustomControlItem = {
+  name: 'neutral_icon_upload',
+  config: {
+    type: 'FileControl',
+    label: t('Upload Neutral Icon'),
+    renderTrigger: true,
+    accept: 'image/*',
+    visibility: ({ controls }) => controls?.neutral_icon_type?.value === 'upload',
+    description: t('Upload an image file for the neutral icon'),
+    validators: [
+      (value: File | null) => {
+        if (!value) return undefined;
+
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
+        if (!allowedTypes.includes(value.type)) {
+          return t('Invalid file type. Please upload a PNG, JPEG, SVG, or GIF image.');
+        }
+
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (value.size > maxSize) {
+          return t('File size too large. Please upload an image smaller than 2MB.');
+        }
+
+        const minSize = 1024; // 1KB minimum
+        if (value.size < minSize) {
+          return t('File size too small. Please upload a valid image file.');
+        }
+
+        return undefined;
+      },
+    ],
+  },
+};
+
+export const neutralIconBackgroundColor: CustomControlItem = {
+  name: 'neutral_icon_background_color',
+  config: {
+    type: 'ColorPickerControl',
+    label: t('Neutral Icon Background Color'),
+    renderTrigger: true,
+    default: '#FEF0E7',
+    description: t('Choose the background color for the neutral trend component'),
+  },
+};
+
+export const neutralIconTextColor: CustomControlItem = {
+  name: 'neutral_icon_text_color',
+  config: {
+    type: 'ColorPickerControl',
+    label: t('Neutral Icon Text Color'),
+    renderTrigger: true,
+    default: '#F06D0F',
+    description: t('Choose the text color for the neutral trend component'),
+  },
+};
+
+export const neutralIconShape: CustomControlItem = {
+  name: 'neutral_icon_shape',
+  config: {
+    type: 'SelectControl',
+    label: t('Neutral Icon Shape'),
+    renderTrigger: true,
+    clearable: false,
+    default: 'circle',
+    options: [
+      { label: t('Circle'), value: 'circle' },
+      { label: t('Square'), value: 'square' },
+      { label: t('Rounded Square'), value: 'rounded' },
+    ],
+    description: t('Choose the shape of the neutral icon background container'),
+  },
+};
+
 export const trendComparisonPosition: CustomControlItem = {
   name: 'trend_comparison_position',
   config: {
@@ -537,4 +651,3 @@ export const trendComparisonSize: CustomControlItem = {
     description: t('Choose the size of the trend comparison indicator'),
   },
 };
-

@@ -117,6 +117,13 @@ export default function transformProps(chartProps: ChartProps) {
     downtrendIconBackgroundColor: downtrendIconBackgroundColorRaw = '#e8eaf6',
     downtrendIconTextColor: downtrendIconTextColorRaw,
     downtrendIconShape = 'circle',
+    showNeutralTrendChip = true,
+    neutralIconType = 'url',
+    neutralIconUrl = '',
+    neutralIconUpload = null,
+    neutralIconBackgroundColor: neutralIconBackgroundColorRaw = '#FEF0E7',
+    neutralIconTextColor: neutralIconTextColorRaw = '#F06D0F',
+    neutralIconShape = 'circle',
     trendComparisonPosition = 'top',
     trendComparisonShape = 'pill',
     trendComparisonSize = 'large',
@@ -139,6 +146,13 @@ export default function transformProps(chartProps: ChartProps) {
     downtrend_icon_background_color,
     downtrend_icon_text_color,
     downtrend_icon_shape,
+    show_neutral_trend_chip,
+    neutral_icon_type,
+    neutral_icon_url,
+    neutral_icon_upload,
+    neutral_icon_background_color,
+    neutral_icon_text_color,
+    neutral_icon_shape,
     trend_comparison_position,
     trend_comparison_shape,
     trend_comparison_size,
@@ -221,6 +235,35 @@ export default function transformProps(chartProps: ChartProps) {
     }
   } else if (typeof finalDowntrendIconTextColor !== 'string' && finalDowntrendIconTextColor !== undefined) {
     finalDowntrendIconTextColor = undefined;
+  }
+
+  const finalShowNeutralTrendChip =
+    showNeutralTrendChip ?? show_neutral_trend_chip ?? true;
+  const finalNeutralIconType = neutralIconType || neutral_icon_type || 'url';
+  let finalNeutralIconUrl = neutralIconUrl || neutral_icon_url || '';
+  const finalNeutralIconShape = neutralIconShape || neutral_icon_shape || 'circle';
+  let finalNeutralIconBackgroundColor = neutralIconBackgroundColorRaw || neutral_icon_background_color || '#e8eaf6';
+  if (typeof finalNeutralIconBackgroundColor === 'object' && finalNeutralIconBackgroundColor !== null) {
+    if ('r' in finalNeutralIconBackgroundColor && 'g' in finalNeutralIconBackgroundColor && 'b' in finalNeutralIconBackgroundColor) {
+      const { r, g, b, a = 1 } = finalNeutralIconBackgroundColor as { r: number; g: number; b: number; a?: number };
+      finalNeutralIconBackgroundColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+      finalNeutralIconBackgroundColor = '#e8eaf6';
+    }
+  } else if (typeof finalNeutralIconBackgroundColor !== 'string') {
+    finalNeutralIconBackgroundColor = '#e8eaf6';
+  }
+
+  let finalNeutralIconTextColor = neutralIconTextColorRaw || neutral_icon_text_color;
+  if (typeof finalNeutralIconTextColor === 'object' && finalNeutralIconTextColor !== null) {
+    if ('r' in finalNeutralIconTextColor && 'g' in finalNeutralIconTextColor && 'b' in finalNeutralIconTextColor) {
+      const { r, g, b, a = 1 } = finalNeutralIconTextColor as { r: number; g: number; b: number; a?: number };
+      finalNeutralIconTextColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+    } else {
+      finalNeutralIconTextColor = undefined;
+    }
+  } else if (typeof finalNeutralIconTextColor !== 'string' && finalNeutralIconTextColor !== undefined) {
+    finalNeutralIconTextColor = undefined;
   }
 
   const finalTrendComparisonPosition =
@@ -452,6 +495,25 @@ export default function transformProps(chartProps: ChartProps) {
     }
   }
 
+  let processedNeutralIconUrl = '';
+  if (finalNeutralIconType === 'upload' && (neutralIconUpload || neutral_icon_upload)) {
+    const uploadFile = neutralIconUpload || neutral_icon_upload;
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/gif'];
+    const maxSize = 2 * 1024 * 1024;
+    const minSize = 1024;
+
+    if (uploadFile && allowedTypes.includes(uploadFile.type) && uploadFile.size >= minSize && uploadFile.size <= maxSize) {
+      processedNeutralIconUrl = URL.createObjectURL(uploadFile);
+    }
+  } else if (finalNeutralIconType === 'url' && finalNeutralIconUrl) {
+    try {
+      new URL(finalNeutralIconUrl);
+      processedNeutralIconUrl = finalNeutralIconUrl;
+    } catch {
+      processedNeutralIconUrl = '';
+    }
+  }
+
   return {
     width,
     height,
@@ -501,6 +563,12 @@ export default function transformProps(chartProps: ChartProps) {
     downtrendIconBackgroundColor: finalDowntrendIconBackgroundColor,
     downtrendIconTextColor: finalDowntrendIconTextColor,
     downtrendIconShape: finalDowntrendIconShape,
+    showNeutralTrendChip: finalShowNeutralTrendChip,
+    neutralIconType: finalNeutralIconType,
+    neutralIconUrl: processedNeutralIconUrl,
+    neutralIconBackgroundColor: finalNeutralIconBackgroundColor,
+    neutralIconTextColor: finalNeutralIconTextColor,
+    neutralIconShape: finalNeutralIconShape,
     trendComparisonPosition: finalTrendComparisonPosition,
     trendComparisonShape: finalTrendComparisonShape,
     trendComparisonSize: finalTrendComparisonSize,
