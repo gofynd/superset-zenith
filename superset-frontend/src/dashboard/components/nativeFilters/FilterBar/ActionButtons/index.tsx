@@ -48,13 +48,20 @@ interface ActionButtonsProps {
 const REFRESH_ICON_URL =
   'https://cdn.pixelbin.io/v2/fynd-console/original/fds/icons/ic_refresh.svg';
 
+// Log environment variables
+console.log('📊 Dashboard Environment Variables:', {
+  ENABLE_DASHBOARD_SNAPSHOT: process.env.ENABLE_DASHBOARD_SNAPSHOT || 'not set',
+  SNAPSHOT_EMAIL_WEBHOOK_URL: process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || 'not set',
+});
+
 // const isDashboardSnapshotEnabled = () =>
 //   process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() === 'true';
 // const getSnapshotEmailWebhookUrl = () =>
 //   process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
 
 const isDashboardSnapshotEnabled = () => true;
-const getSnapshotEmailWebhookUrl = () => 'https://asia-south1.workflow.boltic.app/a4fcf7c2-6d54-433b-9b4f-d4e62f3aa817/zenith/email/snapshot';
+const getSnapshotEmailWebhookUrl = () =>
+  'https://asia-south1.workflow.boltic.app/a4fcf7c2-6d54-433b-9b4f-d4e62f3aa817/zenith/email/snapshot';
 
 const containerStyle = (theme: SupersetTheme) => css`
   display: flex;
@@ -140,6 +147,16 @@ const SnapshotPreviewLoading = styled.div`
   justify-content: center;
 `;
 
+const SnapshotPreviewMessage = styled.div`
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.grayscale.base};
+  text-align: center;
+  padding: ${({ theme }) => theme.gridUnit * 2}px;
+`;
+
 const SNAPSHOT_JPEG_QUALITY = 0.75;
 
 const EmailSection = styled.div`
@@ -175,6 +192,7 @@ const ActionButtons = ({
   const [isSnapshotting, setIsSnapshotting] = useState(false);
   const [showSnapshotModal, setShowSnapshotModal] = useState(false);
   const [snapshotPreviewUrl, setSnapshotPreviewUrl] = useState('');
+  const [snapshotCaptureFailed, setSnapshotCaptureFailed] = useState(false);
   const [sendToEmail, setSendToEmail] = useState(false);
   const [email, setEmail] = useState('');
   const [snapshotFileName, setSnapshotFileName] = useState('');
@@ -197,21 +215,22 @@ const ActionButtons = ({
     const contentWrapper = document.querySelector(
       '[data-test="dashboard-content-wrapper"]',
     ) as HTMLElement | null;
-    const dashboardRoot =
-      contentWrapper?.parentElement?.parentElement ?? contentWrapper;
-
-    if (!dashboardRoot) return;
+    if (!contentWrapper) {
+      setSnapshotCaptureFailed(true);
+      return;
+    }
 
     setIsSnapshotting(true);
+    setSnapshotCaptureFailed(false);
     try {
       // eslint-disable-next-line import/no-extraneous-dependencies
       const { default: html2canvas } = await import('html2canvas');
-      const rawCanvas = await html2canvas(dashboardRoot, {
+      const rawCanvas = await html2canvas(contentWrapper, {
         useCORS: true,
         scrollX: -window.scrollX,
         scrollY: -window.scrollY,
-        windowWidth: dashboardRoot.scrollWidth,
-        windowHeight: dashboardRoot.scrollHeight,
+        windowWidth: contentWrapper.scrollWidth,
+        windowHeight: contentWrapper.scrollHeight,
       });
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -220,6 +239,7 @@ const ActionButtons = ({
       setSnapshotPreviewUrl(dataUrl);
       setSnapshotFileName(fileName);
     } catch (error) {
+      setSnapshotCaptureFailed(true);
       // eslint-disable-next-line no-console
       console.error('Snapshot capture failed', error);
     } finally {
@@ -229,9 +249,12 @@ const ActionButtons = ({
 
   const onOpenSnapshotModal = useCallback(async () => {
     if (!dashboardSnapshotEnabled) return;
-    setShowSnapshotModal(true);
+    setShowSnapshotModal(false);
     setSnapshotPreviewUrl('');
+    setSnapshotCaptureFailed(false);
+    setSnapshotFileName('');
     await buildSnapshot();
+    setShowSnapshotModal(true);
   }, [buildSnapshot, dashboardSnapshotEnabled]);
 
   const onDownloadSnapshot = useCallback(() => {
@@ -244,6 +267,7 @@ const ActionButtons = ({
 
   const onSnapshotPrimaryAction = useCallback(async () => {
     if (!dashboardSnapshotEnabled) return;
+    if (!snapshotPreviewUrl || !snapshotFileName) return;
 
     if (sendToEmail) {
       const payload = {
@@ -346,6 +370,7 @@ const ActionButtons = ({
           primaryButtonName={
             sendToEmail ? t('Send to Email') : t('Download Snapshot')
           }
+          disablePrimaryButton={!snapshotPreviewUrl || isSnapshotting}
           onHandledPrimaryAction={onSnapshotPrimaryAction}
           primaryButtonLoading={isSnapshotting}
         >
@@ -357,10 +382,18 @@ const ActionButtons = ({
                   src={snapshotPreviewUrl}
                   alt={t('Dashboard snapshot preview')}
                 />
-              ) : (
+              ) : isSnapshotting ? (
                 <SnapshotPreviewLoading>
                   <Loading position="inline-centered" />
                 </SnapshotPreviewLoading>
+              ) : snapshotCaptureFailed ? (
+                <SnapshotPreviewMessage>
+                  {t('Unable to generate snapshot. Please try again.')}
+                </SnapshotPreviewMessage>
+              ) : (
+                <SnapshotPreviewMessage>
+                  {t('Snapshot preview is not available.')}
+                </SnapshotPreviewMessage>
               )}
             </SnapshotPreview>
             <EmailSection>
