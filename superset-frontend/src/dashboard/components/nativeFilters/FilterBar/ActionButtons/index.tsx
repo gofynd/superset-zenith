@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   css,
   DataMaskState,
@@ -24,8 +24,13 @@ import {
   t,
   isDefined,
   SupersetTheme,
+  styled,
 } from '@superset-ui/core';
 import Button from 'src/components/Button';
+import Loading from 'src/components/Loading';
+import Modal from 'src/components/Modal';
+import { Input } from 'src/components/Input';
+import { Switch } from 'src/components/Switch';
 import { OPEN_FILTER_BAR_WIDTH } from 'src/dashboard/constants';
 import { rgba } from 'emotion-rgba';
 import { FilterBarOrientation } from 'src/dashboard/types';
@@ -43,11 +48,17 @@ interface ActionButtonsProps {
 const REFRESH_ICON_URL =
   'https://cdn.pixelbin.io/v2/fynd-console/original/fds/icons/ic_refresh.svg';
 
+const isDashboardSnapshotEnabled = () =>
+  process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() === 'true';
+const getSnapshotEmailWebhookUrl = () =>
+  process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
+
 const containerStyle = (theme: SupersetTheme) => css`
   display: flex;
   align-items: center;
 
   && > .filter-refresh-button,
+  && > .filter-snapshot-button,
   && > .filter-clear-all-button {
     color: ${theme.colors.grayscale.base};
     margin-left: 0;
@@ -91,10 +102,58 @@ const verticalStyle = (theme: SupersetTheme, width: number) => css`
 const horizontalStyle = (theme: SupersetTheme) => css`
   align-items: center;
   margin-left: auto;
+  && > .filter-snapshot-button,
   && > .filter-clear-all-button {
     text-transform: capitalize;
     font-weight: ${theme.typography.weights.normal};
   }
+`;
+
+const SnapshotModalContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.gridUnit * 4}px;
+`;
+
+const SnapshotPreview = styled.div`
+  max-height: 50vh;
+  overflow: auto;
+  border: 1px solid ${({ theme }) => theme.colors.grayscale.light2};
+  border-radius: ${({ theme }) => theme.borderRadius}px;
+  padding: ${({ theme }) => theme.gridUnit * 2}px;
+  background: ${({ theme }) => theme.colors.grayscale.light5};
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+`;
+
+const SnapshotPreviewLoading = styled.div`
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const EmailSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.gridUnit * 3}px;
+`;
+
+const EmailToggleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.gridUnit * 3}px;
+`;
+
+const PreviewTitle = styled.div`
+  font-size: ${({ theme }) => theme.typography.sizes.s}px;
+  color: ${({ theme }) => theme.colors.grayscale.base};
+  font-weight: ${({ theme }) => theme.typography.weights.medium};
+  text-transform: capitalize;
 `;
 
 const ActionButtons = ({
@@ -105,6 +164,15 @@ const ActionButtons = ({
   dataMaskSelected,
   filterBarOrientation = FilterBarOrientation.Vertical,
 }: ActionButtonsProps) => {
+  const dashboardSnapshotEnabled = isDashboardSnapshotEnabled();
+  const snapshotEmailWebhookUrl = getSnapshotEmailWebhookUrl();
+
+  const [isSnapshotting, setIsSnapshotting] = useState(false);
+  const [showSnapshotModal, setShowSnapshotModal] = useState(false);
+  const [snapshotPreviewUrl, setSnapshotPreviewUrl] = useState('');
+  const [sendToEmail, setSendToEmail] = useState(false);
+  const [email, setEmail] = useState('');
+  const [snapshotFileName, setSnapshotFileName] = useState('');
   const isClearAllEnabled = useMemo(
     () =>
       Object.values(dataMaskApplied).some(
@@ -117,43 +185,196 @@ const ActionButtons = ({
   );
   const isVertical = filterBarOrientation === FilterBarOrientation.Vertical;
 
+  const buildSnapshot = useCallback(async () => {
+    if (!dashboardSnapshotEnabled) return;
+    if (isSnapshotting) return;
+
+    const contentWrapper = document.querySelector(
+      '[data-test="dashboard-content-wrapper"]',
+    ) as HTMLElement | null;
+    const dashboardRoot =
+      contentWrapper?.parentElement?.parentElement ?? contentWrapper;
+
+    if (!dashboardRoot) return;
+
+    setIsSnapshotting(true);
+    try {
+      // eslint-disable-next-line import/no-extraneous-dependencies
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(dashboardRoot, {
+        useCORS: true,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        windowWidth: dashboardRoot.scrollWidth,
+        windowHeight: dashboardRoot.scrollHeight,
+      });
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `dashboard-snapshot-${timestamp}.png`;
+      const dataUrl = canvas.toDataURL('image/png');
+      setSnapshotPreviewUrl(dataUrl);
+      setSnapshotFileName(fileName);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Snapshot capture failed', error);
+    } finally {
+      setIsSnapshotting(false);
+    }
+  }, [dashboardSnapshotEnabled, isSnapshotting]);
+
+  const onOpenSnapshotModal = useCallback(async () => {
+    if (!dashboardSnapshotEnabled) return;
+    setShowSnapshotModal(true);
+    setSnapshotPreviewUrl('');
+    await buildSnapshot();
+  }, [buildSnapshot, dashboardSnapshotEnabled]);
+
+  const onDownloadSnapshot = useCallback(() => {
+    if (!snapshotPreviewUrl || !snapshotFileName) return;
+    const link = document.createElement('a');
+    link.download = snapshotFileName;
+    link.href = snapshotPreviewUrl;
+    link.click();
+  }, [snapshotFileName, snapshotPreviewUrl]);
+
+  const onSnapshotPrimaryAction = useCallback(async () => {
+    if (!dashboardSnapshotEnabled) return;
+
+    if (sendToEmail) {
+      const payload = {
+        messageType: 'Snapshot',
+        email,
+        fileName: snapshotFileName,
+        imageDataUrl: snapshotPreviewUrl,
+        generatedAt: new Date().toISOString(),
+      };
+      if (!snapshotEmailWebhookUrl) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          'SNAPSHOT_EMAIL_WEBHOOK_URL is not configured. Skipping snapshot email request.',
+        );
+        return;
+      }
+      try {
+        await fetch(snapshotEmailWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to send snapshot payload', error);
+      }
+      return;
+    }
+    onDownloadSnapshot();
+  }, [
+    dashboardSnapshotEnabled,
+    email,
+    onDownloadSnapshot,
+    sendToEmail,
+    snapshotEmailWebhookUrl,
+    snapshotFileName,
+    snapshotPreviewUrl,
+  ]);
+
+  const onCloseSnapshotModal = useCallback(() => {
+    setShowSnapshotModal(false);
+  }, []);
+
   return (
-    <div
-      css={(theme: SupersetTheme) => [
-        containerStyle(theme),
-        isVertical ? verticalStyle(theme, width) : horizontalStyle(theme),
-      ]}
-      data-test="filterbar-action-buttons"
-    >
-      <Button
-        buttonStyle="link"
-        buttonSize="small"
-        className="filter-clear-all-button"
-        onClick={onRefreshAll}
-        {...getFilterBarTestId('refresh-button')}
+    <>
+      <div
+        css={(theme: SupersetTheme) => [
+          containerStyle(theme),
+          isVertical ? verticalStyle(theme, width) : horizontalStyle(theme),
+        ]}
+        data-test="filterbar-action-buttons"
       >
-        <img
-          src={REFRESH_ICON_URL}
-          alt={t('Refresh all charts')}
-          css={css`
-            height: 14px;
-            width: 14px;
-            margin-right: 4px;
-          `}
-        />
-        {t('Refresh')}
-      </Button>
-      <Button
-        disabled={!isClearAllEnabled}
-        buttonStyle="link"
-        buttonSize="small"
-        className="filter-clear-all-button"
-        onClick={onClearAll}
-        {...getFilterBarTestId('clear-button')}
-      >
-        {t('Reset All')}
-      </Button>
-    </div>
+        {dashboardSnapshotEnabled && (
+          <Button
+            buttonStyle="link"
+            buttonSize="small"
+            className="filter-snapshot-button"
+            disabled={isSnapshotting}
+            onClick={onOpenSnapshotModal}
+          >
+            {t('Snapshot')}
+          </Button>
+        )}
+        <Button
+          buttonStyle="link"
+          buttonSize="small"
+          className="filter-clear-all-button"
+          onClick={onRefreshAll}
+          {...getFilterBarTestId('refresh-button')}
+        >
+          <img
+            src={REFRESH_ICON_URL}
+            alt={t('Refresh all charts')}
+            css={css`
+              height: 14px;
+              width: 14px;
+              margin-right: 4px;
+            `}
+          />
+          {t('Refresh')}
+        </Button>
+        <Button
+          disabled={!isClearAllEnabled}
+          buttonStyle="link"
+          buttonSize="small"
+          className="filter-clear-all-button"
+          onClick={onClearAll}
+          {...getFilterBarTestId('clear-button')}
+        >
+          {t('Reset All')}
+        </Button>
+      </div>
+      {dashboardSnapshotEnabled && (
+        <Modal
+          show={showSnapshotModal}
+          onHide={onCloseSnapshotModal}
+          title={t('Snapshot')}
+          primaryButtonName={
+            sendToEmail ? t('Send to Email') : t('Download Snapshot')
+          }
+          onHandledPrimaryAction={onSnapshotPrimaryAction}
+          primaryButtonLoading={isSnapshotting}
+        >
+          <SnapshotModalContent>
+            <PreviewTitle>{t('Preview')}</PreviewTitle>
+            <SnapshotPreview>
+              {snapshotPreviewUrl ? (
+                <img
+                  src={snapshotPreviewUrl}
+                  alt={t('Dashboard snapshot preview')}
+                />
+              ) : (
+                <SnapshotPreviewLoading>
+                  <Loading position="inline-centered" />
+                </SnapshotPreviewLoading>
+              )}
+            </SnapshotPreview>
+            <EmailSection>
+              <EmailToggleRow>
+                <Switch checked={sendToEmail} onChange={setSendToEmail} />
+                <span>{t('Do you want this report in an email?')}</span>
+              </EmailToggleRow>
+              {sendToEmail && (
+                <Input
+                  value={email}
+                  onChange={event => setEmail(event.target.value)}
+                  placeholder={t('Enter recipient email')}
+                />
+              )}
+            </EmailSection>
+          </SnapshotModalContent>
+        </Modal>
+      )}
+    </>
   );
 };
 
