@@ -48,6 +48,12 @@ interface ActionButtonsProps {
 const REFRESH_ICON_URL =
   'https://cdn.pixelbin.io/v2/fynd-console/original/fds/icons/ic_refresh.svg';
 
+// Log environment variables
+console.log('📊 Dashboard Environment Variables:', {
+  ENABLE_DASHBOARD_SNAPSHOT: process.env.ENABLE_DASHBOARD_SNAPSHOT || 'not set',
+  SNAPSHOT_EMAIL_WEBHOOK_URL: process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || 'not set',
+});
+
 // const isDashboardSnapshotEnabled = () =>
 //   process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() === 'true';
 // const getSnapshotEmailWebhookUrl = () =>
