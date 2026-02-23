@@ -53,8 +53,8 @@ const REFRESH_ICON_URL =
 // const getSnapshotEmailWebhookUrl = () =>
 //   process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
 
-const isDashboardSnapshotEnabled = true;
-const getSnapshotEmailWebhookUrl = 'https://asia-south1.workflow.boltic.app/a4fcf7c2-6d54-433b-9b4f-d4e62f3aa817/zenith/email/snapshot';
+const isDashboardSnapshotEnabled = () => true;
+const getSnapshotEmailWebhookUrl = () => 'https://asia-south1.workflow.boltic.app/a4fcf7c2-6d54-433b-9b4f-d4e62f3aa817/zenith/email/snapshot';
 
 const containerStyle = (theme: SupersetTheme) => css`
   display: flex;
