@@ -48,10 +48,13 @@ interface ActionButtonsProps {
 const REFRESH_ICON_URL =
   'https://cdn.pixelbin.io/v2/fynd-console/original/fds/icons/ic_refresh.svg';
 
-const isDashboardSnapshotEnabled = () =>
-  process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() === 'true';
-const getSnapshotEmailWebhookUrl = () =>
-  process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
+// const isDashboardSnapshotEnabled = () =>
+//   process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() === 'true';
+// const getSnapshotEmailWebhookUrl = () =>
+//   process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
+
+const isDashboardSnapshotEnabled = true;
+const getSnapshotEmailWebhookUrl = 'https://asia-south1.workflow.boltic.app/a4fcf7c2-6d54-433b-9b4f-d4e62f3aa817/zenith/email/snapshot';
 
 const containerStyle = (theme: SupersetTheme) => css`
   display: flex;
