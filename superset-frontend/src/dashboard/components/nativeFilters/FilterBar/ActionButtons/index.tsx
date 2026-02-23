@@ -137,6 +137,8 @@ const SnapshotPreviewLoading = styled.div`
   justify-content: center;
 `;
 
+const SNAPSHOT_JPEG_QUALITY = 0.75;
+
 const EmailSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -201,7 +203,7 @@ const ActionButtons = ({
     try {
       // eslint-disable-next-line import/no-extraneous-dependencies
       const { default: html2canvas } = await import('html2canvas');
-      const canvas = await html2canvas(dashboardRoot, {
+      const rawCanvas = await html2canvas(dashboardRoot, {
         useCORS: true,
         scrollX: -window.scrollX,
         scrollY: -window.scrollY,
@@ -210,8 +212,8 @@ const ActionButtons = ({
       });
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `dashboard-snapshot-${timestamp}.png`;
-      const dataUrl = canvas.toDataURL('image/png');
+      const fileName = `dashboard-snapshot-${timestamp}.jpg`;
+      const dataUrl = rawCanvas.toDataURL('image/jpeg', SNAPSHOT_JPEG_QUALITY);
       setSnapshotPreviewUrl(dataUrl);
       setSnapshotFileName(fileName);
     } catch (error) {
