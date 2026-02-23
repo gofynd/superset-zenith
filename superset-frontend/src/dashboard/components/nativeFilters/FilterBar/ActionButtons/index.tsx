@@ -34,6 +34,7 @@ import { Switch } from 'src/components/Switch';
 import { OPEN_FILTER_BAR_WIDTH } from 'src/dashboard/constants';
 import { rgba } from 'emotion-rgba';
 import { FilterBarOrientation } from 'src/dashboard/types';
+import getBootstrapData from 'src/utils/getBootstrapData';
 import { getFilterBarTestId } from '../utils';
 
 interface ActionButtonsProps {
@@ -47,17 +48,21 @@ interface ActionButtonsProps {
 
 const REFRESH_ICON_URL =
   'https://cdn.pixelbin.io/v2/fynd-console/original/fds/icons/ic_refresh.svg';
+const bootstrapData = getBootstrapData();
+const snapshotEnabledConf =
+  bootstrapData?.common?.conf?.ENABLE_DASHBOARD_SNAPSHOT;
+const snapshotWebhookConf =
+  bootstrapData?.common?.conf?.SNAPSHOT_EMAIL_WEBHOOK_URL;
 
-// Log environment variables
+// eslint-disable-next-line no-console
 console.log('📊 Dashboard Environment Variables:', {
-  ENABLE_DASHBOARD_SNAPSHOT: process.env.ENABLE_DASHBOARD_SNAPSHOT || 'not set',
-  SNAPSHOT_EMAIL_WEBHOOK_URL: process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || 'not set',
+  ENABLE_DASHBOARD_SNAPSHOT_BUILD:
+    process.env.ENABLE_DASHBOARD_SNAPSHOT || 'not set',
+  SNAPSHOT_EMAIL_WEBHOOK_URL_BUILD:
+    process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || 'not set',
+  ENABLE_DASHBOARD_SNAPSHOT_BOOTSTRAP: snapshotEnabledConf ?? 'not set',
+  SNAPSHOT_EMAIL_WEBHOOK_URL_BOOTSTRAP: snapshotWebhookConf ?? 'not set',
 });
-
-// const isDashboardSnapshotEnabled = () =>
-//   process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() === 'true';
-// const getSnapshotEmailWebhookUrl = () =>
-//   process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
 
 const isDashboardSnapshotEnabled = () => true;
 const getSnapshotEmailWebhookUrl = () =>
@@ -212,9 +217,11 @@ const ActionButtons = ({
     if (!dashboardSnapshotEnabled) return;
     if (isSnapshotting) return;
 
-    const contentWrapper = document.querySelector(
-      '[data-test="dashboard-content-wrapper"]',
-    ) as HTMLElement | null;
+    const contentWrapper =
+      (document.querySelector(
+        '[data-test="dashboard-content-wrapper"]',
+      ) as HTMLElement | null) ||
+      (document.querySelector('.dashboard-content') as HTMLElement | null);
     if (!contentWrapper) {
       setSnapshotCaptureFailed(true);
       return;
@@ -225,17 +232,47 @@ const ActionButtons = ({
     try {
       // eslint-disable-next-line import/no-extraneous-dependencies
       const { default: html2canvas } = await import('html2canvas');
-      const rawCanvas = await html2canvas(contentWrapper, {
+      const baseCaptureOptions = {
         useCORS: true,
         scrollX: -window.scrollX,
         scrollY: -window.scrollY,
         windowWidth: contentWrapper.scrollWidth,
         windowHeight: contentWrapper.scrollHeight,
-      });
+      };
+      let rawCanvas = await html2canvas(contentWrapper, baseCaptureOptions);
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `dashboard-snapshot-${timestamp}.jpg`;
-      const dataUrl = rawCanvas.toDataURL('image/jpeg', SNAPSHOT_JPEG_QUALITY);
+      let dataUrl = '';
+      try {
+        dataUrl = rawCanvas.toDataURL('image/jpeg', SNAPSHOT_JPEG_QUALITY);
+      } catch (toDataUrlError) {
+        rawCanvas = await html2canvas(contentWrapper, {
+          ...baseCaptureOptions,
+          ignoreElements: element => {
+            if (element instanceof HTMLImageElement) {
+              const value = element.currentSrc || element.src;
+              if (
+                !value ||
+                value.startsWith('data:') ||
+                value.startsWith('blob:')
+              ) {
+                return false;
+              }
+              try {
+                return (
+                  new URL(value, window.location.href).origin !==
+                  window.location.origin
+                );
+              } catch {
+                return false;
+              }
+            }
+            return false;
+          },
+        });
+        dataUrl = rawCanvas.toDataURL('image/jpeg', SNAPSHOT_JPEG_QUALITY);
+      }
       setSnapshotPreviewUrl(dataUrl);
       setSnapshotFileName(fileName);
     } catch (error) {
