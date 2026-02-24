@@ -145,6 +145,7 @@ const DashboardWrapper: FC<Props> = ({ children }) => {
 
   return (
     <StyledDiv
+      data-test="dashboard-builder-wrapper"
       className={classNames({
         'dragdroppable--dragging': editMode && isDragged,
       })}

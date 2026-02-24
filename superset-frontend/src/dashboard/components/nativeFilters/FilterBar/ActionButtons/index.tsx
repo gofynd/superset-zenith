@@ -34,6 +34,7 @@ import { Switch } from 'src/components/Switch';
 import { OPEN_FILTER_BAR_WIDTH } from 'src/dashboard/constants';
 import { rgba } from 'emotion-rgba';
 import { FilterBarOrientation } from 'src/dashboard/types';
+import { useToasts } from 'src/components/MessageToasts/withToasts';
 import getBootstrapData from 'src/utils/getBootstrapData';
 import { getFilterBarTestId } from '../utils';
 
@@ -162,6 +163,11 @@ const SnapshotPreviewMessage = styled.div`
   padding: ${({ theme }) => theme.gridUnit * 2}px;
 `;
 
+const SnapshotActionError = styled.div`
+  color: ${({ theme }) => theme.colors.error.base};
+  font-size: ${({ theme }) => theme.typography.sizes.s}px;
+`;
+
 const SNAPSHOT_JPEG_QUALITY = 0.75;
 
 const EmailSection = styled.div`
@@ -193,11 +199,14 @@ const ActionButtons = ({
 }: ActionButtonsProps) => {
   const dashboardSnapshotEnabled = isDashboardSnapshotEnabled();
   const snapshotEmailWebhookUrl = getSnapshotEmailWebhookUrl();
+  const { addSuccessToast } = useToasts();
 
   const [isSnapshotting, setIsSnapshotting] = useState(false);
+  const [isSnapshotActioning, setIsSnapshotActioning] = useState(false);
   const [showSnapshotModal, setShowSnapshotModal] = useState(false);
   const [snapshotPreviewUrl, setSnapshotPreviewUrl] = useState('');
   const [snapshotCaptureFailed, setSnapshotCaptureFailed] = useState(false);
+  const [snapshotActionError, setSnapshotActionError] = useState('');
   const [sendToEmail, setSendToEmail] = useState(false);
   const [email, setEmail] = useState('');
   const [snapshotFileName, setSnapshotFileName] = useState('');
@@ -218,6 +227,9 @@ const ActionButtons = ({
     if (isSnapshotting) return;
 
     const contentWrapper =
+      (document.querySelector(
+        '[data-test="dashboard-builder-wrapper"]',
+      ) as HTMLElement | null) ||
       (document.querySelector(
         '[data-test="dashboard-content-wrapper"]',
       ) as HTMLElement | null) ||
@@ -289,6 +301,7 @@ const ActionButtons = ({
     setShowSnapshotModal(false);
     setSnapshotPreviewUrl('');
     setSnapshotCaptureFailed(false);
+    setSnapshotActionError('');
     setSnapshotFileName('');
     await buildSnapshot();
     setShowSnapshotModal(true);
@@ -305,38 +318,56 @@ const ActionButtons = ({
   const onSnapshotPrimaryAction = useCallback(async () => {
     if (!dashboardSnapshotEnabled) return;
     if (!snapshotPreviewUrl || !snapshotFileName) return;
+    setSnapshotActionError('');
+    setIsSnapshotActioning(true);
 
-    if (sendToEmail) {
-      const payload = {
-        messageType: 'Snapshot',
-        email,
-        fileName: snapshotFileName,
-        imageDataUrl: snapshotPreviewUrl,
-        generatedAt: new Date().toISOString(),
-      };
-      if (!snapshotEmailWebhookUrl) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          'SNAPSHOT_EMAIL_WEBHOOK_URL is not configured. Skipping snapshot email request.',
-        );
+    try {
+      if (sendToEmail) {
+        const payload = {
+          messageType: 'Snapshot',
+          email,
+          fileName: snapshotFileName,
+          imageDataUrl: snapshotPreviewUrl,
+          generatedAt: new Date().toISOString(),
+        };
+        if (!snapshotEmailWebhookUrl) {
+          setSnapshotActionError(t('Something went wrong. Please try again.'));
+          return;
+        }
+        try {
+          const response = await fetch(snapshotEmailWebhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+          const result = await response.json().catch(() => null);
+          if (
+            response.ok &&
+            result?.success === true &&
+            result?.statusCode === 200
+          ) {
+            addSuccessToast(t('Report email queued successfully.'));
+            setShowSnapshotModal(false);
+            return;
+          }
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to send snapshot payload', error);
+        }
+        setSnapshotActionError(t('Something went wrong. Please try again.'));
         return;
       }
-      try {
-        await fetch(snapshotEmailWebhookUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to send snapshot payload', error);
-      }
-      return;
+
+      onDownloadSnapshot();
+      addSuccessToast(t('Snapshot downloaded successfully.'));
+      setShowSnapshotModal(false);
+    } finally {
+      setIsSnapshotActioning(false);
     }
-    onDownloadSnapshot();
   }, [
+    addSuccessToast,
     dashboardSnapshotEnabled,
     email,
     onDownloadSnapshot,
@@ -348,6 +379,7 @@ const ActionButtons = ({
 
   const onCloseSnapshotModal = useCallback(() => {
     setShowSnapshotModal(false);
+    setSnapshotActionError('');
   }, []);
 
   return (
@@ -407,9 +439,11 @@ const ActionButtons = ({
           primaryButtonName={
             sendToEmail ? t('Send to Email') : t('Download Snapshot')
           }
-          disablePrimaryButton={!snapshotPreviewUrl || isSnapshotting}
+          disablePrimaryButton={
+            !snapshotPreviewUrl || isSnapshotting || isSnapshotActioning
+          }
           onHandledPrimaryAction={onSnapshotPrimaryAction}
-          primaryButtonLoading={isSnapshotting}
+          primaryButtonLoading={isSnapshotting || isSnapshotActioning}
         >
           <SnapshotModalContent>
             <PreviewTitle>{t('Preview')}</PreviewTitle>
@@ -444,6 +478,9 @@ const ActionButtons = ({
                   onChange={event => setEmail(event.target.value)}
                   placeholder={t('Enter recipient email')}
                 />
+              )}
+              {snapshotActionError && (
+                <SnapshotActionError>{snapshotActionError}</SnapshotActionError>
               )}
             </EmailSection>
           </SnapshotModalContent>
