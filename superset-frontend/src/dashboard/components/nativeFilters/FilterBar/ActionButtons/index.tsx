@@ -228,10 +228,7 @@ const ActionButtons = ({
 
     const contentWrapper =
       (document.querySelector(
-        '[data-test="dashboard-builder-wrapper"]',
-      ) as HTMLElement | null) ||
-      (document.querySelector(
-        '[data-test="dashboard-content-wrapper"]',
+        '#dashboard-snapshot-root',
       ) as HTMLElement | null) ||
       (document.querySelector('.dashboard-content') as HTMLElement | null);
     if (!contentWrapper) {
