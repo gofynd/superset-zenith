@@ -68,6 +68,48 @@ const DashboardBuilder = lazy(
 
 const originalDocumentTitle = document.title;
 
+type SnapshotStatus = 'loading' | 'completed' | 'failed';
+type SnapshotError = {
+  message: string;
+  status?: number;
+  statusText?: string;
+} | null;
+
+
+type SnapshotWindow = Window & {
+  __SNAPSHOT_STATUS__?: SnapshotStatus;
+  __SNAPSHOT_READY__?: boolean;
+  __SNAPSHOT_ERROR__?: SnapshotError;
+};
+
+const SNAPSHOT_TERMINAL_CHART_STATUSES = [
+  'success',
+  'rendered',
+  'failed',
+  'stopped',
+];
+
+function normalizeSnapshotError(error: any): SnapshotError {
+  if (!error) return null;
+  return {
+    message: error.message || 'Dashboard failed to load',
+    status: error.status,
+    statusText: error.statusText,
+  };
+}
+
+
+function syncSnapshotWindowState(status: SnapshotStatus, error: SnapshotError) {
+  if (typeof window === 'undefined') return;
+  const snapshotWindow = window as SnapshotWindow;
+  /* eslint-disable no-underscore-dangle */
+  snapshotWindow.__SNAPSHOT_STATUS__ = status;
+  snapshotWindow.__SNAPSHOT_READY__ =
+    status === 'completed' || status === 'failed';
+  snapshotWindow.__SNAPSHOT_ERROR__ = status === 'failed' ? error : null;
+  /* eslint-enable no-underscore-dangle */
+}
+
 type PageProps = {
   idOrSlug: string;
 };
@@ -80,6 +122,12 @@ export const DashboardPage: FC<PageProps> = ({ idOrSlug }: PageProps) => {
   const hasDashboardInfoInitiated = useSelector<RootState, Boolean>(
     ({ dashboardInfo }) =>
       dashboardInfo && Object.keys(dashboardInfo).length > 0,
+  );
+  const chartQueries = useSelector<RootState, RootState['charts']>(
+    ({ charts }) => charts,
+  );
+  const sliceIds = useSelector<RootState, number[]>(
+    ({ dashboardState }) => dashboardState?.sliceIds || [],
   );
   const { addDangerToast } = useToasts();
   const { result: dashboard, error: dashboardApiError } =
@@ -96,6 +144,32 @@ export const DashboardPage: FC<PageProps> = ({ idOrSlug }: PageProps) => {
   const error = dashboardApiError || chartsApiError;
   const readyToRender = Boolean(dashboard && charts);
   const { dashboard_title, css, id = 0 } = dashboard || {};
+
+  useEffect(() => {
+    if (error) {
+      syncSnapshotWindowState('failed', normalizeSnapshotError(error));
+      return;
+    }
+
+    if (!readyToRender || !hasDashboardInfoInitiated) {
+      syncSnapshotWindowState('loading', null);
+      return;
+    }
+
+    const trackedChartIds = sliceIds.length
+      ? sliceIds
+      : Object.keys(chartQueries).map(chartId => Number(chartId));
+
+    const isComplete =
+      trackedChartIds.length === 0 ||
+      trackedChartIds.every((chartId) =>
+        SNAPSHOT_TERMINAL_CHART_STATUSES.includes(
+          chartQueries[chartId]?.chartStatus as any,
+        ),
+      );
+
+    syncSnapshotWindowState(isComplete ? 'completed' : 'loading', null);
+  }, [chartQueries, error, hasDashboardInfoInitiated, readyToRender, sliceIds]);
 
   useEffect(() => {
     // mark tab id as redundant when user closes browser tab - a new id will be
