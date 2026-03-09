@@ -51,7 +51,8 @@ const REFRESH_ICON_URL =
 const isDashboardSnapshotEnabled = () =>
   process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() !== 'false';
 const getSnapshotEmailWebhookUrl = () =>
-  process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
+  process.env.SNAPSHOT_EMAIL_WEBHOOK_URL ||
+  'https://asia-south1.workflow.boltic.app/10e087f5-cd04-4a66-88a7-df6429cb34c3/zenith/email/snapshot';
 
 // TODO: remove before prod — verifying env vars are picked up at build time
 // eslint-disable-next-line no-console
