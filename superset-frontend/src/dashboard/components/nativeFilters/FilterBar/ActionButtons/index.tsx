@@ -35,7 +35,6 @@ import { OPEN_FILTER_BAR_WIDTH } from 'src/dashboard/constants';
 import { rgba } from 'emotion-rgba';
 import { FilterBarOrientation } from 'src/dashboard/types';
 import { useToasts } from 'src/components/MessageToasts/withToasts';
-import getBootstrapData from 'src/utils/getBootstrapData';
 import { getFilterBarTestId } from '../utils';
 
 interface ActionButtonsProps {
@@ -49,25 +48,17 @@ interface ActionButtonsProps {
 
 const REFRESH_ICON_URL =
   'https://cdn.pixelbin.io/v2/fynd-console/original/fds/icons/ic_refresh.svg';
-const bootstrapData = getBootstrapData();
-const snapshotEnabledConf =
-  bootstrapData?.common?.conf?.ENABLE_DASHBOARD_SNAPSHOT;
-const snapshotWebhookConf =
-  bootstrapData?.common?.conf?.SNAPSHOT_EMAIL_WEBHOOK_URL;
-
-// eslint-disable-next-line no-console
-console.log('📊 Dashboard Environment Variables:', {
-  ENABLE_DASHBOARD_SNAPSHOT_BUILD:
-    process.env.ENABLE_DASHBOARD_SNAPSHOT || 'not set',
-  SNAPSHOT_EMAIL_WEBHOOK_URL_BUILD:
-    process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || 'not set',
-  ENABLE_DASHBOARD_SNAPSHOT_BOOTSTRAP: snapshotEnabledConf ?? 'not set',
-  SNAPSHOT_EMAIL_WEBHOOK_URL_BOOTSTRAP: snapshotWebhookConf ?? 'not set',
-});
-
-const isDashboardSnapshotEnabled = () => true;
+const isDashboardSnapshotEnabled = () =>
+  process.env.ENABLE_DASHBOARD_SNAPSHOT?.toLowerCase() !== 'false';
 const getSnapshotEmailWebhookUrl = () =>
-  'https://asia-south1.workflow.boltic.app/a4fcf7c2-6d54-433b-9b4f-d4e62f3aa817/zenith/email/snapshot';
+  process.env.SNAPSHOT_EMAIL_WEBHOOK_URL || '';
+
+// TODO: remove before prod — verifying env vars are picked up at build time
+// eslint-disable-next-line no-console
+console.log('📊 Dashboard Snapshot Env (build-time):', {
+  ENABLE_DASHBOARD_SNAPSHOT: process.env.ENABLE_DASHBOARD_SNAPSHOT ?? 'not set',
+  SNAPSHOT_EMAIL_WEBHOOK_URL: process.env.SNAPSHOT_EMAIL_WEBHOOK_URL ?? 'not set',
+});
 
 const containerStyle = (theme: SupersetTheme) => css`
   display: flex;
