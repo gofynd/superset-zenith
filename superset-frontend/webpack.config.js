@@ -125,6 +125,12 @@ const plugins = [
     'process.env.ZEN_SENTRY_ENVIRONMENT': JSON.stringify(process.env.ZEN_SENTRY_ENVIRONMENT),
     'process.env.ZEN_SENTRY_RELEASE': JSON.stringify(process.env.ZEN_SENTRY_RELEASE),
     'process.env.AI_SUMMARY_ENDPOINT': JSON.stringify(process.env.AI_SUMMARY_ENDPOINT),
+    'process.env.ENABLE_DASHBOARD_SNAPSHOT': JSON.stringify(
+      process.env.ENABLE_DASHBOARD_SNAPSHOT,
+    ),
+    'process.env.SNAPSHOT_EMAIL_WEBHOOK_URL': JSON.stringify(
+      process.env.SNAPSHOT_EMAIL_WEBHOOK_URL,
+    ),
   }),
 
   new CopyPlugin({
