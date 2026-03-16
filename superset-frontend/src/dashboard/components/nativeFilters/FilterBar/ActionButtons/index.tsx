@@ -459,7 +459,7 @@ const ActionButtons = ({
             <EmailSection>
               <EmailToggleRow>
                 <Switch checked={sendToEmail} onChange={setSendToEmail} />
-                <span>{t('Do you want this report in an email?')}</span>
+                <span>{t('Do you want this snapshot in an email?')}</span>
               </EmailToggleRow>
               {sendToEmail && (
                 <Input
