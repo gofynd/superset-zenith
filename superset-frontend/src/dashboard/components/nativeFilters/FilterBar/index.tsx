@@ -277,6 +277,7 @@ const FilterBar: FC<FiltersBarProps> = ({
           setDataMaskSelected(draft => {
             draft[id] = {
               ...draft[id],
+              extraFormData: {},
               filterState: {
                 ...draft[id]?.filterState,
                 value: 'Current month',
@@ -284,7 +285,9 @@ const FilterBar: FC<FiltersBarProps> = ({
             };
           });
           // Update the applied filter immediately with "Current month"
+          // Also clear extraFormData so chart queries use the reset value
           dispatch(updateDataMask(id, {
+            extraFormData: {},
             filterState: {
               value: 'Current month',
             },
