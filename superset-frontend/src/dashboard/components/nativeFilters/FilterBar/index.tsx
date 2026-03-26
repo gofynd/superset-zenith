@@ -271,13 +271,14 @@ const FilterBar: FC<FiltersBarProps> = ({
 
       if (defaultDataMask?.filterState?.value !== undefined) {
         // Reset to the filter's configured default value.
-        // Spread extraFormData: {} first so it is always cleared even if the
-        // stored defaultDataMask pre-dates when extraFormData was persisted.
-        const resetMask = { extraFormData: {}, ...defaultDataMask };
+        // Preserve existing extraFormData so charts don't briefly see an empty
+        // time range (which breaks Time Comparison charts). The filter plugin's
+        // useEffect will emit the correct extraFormData after re-rendering with
+        // the new filterState.value, and auto-apply will dispatch the final state.
         setDataMaskSelected(draft => {
-          draft[id] = { ...getInitialDataMask(id), ...resetMask };
+          draft[id] = { ...getInitialDataMask(id), ...draft[id], ...defaultDataMask };
         });
-        dispatch(updateDataMask(id, resetMask));
+        dispatch(updateDataMask(id, defaultDataMask));
       } else {
         setDataMaskSelected(draft => { delete draft[id]; });
         dispatch(clearDataMask(id));
