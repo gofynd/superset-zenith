@@ -124,7 +124,7 @@ const SnapshotModalContent = styled.div`
 `;
 
 const SnapshotPreview = styled.div`
-  max-height: 50vh;
+  max-height: 40vh;
   overflow: auto;
   border: 1px solid ${({ theme }) => theme.colors.grayscale.light2};
   border-radius: ${({ theme }) => theme.borderRadius}px;
@@ -435,7 +435,6 @@ const ActionButtons = ({
           primaryButtonLoading={isSnapshotting || isSnapshotActioning}
         >
           <SnapshotModalContent>
-            <PreviewTitle>{t('Preview')}</PreviewTitle>
             <SnapshotPreview>
               {snapshotPreviewUrl ? (
                 <img
