@@ -265,41 +265,22 @@ const FilterBar: FC<FiltersBarProps> = ({
   }, [charts, dashboardId, dispatch]);
 
   const handleClearAll = useCallback(() => {
-    const clearDataMaskIds: string[] = [];
-
     filtersInScope.filter(isNativeFilter).forEach(filter => {
-      const { id, filterType } = filter;
-      if (dataMaskSelected[id] || dataMaskApplied[id]) {
-        clearDataMaskIds.push(id);
-        
-        // For time filters, set to "Current month" instead of clearing
-        if (filterType === 'filter_time') {
-          setDataMaskSelected(draft => {
-            draft[id] = {
-              ...draft[id],
-              extraFormData: {},
-              filterState: {
-                ...draft[id]?.filterState,
-                value: 'Current month',
-              },
-            };
-          });
-          // Update the applied filter immediately with "Current month"
-          // Also clear extraFormData so chart queries use the reset value
-          dispatch(updateDataMask(id, {
-            extraFormData: {},
-            filterState: {
-              value: 'Current month',
-            },
-          }));
-        } else {
-          setDataMaskSelected(draft => {
-            // Clear other filters from selected state
-            delete draft[id];
-          });
-          // Clear other applied filters immediately
-          dispatch(clearDataMask(id));
-        }
+      const { id, defaultDataMask } = filter;
+      if (!dataMaskSelected[id] && !dataMaskApplied[id]) return;
+
+      if (defaultDataMask?.filterState?.value !== undefined) {
+        // Reset to the filter's configured default value.
+        // Spread extraFormData: {} first so it is always cleared even if the
+        // stored defaultDataMask pre-dates when extraFormData was persisted.
+        const resetMask = { extraFormData: {}, ...defaultDataMask };
+        setDataMaskSelected(draft => {
+          draft[id] = { ...getInitialDataMask(id), ...resetMask };
+        });
+        dispatch(updateDataMask(id, resetMask));
+      } else {
+        setDataMaskSelected(draft => { delete draft[id]; });
+        dispatch(clearDataMask(id));
       }
     });
   }, [
