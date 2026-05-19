@@ -16,7 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { GenericDataType, SMART_DATE_ID, t } from '@superset-ui/core';
+import {
+  GenericDataType,
+  NumberFormats,
+  SMART_DATE_ID,
+  t,
+} from '@superset-ui/core';
 import {
   ControlPanelConfig,
   D3_FORMAT_DOCS,
@@ -58,6 +63,9 @@ import {
   trendComparisonShape,
   trendComparisonSize,
 } from '../sharedControls';
+
+// eslint-disable-next-line theme-colors/no-literal-colors
+const DEFAULT_HOVER_BORDER_COLOR = '#1890ff';
 
 export default {
   sectionOverrides: {
@@ -161,7 +169,9 @@ export default {
               label: t('URL Column'),
               renderTrigger: true,
               clearable: true,
-              description: t('Select the column containing the redirect URL (or use Manual URL below)'),
+              description: t(
+                'Select the column containing the redirect URL (or use Manual URL below)',
+              ),
               visibility: ({ controls }) =>
                 controls?.enable_clickable_card?.value === true,
               shouldMapStateToProps() {
@@ -169,17 +179,22 @@ export default {
               },
               mapStateToProps(explore, _, chart) {
                 // Get columns from both query response and datasource
-                const responseColumns = chart?.queriesResponse?.[0]?.colnames || [];
-                const datasourceColumns = explore?.datasource?.columns?.map(
-                  (col: any) => col.column_name
-                ) || [];
-                
+                const responseColumns =
+                  chart?.queriesResponse?.[0]?.colnames || [];
+                const datasourceColumns =
+                  explore?.datasource?.columns?.map(
+                    (col: any) => col.column_name,
+                  ) || [];
+
                 // Combine and deduplicate columns
                 const allColumns = [
-                  ...new Set([...responseColumns, ...datasourceColumns])
+                  ...new Set([...responseColumns, ...datasourceColumns]),
                 ];
-                
-                const columnOptions = allColumns.map((colname: string) => [colname, colname]);
+
+                const columnOptions = allColumns.map((colname: string) => [
+                  colname,
+                  colname,
+                ]);
                 return {
                   choices: columnOptions,
                 };
@@ -194,7 +209,9 @@ export default {
               type: 'TextControl',
               label: t('Manual URL (Optional)'),
               renderTrigger: true,
-              description: t('Manually specify the redirect URL. This overrides the URL Column if set. Example: https://dashboard.com/details'),
+              description: t(
+                'Manually specify the redirect URL. This overrides the URL Column if set. Example: https://dashboard.com/details',
+              ),
               visibility: ({ controls }) =>
                 controls?.enable_clickable_card?.value === true,
               placeholder: 'https://your-dashboard.com/page',
@@ -209,7 +226,9 @@ export default {
               label: t('Show border on hover'),
               renderTrigger: true,
               default: false,
-              description: t('Show a colored border when hovering over clickable card'),
+              description: t(
+                'Show a colored border when hovering over clickable card',
+              ),
               visibility: ({ controls }) =>
                 controls?.enable_clickable_card?.value === true,
             },
@@ -237,12 +256,12 @@ export default {
               type: 'TextControl',
               label: t('Border color'),
               renderTrigger: true,
-              default: '#1890ff',
+              default: DEFAULT_HOVER_BORDER_COLOR,
               description: t('Border color (hex code, e.g. #1890ff)'),
               visibility: ({ controls }) =>
                 controls?.enable_clickable_card?.value === true &&
                 controls?.hover_border_enabled?.value === true,
-              placeholder: '#1890ff',
+              placeholder: DEFAULT_HOVER_BORDER_COLOR,
             },
           },
         ],
@@ -365,6 +384,7 @@ export default {
   controlOverrides: {
     y_axis_format: {
       label: t('Number format'),
+      default: NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION,
     },
   },
   formDataOverrides: formData => ({

@@ -18,13 +18,11 @@
  */
 import {
   DatasourceType,
+  NumberFormats,
   supersetTheme,
-  TimeGranularity,
   QueryFormData,
-  QueryData,
 } from '@superset-ui/core';
 import transformProps from '../../src/BigNumber/BigNumberTotal/transformProps';
-import { BigNumberVizProps } from '../../src/BigNumber/types';
 
 const formData: QueryFormData = {
   metric: 'value',
@@ -133,6 +131,20 @@ describe('BigNumberTotal transformProps with Time Comparison', () => {
         height: 200,
         bigNumber: null,
       });
+    });
+
+    it('should format comma until 10M when selected', () => {
+      const props = generateProps([{ value: 1000 }], [], {
+        yAxisFormat: NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION,
+      });
+      const result = transformProps(props);
+
+      expect(result.headerFormatter(999)).toBe('999');
+      expect(result.headerFormatter(1000)).toBe('1,000');
+      expect(result.headerFormatter(999999)).toBe('999,999');
+      expect(result.headerFormatter(1000000)).toBe('1,000,000');
+      expect(result.headerFormatter(10000000)).toBe('10,000,000');
+      expect(result.headerFormatter(10000001)).toBe('10M');
     });
   });
 

@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-export { CommonFrame } from './CommonFrame';
-export { CalendarFrame } from './CalendarFrame';
-export { CurrentCalendarFrame } from './CurrentCalendarFrame';
-export { CustomFrame } from './CustomFrame';
-export { DateLabel } from './DateLabel';
-export { RevampedDateFilter } from './RevampedDateFilter';
+import { FrameType } from '../../types';
+
+export type QuickRangeOption = {
+  value: string;
+  label: string;
+  frame: FrameType;
+};

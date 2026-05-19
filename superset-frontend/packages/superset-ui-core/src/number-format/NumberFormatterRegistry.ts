@@ -44,6 +44,14 @@ export default class NumberFormatterRegistry extends RegistryWithDefaultKey<
       NumberFormats.SMART_NUMBER_SIGNED,
       createSmartNumberFormatter({ signed: true }),
     );
+    this.registerValue(
+      NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION,
+      createSmartNumberFormatter({
+        id: NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION,
+        label: 'Compact numbers after 10M',
+        compactAfterThreshold: 10000000,
+      }),
+    );
     this.setDefaultKey(NumberFormats.SMART_NUMBER);
     this.d3Format = DEFAULT_D3_FORMAT;
   }
