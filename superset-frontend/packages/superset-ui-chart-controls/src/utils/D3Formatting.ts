@@ -55,7 +55,7 @@ export const D3_FORMAT_OPTIONS: [string, string][] = [
   [NumberFormats.SMART_NUMBER, t('Adaptive formatting')],
   [
     NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION,
-    t('Compact numbers after 1M'),
+    t('Compact numbers after 10M'),
   ],
   ['~g', t('Original value')],
   ...d3Formatted,
