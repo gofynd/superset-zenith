@@ -54,7 +54,7 @@ function isDateString(str: string): boolean {
   return true;
 }
 
-function isRelativeTimeRange(str: string): boolean {
+export function isRelativeTimeRange(str: string): boolean {
   if (!str || typeof str !== 'string') return false;
   const relativePatterns = [
     /^today$/i,
@@ -156,7 +156,6 @@ function resolveRelativeTimeRangeInternal(
       .clone()
       .startOf(unit as any)
       .format('YYYY-MM-DDTHH:mm:ss');
-      console.log(`Previous range: ${startTime} : ${endTime}`)
     return `${startTime} : ${endTime}`;
   }
   const lastMatch = timeRange.match(
@@ -178,7 +177,6 @@ function resolveRelativeTimeRangeInternal(
       .subtract(count, momentUnit as any)
       .format('YYYY-MM-DDTHH:mm:ss');
     const endTime = today.format('YYYY-MM-DDTHH:mm:ss');
-    console.log(`Last range: ${startTime} : ${endTime}`)
     return `${startTime} : ${endTime}`;
   }
   if (timeRange.includes('DATETRUNC(')) {
@@ -199,22 +197,34 @@ function resolveRelativeTimeRangeInternal(
   return timeRange;
 }
 
-function resolveRelativeTimeRange(timeRange: string, timezone: string): string {
+export function resolveRelativeTimeRange(
+  timeRange: string,
+  timezone: string,
+): string {
   const originalTimeRange = timeRange;
   if (!isRelativeTimeRange(timeRange)) {
-    logTimezoneConversion('resolveRelativeTimeRange (not relative)', originalTimeRange, timeRange);
+    logTimezoneConversion(
+      'resolveRelativeTimeRange (not relative)',
+      originalTimeRange,
+      timeRange,
+    );
     return timeRange;
   }
   const now = moment.tz(timezone);
   const today = moment.tz(timezone).startOf('day');
-  const result = resolveRelativeTimeRangeInternal(timeRange, timezone, now, today);
-  
+  const result = resolveRelativeTimeRangeInternal(
+    timeRange,
+    timezone,
+    now,
+    today,
+  );
+
   logTimezoneConversion('resolveRelativeTimeRange', originalTimeRange, result, {
     timezone,
     now: now.format('YYYY-MM-DDTHH:mm:ss'),
     today: today.format('YYYY-MM-DDTHH:mm:ss'),
   });
-  
+
   return result;
 }
 
@@ -229,8 +239,11 @@ function convertFilterDateValues(filter: any, timezone: string): any {
       isDateString(converted.comparator)
     ) {
       // Skip conversion for relative time ranges in filter comparators
-      const isSimpleRelativeRange = /^(last|previous|current)\s+(day|week|month|quarter|year)$/i.test(converted.comparator) ||
-                                  /^previous\s+calendar\s+(week|month|year)$/i.test(converted.comparator);
+      const isSimpleRelativeRange =
+        /^(last|previous|current)\s+(day|week|month|quarter|year)$/i.test(
+          converted.comparator,
+        ) ||
+        /^previous\s+calendar\s+(week|month|year)$/i.test(converted.comparator);
       if (!isSimpleRelativeRange) {
         converted.comparator = convertToUTC(
           converted.comparator,
@@ -324,29 +337,41 @@ export function convertRequestDatesToUTC(
       if (typeof extraFormData.time_range === 'string') {
         const originalTimeRange = extraFormData.time_range;
         let tr = extraFormData.time_range as string;
-        
-        logTimezoneConversion('extra_form_data.time_range (initial)', originalTimeRange, tr);
-        
-        logTimezoneConversion('extra_form_data.time_range (processing check)', tr, 'WILL PROCESS ALL RANGES');
-        
+
+        logTimezoneConversion(
+          'extra_form_data.time_range (initial)',
+          originalTimeRange,
+          tr,
+        );
+
+        logTimezoneConversion(
+          'extra_form_data.time_range (processing check)',
+          tr,
+          'WILL PROCESS ALL RANGES',
+        );
+
         if (isRelativeTimeRange(tr) && !tr.includes(' : ')) {
           const resolvedTr = resolveRelativeTimeRange(tr, timezone);
-          logTimezoneConversion('extra_form_data.time_range (resolved)', tr, resolvedTr);
+          logTimezoneConversion(
+            'extra_form_data.time_range (resolved)',
+            tr,
+            resolvedTr,
+          );
           tr = resolvedTr;
         }
-        
+
         const parts = tr.split(' : ');
         if (parts.length === 2) {
           let [startTime, endTime] = parts;
           const originalParts = [startTime, endTime];
-          
+
           if (isRelativeTimeRange(startTime)) {
             startTime = resolveRelativeTimeRange(startTime, timezone);
           }
           if (isRelativeTimeRange(endTime)) {
             endTime = resolveRelativeTimeRange(endTime, timezone);
           }
-          
+
           if (isDateString(startTime) && isDateString(endTime)) {
             const convertedStart = convertToUTC(
               startTime,
@@ -354,17 +379,30 @@ export function convertRequestDatesToUTC(
             ).toISOString();
             const convertedEnd = convertToUTC(endTime, timezone).toISOString();
             tr = `${convertedStart} : ${convertedEnd}`;
-            
-            logTimezoneConversion('extra_form_data.time_range (final UTC)', originalParts, [convertedStart, convertedEnd], {
-              timezone,
-              originalTimeRange,
-            });
+
+            logTimezoneConversion(
+              'extra_form_data.time_range (final UTC)',
+              originalParts,
+              [convertedStart, convertedEnd],
+              {
+                timezone,
+                originalTimeRange,
+              },
+            );
           } else {
             tr = `${startTime} : ${endTime}`;
-            logTimezoneConversion('extra_form_data.time_range (non-date range)', originalParts, [startTime, endTime]);
+            logTimezoneConversion(
+              'extra_form_data.time_range (non-date range)',
+              originalParts,
+              [startTime, endTime],
+            );
           }
         } else {
-          logTimezoneConversion('extra_form_data.time_range (single value)', originalTimeRange, tr);
+          logTimezoneConversion(
+            'extra_form_data.time_range (single value)',
+            originalTimeRange,
+            tr,
+          );
         }
         extraFormData.time_range = tr;
       }
@@ -384,9 +422,9 @@ export function convertRequestDatesToUTC(
     ) {
       logTimezoneConversion('date string conversion', field, {
         value: converted[field],
-        isTimeRange: field === 'time_range'
+        isTimeRange: field === 'time_range',
       });
-      
+
       converted[field] = convertToUTC(converted[field], timezone).toISOString();
     }
   });
@@ -470,7 +508,7 @@ export function createTimezoneAwareApiCall<T = any>(
 let debugLogging = false;
 
 // Enable/disable debug logging
-export function enableTimezoneDebugLogging(enable: boolean = true): void {
+export function enableTimezoneDebugLogging(enable = true): void {
   debugLogging = enable;
 }
 

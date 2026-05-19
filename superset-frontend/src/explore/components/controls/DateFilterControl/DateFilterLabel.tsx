@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ReactNode, useState, useEffect, useMemo } from 'react';
+import { ReactNode, useState, useEffect, useMemo, useCallback } from 'react';
 import { DateTime } from 'luxon';
 import {
   css,
@@ -39,6 +39,7 @@ import { useDebouncedEffect } from 'src/explore/exploreUtils';
 import { SLOW_DEBOUNCE } from 'src/constants';
 import { noOp } from 'src/utils/common';
 import { getCurrentTimezone } from 'src/utils/dateUtils';
+import { resolveRelativeTimeRange } from 'src/utils/timezoneApiUtils';
 import ControlPopover from '../ControlPopover/ControlPopover';
 
 import { DateFilterControlProps, FrameType } from './types';
@@ -189,15 +190,18 @@ const getTooltipTitle = (
 // Use centralized timezone utility for consistency
 const getTimezoneFromUrl = getCurrentTimezone;
 
+export type DateTimeSourceZone = 'utc' | 'target';
+
 // Format datetime for user-friendly display (only for UI, not API)
-function formatDateTimeForDisplay(
+export function formatDateTimeForDisplay(
   s: string,
   toTZ = 'Asia/Kolkata',
   use24HourFormat = false,
+  sourceZone: DateTimeSourceZone = 'utc',
 ) {
   // Pattern for full ISO datetime stamps
   const isoRe =
-    /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?/g;
+    /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/g;
 
   // Pattern for date-only formats (YYYY-MM-DD)
   const dateOnlyRe = /\d{4}-\d{2}-\d{2}(?!\d)/g;
@@ -224,12 +228,20 @@ function formatDateTimeForDisplay(
   const isoMatches = [...s.matchAll(isoRe)].map(m => m[0]);
   if (isoMatches.length >= 2) {
     const formatForDisplay = (iso: string) => {
-      // If no offset, assume UTC
-      const src = /Z|[+-]\d{2}:\d{2}$/.test(iso) ? iso : `${iso}Z`;
-      const dt = new Date(src);
+      const src = iso.trim().replace(' ', 'T');
+      const hasTimezone = /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(src);
+      const dt = hasTimezone
+        ? DateTime.fromISO(src, { setZone: true }).setZone(toTZ)
+        : DateTime.fromISO(src, {
+            zone: sourceZone === 'target' ? toTZ : 'utc',
+          }).setZone(toTZ);
+
+      if (!dt.isValid) {
+        return iso;
+      }
 
       // Format as user-friendly string in target zone
-      return new Intl.DateTimeFormat('en-US', options).format(dt);
+      return new Intl.DateTimeFormat('en-US', options).format(dt.toJSDate());
     };
 
     const formattedStart = formatForDisplay(isoMatches[0]);
@@ -244,10 +256,15 @@ function formatDateTimeForDisplay(
   const dateMatches = [...s.matchAll(dateOnlyRe)].map(m => m[0]);
   if (dateMatches.length >= 2) {
     const formatDateOnly = (dateStr: string) => {
-      // Convert date-only to datetime at start of day in target timezone
-      const dt = new Date(`${dateStr}T00:00:00`);
+      const dt = DateTime.fromISO(dateStr, {
+        zone: sourceZone === 'target' ? toTZ : 'utc',
+      }).setZone(toTZ);
 
-      return new Intl.DateTimeFormat('en-US', options).format(dt);
+      if (!dt.isValid) {
+        return dateStr;
+      }
+
+      return new Intl.DateTimeFormat('en-US', options).format(dt.toJSDate());
     };
 
     const formattedStart = formatDateOnly(dateMatches[0]);
@@ -262,6 +279,18 @@ function formatDateTimeForDisplay(
   return s;
 }
 
+export function getTimezoneAwareDisplayRange(
+  timeRange: string,
+  timezone: string,
+): string | undefined {
+  const resolvedTimeRange = resolveRelativeTimeRange(timeRange, timezone);
+  if (resolvedTimeRange === timeRange || !resolvedTimeRange.includes(' : ')) {
+    return undefined;
+  }
+
+  return resolvedTimeRange.replace(/\s+:\s+/, ' to ');
+}
+
 export const getDateFromTimezone = (timezone: string) =>
   DateTime.now().setZone(timezone);
 export const getEzTimezoneDate = (
@@ -273,31 +302,6 @@ export const getEzTimezoneDate = (
   // Convert boundary in TZ to UTC ISO string
   return date[fn](unit).toUTC().toISO() as string;
 };
-
-// Try to parse a naive "YYYY-MM-DD HH:mm:ss" or ISO-like string as UTC using Luxon
-function parseNaiveUTC(input: string): DateTime | null {
-  if (!input) return null;
-  let iso = input.trim().replace(' ', 'T');
-  const hasTZ = /[zZ]|[+-]\d{2}:?\d{2}$/.test(iso);
-  if (!hasTZ) iso += 'Z';
-  const dt = DateTime.fromISO(iso, { zone: 'utc' });
-  return dt.isValid ? dt : null;
-}
-
-// Convert a range string "start to end" (or "start : end") from UTC -> tz using Luxon
-function convertRangeUTCToTZ(range: string, tz: string): string {
-  if (!range) return range;
-  const parts = range.split(/\s+(?:to|:)\s+/i);
-  if (parts.length !== 2) return range;
-
-  const startUTC = parseNaiveUTC(parts[0]);
-  const endUTC = parseNaiveUTC(parts[1]);
-  if (!startUTC || !endUTC) return range;
-
-  const startStr = startUTC.setZone(tz).toFormat("yyyy-MM-dd'T'HH:mm:ssZZ");
-  const endStr = endUTC.setZone(tz).toFormat("yyyy-MM-dd'T'HH:mm:ssZZ");
-  return `${startStr} to ${endStr}`;
-}
 
 export default function DateFilterLabel(props: DateFilterControlProps) {
   const {
@@ -329,13 +333,72 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
 
   // Get timezone for chip display (only show if not UTC)
   const timezone = getCurrentTimezone();
-  const showTimezone = DISABLE_TIMEZONE_CHIP ? false : timezone && timezone !== 'UTC' && timezone !== 'Etc/UTC';
+  const showTimezone = DISABLE_TIMEZONE_CHIP
+    ? false
+    : timezone && timezone !== 'UTC' && timezone !== 'Etc/UTC';
+
+  const applyFormattedTimeRange = useCallback(
+    (formattedADR: string, displayFrame: FrameType, displayValue: string) => {
+      if (
+        displayFrame === 'Common' ||
+        displayFrame === 'Calendar' ||
+        displayFrame === 'Current'
+      ) {
+        // Pill shows HRT (value); tooltip shows ADR (user-friendly formatted)
+        // "Actual time range" shows formatted ADR
+        setActualTimeRange(displayValue);
+        setEvalResponse(formattedADR);
+        setTooltipTitle(
+          getTooltipTitle(labelIsTruncated, displayValue, formattedADR),
+        );
+      } else if (displayFrame === 'Custom') {
+        setActualTimeRange(formattedADR);
+        setEvalResponse(formattedADR);
+        const customTooltipText = formattedADR ? `${formattedADR}` : null;
+        setTooltipTitle(
+          labelIsTruncated && formattedADR ? (
+            <div
+              css={(theme: SupersetTheme) => css`
+                margin-top: ${theme.gridUnit}px;
+              `}
+            >
+              {formattedADR}
+            </div>
+          ) : (
+            customTooltipText
+          ),
+        );
+      } else {
+        // Pill shows ADR (user-friendly formatted); tooltip shows HRT (value)
+        // "Actual time range" shows formatted ADR
+        setActualTimeRange(formattedADR);
+        setEvalResponse(formattedADR);
+        setTooltipTitle(
+          getTooltipTitle(labelIsTruncated, formattedADR, displayValue),
+        );
+      }
+      setValidTimeRange(true);
+    },
+    [labelIsTruncated],
+  );
 
   useEffect(() => {
     if (value === NO_TIME_RANGE) {
       setActualTimeRange(NO_TIME_RANGE);
       setTooltipTitle(null);
       setValidTimeRange(true);
+      return;
+    }
+    const timezoneAwareRange = getTimezoneAwareDisplayRange(value, urlTZ);
+    if (timezoneAwareRange) {
+      const formattedADR = formatDateTimeForDisplay(
+        timezoneAwareRange,
+        urlTZ,
+        guessedFrame === 'Custom',
+        'target',
+      );
+      applyFormattedTimeRange(formattedADR, guessedFrame, value);
+      setLastFetchedTimeRange(value);
       return;
     }
     fetchTimeRange(value, 'date').then(({ value: actualRange, error }) => {
@@ -345,7 +408,12 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
         setTooltipTitle(value || null);
       } else {
         const convertedADR = actualRange
-          ? convertRangeUTCToTZ(actualRange, urlTZ)
+          ? formatDateTimeForDisplay(
+              actualRange,
+              urlTZ,
+              guessedFrame === 'Custom',
+              'utc',
+            )
           : actualRange;
 
         /*
@@ -360,60 +428,11 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           +--------------+------+----------+--------+----------+-----------+
         */
 
-        // Format ADR for user-friendly display (for "Actual time range" section)
-        const formattedADR = convertedADR
-          ? formatDateTimeForDisplay(
-            convertedADR,
-            urlTZ,
-            guessedFrame === 'Custom',
-          )
-          : convertedADR;
-
-        if (
-          guessedFrame === 'Common' ||
-          guessedFrame === 'Calendar' ||
-          guessedFrame === 'Current'
-        ) {
-          // Pill shows HRT (value); tooltip shows ADR (user-friendly formatted)
-          // "Actual time range" shows formatted ADR
-          setActualTimeRange(value);
-          setEvalResponse(formattedADR || ''); // Store formatted ADR for "Actual time range" display
-          setTooltipTitle(
-            getTooltipTitle(labelIsTruncated, value, formattedADR),
-          );
-        } else if (guessedFrame === 'Custom') {
-          setActualTimeRange(formattedADR || '');
-          setEvalResponse(formattedADR || '');
-          const customTooltipText = formattedADR 
-            ? `${formattedADR}`
-            : null;
-          setTooltipTitle(
-            labelIsTruncated && formattedADR
-              ? (
-                  <div
-                    css={(theme: SupersetTheme) => css`
-                      margin-top: ${theme.gridUnit}px;
-                    `}
-                  >
-                    {formattedADR}
-                  </div>
-                )
-              : customTooltipText
-          );
-        } else {
-          // Pill shows ADR (user-friendly formatted); tooltip shows HRT (value)
-          // "Actual time range" shows formatted ADR
-          setActualTimeRange(formattedADR || '');
-          setEvalResponse(formattedADR || ''); // Store formatted ADR for "Actual time range" display
-          setTooltipTitle(
-            getTooltipTitle(labelIsTruncated, formattedADR, value),
-          );
-        }
-        setValidTimeRange(true);
+        applyFormattedTimeRange(convertedADR || '', guessedFrame, value);
       }
       setLastFetchedTimeRange(value);
     });
-  }, [guessedFrame, labelIsTruncated, labelRef, value, urlTZ]);
+  }, [applyFormattedTimeRange, guessedFrame, labelRef, value, urlTZ]);
 
   useDebouncedEffect(
     () => {
@@ -424,6 +443,23 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
         return;
       }
       if (lastFetchedTimeRange !== timeRangeValue) {
+        const timezoneAwareRange = getTimezoneAwareDisplayRange(
+          timeRangeValue,
+          urlTZ,
+        );
+        if (timezoneAwareRange) {
+          setEvalResponse(
+            formatDateTimeForDisplay(
+              timezoneAwareRange,
+              urlTZ,
+              frame === 'Custom',
+              'target',
+            ),
+          );
+          setValidTimeRange(true);
+          setLastFetchedTimeRange(timeRangeValue);
+          return;
+        }
         fetchTimeRange(timeRangeValue, 'date').then(
           ({ value: actualRange, error }) => {
             if (error) {
@@ -431,17 +467,14 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
               setValidTimeRange(false);
             } else {
               const previewADR = actualRange
-                ? convertRangeUTCToTZ(actualRange, urlTZ)
-                : actualRange;
-              // Format the preview ADR for user-friendly display
-              const formattedPreviewADR = previewADR
                 ? formatDateTimeForDisplay(
-                  previewADR,
-                  urlTZ,
-                  frame === 'Custom',
-                )
-                : previewADR;
-              setEvalResponse(formattedPreviewADR || '');
+                    actualRange,
+                    urlTZ,
+                    frame === 'Custom',
+                    'utc',
+                  )
+                : actualRange;
+              setEvalResponse(previewADR || '');
               setValidTimeRange(true);
             }
             setLastFetchedTimeRange(timeRangeValue);
@@ -492,9 +525,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     <ContentStyleWrapper style={{ position: 'relative' }}>
       {showTimezone && (
         <TimezoneChipContainer>
-          <TimezoneChip>
-            {timezone}
-          </TimezoneChip>
+          <TimezoneChip>{timezone}</TimezoneChip>
         </TimezoneChipContainer>
       )}
       <div className="control-label">{t('RANGE TYPE')}</div>
