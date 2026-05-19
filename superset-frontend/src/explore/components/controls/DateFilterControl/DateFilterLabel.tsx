@@ -27,6 +27,8 @@ import {
   SupersetTheme,
   useCSSTextTruncation,
   fetchTimeRange,
+  FeatureFlag,
+  isFeatureEnabled,
 } from '@superset-ui/core';
 import Button from 'src/components/Button';
 import ControlHeader from 'src/explore/components/ControlHeader';
@@ -54,6 +56,7 @@ import {
   CalendarFrame,
   CustomFrame,
   DateLabel,
+  RevampedDateFilter,
 } from './components';
 import { CurrentCalendarFrame } from './components/CurrentCalendarFrame';
 
@@ -311,6 +314,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     overlayStyle = 'Popover',
     isOverflowingFilterBar = false,
   } = props;
+  const showActualTimeRangesLabel = false;
   const defaultTimeFilter = useDefaultTimeFilter();
 
   const value = props.value ?? defaultTimeFilter;
@@ -336,6 +340,9 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const showTimezone = DISABLE_TIMEZONE_CHIP
     ? false
     : timezone && timezone !== 'UTC' && timezone !== 'Etc/UTC';
+  const useRevampedDateFilter = isFeatureEnabled(
+    FeatureFlag.DateFilterInlinePicker,
+  );
 
   const applyFormattedTimeRange = useCallback(
     (formattedADR: string, displayFrame: FrameType, displayValue: string) => {
@@ -515,9 +522,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   };
 
   function onChangeFrame(value: FrameType) {
-    if (value === NO_TIME_RANGE) {
-      setTimeRangeValue(NO_TIME_RANGE);
-    }
     setFrame(value);
   }
 
@@ -528,41 +532,61 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
           <TimezoneChip>{timezone}</TimezoneChip>
         </TimezoneChipContainer>
       )}
-      <div className="control-label">{t('RANGE TYPE')}</div>
-      <StyledRangeType
-        ariaLabel={t('RANGE TYPE')}
-        options={FRAME_OPTIONS}
-        value={frame}
-        onChange={onChangeFrame}
-      />
-      <Divider />
-      {frame === 'Common' && (
-        <CommonFrame value={timeRangeValue} onChange={setTimeRangeValue} />
-      )}
-      {frame === 'Calendar' && (
-        <CalendarFrame value={timeRangeValue} onChange={setTimeRangeValue} />
-      )}
-      {frame === 'Current' && (
-        <CurrentCalendarFrame
+      {useRevampedDateFilter ? (
+        <RevampedDateFilter
+          frame={frame}
           value={timeRangeValue}
           onChange={setTimeRangeValue}
+          onFrameChange={setFrame}
         />
+      ) : (
+        <>
+          <div className="control-label">{t('RANGE TYPE')}</div>
+          <StyledRangeType
+            ariaLabel={t('RANGE TYPE')}
+            options={FRAME_OPTIONS}
+            value={frame}
+            onChange={onChangeFrame}
+          />
+          <Divider />
+          {frame === 'Common' && (
+            <CommonFrame value={timeRangeValue} onChange={setTimeRangeValue} />
+          )}
+          {frame === 'Calendar' && (
+            <CalendarFrame
+              value={timeRangeValue}
+              onChange={setTimeRangeValue}
+            />
+          )}
+          {frame === 'Current' && (
+            <CurrentCalendarFrame
+              value={timeRangeValue}
+              onChange={setTimeRangeValue}
+            />
+          )}
+          {frame === 'Custom' && (
+            <CustomFrame value={timeRangeValue} onChange={setTimeRangeValue} />
+          )}
+        </>
       )}
-      {frame === 'Custom' && (
-        <CustomFrame value={timeRangeValue} onChange={setTimeRangeValue} />
+      {showActualTimeRangesLabel ? (
+        <>
+          <Divider />
+          <div>
+            <div className="section-title">{t('Actual time range')}</div>
+            {validTimeRange && <div>{evalResponse}</div>}
+            {!validTimeRange && (
+              <IconWrapper className="warning">
+                <Icons.ErrorSolidSmall iconColor={theme.colors.error.base} />
+                <span className="text error">{evalResponse}</span>
+              </IconWrapper>
+            )}
+          </div>
+          <Divider />
+        </>
+      ) : (
+        <Divider />
       )}
-      <Divider />
-      <div>
-        <div className="section-title">{t('Actual time range')}</div>
-        {validTimeRange && <div>{evalResponse}</div>}
-        {!validTimeRange && (
-          <IconWrapper className="warning">
-            <Icons.ErrorSolidSmall iconColor={theme.colors.error.base} />
-            <span className="text error">{evalResponse}</span>
-          </IconWrapper>
-        )}
-      </div>
-      <Divider />
       <div className="footer">
         <Button
           buttonStyle="secondary"
