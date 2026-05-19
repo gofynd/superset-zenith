@@ -22,14 +22,18 @@ import NumberFormatter from '../NumberFormatter';
 import NumberFormats from '../NumberFormats';
 
 const siFormatter = d3Format(`.3~s`);
+const commaFormatter = d3Format(`,.6~f`);
 const float2PointFormatter = d3Format(`.2~f`);
 const float4PointFormatter = d3Format(`.4~f`);
 
-function formatValue(value: number) {
+function formatValue(value: number, commaUntilMillion = false) {
   if (value === 0) {
     return '0';
   }
   const absoluteValue = Math.abs(value);
+  if (commaUntilMillion && absoluteValue >= 1000 && absoluteValue <= 1000000) {
+    return commaFormatter(value);
+  }
   if (absoluteValue >= 1000) {
     // Normal human being are more familiar
     // with billion (B) that giga (G)
@@ -53,18 +57,25 @@ export default function createSmartNumberFormatter(
     signed?: boolean;
     id?: string;
     label?: string;
+    commaUntilMillion?: boolean;
   } = {},
 ) {
-  const { description, signed = false, id, label } = config;
+  const {
+    description,
+    signed = false,
+    id,
+    label,
+    commaUntilMillion = false,
+  } = config;
   const getSign = signed ? (value: number) => (value > 0 ? '+' : '') : () => '';
 
   return new NumberFormatter({
     description,
-    formatFunc: value => `${getSign(value)}${formatValue(value)}`,
+    formatFunc: value =>
+      `${getSign(value)}${formatValue(value, commaUntilMillion)}`,
     id:
-      id || signed
-        ? NumberFormats.SMART_NUMBER_SIGNED
-        : NumberFormats.SMART_NUMBER,
+      id ??
+      (signed ? NumberFormats.SMART_NUMBER_SIGNED : NumberFormats.SMART_NUMBER),
     label: label ?? 'Adaptive formatter',
   });
 }
