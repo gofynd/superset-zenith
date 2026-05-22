@@ -17,6 +17,27 @@
  * under the License.
  */
 
+let failurePosted = false;
+
+export function resetEmbeddedFailureFlag(): void {
+  failurePosted = false;
+}
+
+export function postEmbeddedDashboardFailure(failedCharts: number): void {
+  if (!isEmbeddedMode() || failurePosted || failedCharts <= 0) return;
+  failurePosted = true;
+  window.parent.postMessage(
+    {
+      type: '__superset_dashboard_status__',
+      dashboardStatus: {
+        status: 'failed',
+        failedCharts,
+      },
+    },
+    '*',
+  );
+}
+
 export interface EmbeddedDetectionResult {
   isEmbedded: boolean;
   reason: string;

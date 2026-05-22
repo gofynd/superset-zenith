@@ -19,6 +19,10 @@
 import { ActiveTabs, ChartsState, DashboardLayout } from 'src/dashboard/types';
 import { CHART_TYPE, TABS_TYPE } from 'src/dashboard/util/componentTypes';
 import { DASHBOARD_ROOT_ID } from 'src/dashboard/util/constants';
+import {
+  postEmbeddedDashboardFailure,
+  resetEmbeddedFailureFlag,
+} from 'src/utils/embeddedUtils';
 
 export type DashboardStatus = 'loading' | 'ready' | 'failed';
 
@@ -245,4 +249,13 @@ export function syncDashboardStatusWindowState(
   /* eslint-disable no-underscore-dangle */
   dashboardWindow.__SUPERSET_DASHBOARD_STATUS__ = dashboardStatus;
   /* eslint-enable no-underscore-dangle */
+
+  if (dashboardStatus.status === 'loading') {
+    resetEmbeddedFailureFlag();
+  } else if (
+    dashboardStatus.status === 'failed' &&
+    dashboardStatus.failedCharts > 0
+  ) {
+    postEmbeddedDashboardFailure(dashboardStatus.failedCharts);
+  }
 }
