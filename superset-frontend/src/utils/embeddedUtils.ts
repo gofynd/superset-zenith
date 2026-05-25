@@ -17,23 +17,12 @@
  * under the License.
  */
 
-let failurePosted = false;
-
-export function resetEmbeddedFailureFlag(): void {
-  failurePosted = false;
-}
-
-export function postEmbeddedDashboardFailure(failedCharts: number): void {
-  if (!isEmbeddedMode() || failurePosted || failedCharts <= 0) return;
-  failurePosted = true;
+// Broadcasts the full dashboard status to the parent frame on every Redux update.
+// No filtering, no guards — Superset is a dumb emitter; the SDK decides what to do.
+export function postEmbeddedDashboardStatus(dashboardStatus: object): void {
+  if (!isEmbeddedMode()) return;
   window.parent.postMessage(
-    {
-      type: '__superset_dashboard_status__',
-      dashboardStatus: {
-        status: 'failed',
-        failedCharts,
-      },
-    },
+    { type: '__superset_dashboard_status__', dashboardStatus },
     '*',
   );
 }
