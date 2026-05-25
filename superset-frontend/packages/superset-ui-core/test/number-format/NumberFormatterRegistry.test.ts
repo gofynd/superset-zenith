@@ -42,7 +42,7 @@ describe('NumberFormatterRegistry', () => {
       const formatter2 = registry.get('.2f');
       expect(formatter).toBe(formatter2);
     });
-    it('formats comma until 1M, then uses compact notation', () => {
+    it('formats comma until 10M, then uses compact notation', () => {
       const formatter = registry.get(
         NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION,
       );
@@ -50,8 +50,9 @@ describe('NumberFormatterRegistry', () => {
       expect(formatter.format(1000)).toEqual('1,000');
       expect(formatter.format(999999)).toEqual('999,999');
       expect(formatter.format(1000000)).toEqual('1,000,000');
-      expect(formatter.format(1000001)).toEqual('1M');
-      expect(formatter.format(-1000000)).toEqual('-1,000,000');
+      expect(formatter.format(10000000)).toEqual('10,000,000');
+      expect(formatter.format(10000001)).toEqual('10M');
+      expect(formatter.format(-10000000)).toEqual('-10,000,000');
     });
     it('falls back to default format if format is not specified', () => {
       registry.setDefaultKey('.1f');

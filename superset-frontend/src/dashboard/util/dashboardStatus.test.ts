@@ -160,7 +160,8 @@ test('buildDashboardReadinessStatus returns failed when all visible charts fail'
 
   expect(status.status).toBe('failed');
   expect(status.settled).toBe(true);
-  expect(status.failedCharts).toBe(1);
+  expect(status.failedCharts).toHaveLength(1);
+  expect(status.failedCharts[0].chartId).toBe(1);
 });
 
 test('buildDashboardReadinessStatus returns ready when visible charts settle with mixed outcomes', () => {
@@ -184,7 +185,8 @@ test('buildDashboardReadinessStatus returns ready when visible charts settle wit
   expect(status.settled).toBe(true);
   expect(status.totalCharts).toBe(2);
   expect(status.renderedCharts).toBe(1);
-  expect(status.failedCharts).toBe(1);
+  expect(status.failedCharts).toHaveLength(1);
+  expect(status.failedCharts[0].chartId).toBe(1);
 });
 
 test('buildDashboardReadinessStatus treats missing visible charts as settled failures', () => {
@@ -196,7 +198,9 @@ test('buildDashboardReadinessStatus treats missing visible charts as settled fai
 
   expect(status.status).toBe('failed');
   expect(status.settled).toBe(true);
-  expect(status.failedCharts).toBe(1);
+  expect(status.failedCharts).toHaveLength(1);
+  expect(status.failedCharts[0].chartId).toBe(1);
+  expect(status.failedCharts[0].error).toBeUndefined(); // missing chart has no chartAlert
 });
 
 test('buildDashboardReadinessStatus stays loading while visible charts are pending', () => {

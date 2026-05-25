@@ -133,7 +133,7 @@ describe('BigNumberTotal transformProps with Time Comparison', () => {
       });
     });
 
-    it('should format comma until 1M when selected', () => {
+    it('should format comma until 10M when selected', () => {
       const props = generateProps([{ value: 1000 }], [], {
         yAxisFormat: NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION,
       });
@@ -143,7 +143,8 @@ describe('BigNumberTotal transformProps with Time Comparison', () => {
       expect(result.headerFormatter(1000)).toBe('1,000');
       expect(result.headerFormatter(999999)).toBe('999,999');
       expect(result.headerFormatter(1000000)).toBe('1,000,000');
-      expect(result.headerFormatter(1000001)).toBe('1M');
+      expect(result.headerFormatter(10000000)).toBe('10,000,000');
+      expect(result.headerFormatter(10000001)).toBe('10M');
     });
   });
 

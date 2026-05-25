@@ -26,12 +26,16 @@ const commaFormatter = d3Format(`,.6~f`);
 const float2PointFormatter = d3Format(`.2~f`);
 const float4PointFormatter = d3Format(`.4~f`);
 
-function formatValue(value: number, commaUntilMillion = false) {
+function formatValue(value: number, compactAfterThreshold?: number) {
   if (value === 0) {
     return '0';
   }
   const absoluteValue = Math.abs(value);
-  if (commaUntilMillion && absoluteValue >= 1000 && absoluteValue <= 1000000) {
+  if (
+    compactAfterThreshold &&
+    absoluteValue >= 1000 &&
+    absoluteValue <= compactAfterThreshold
+  ) {
     return commaFormatter(value);
   }
   if (absoluteValue >= 1000) {
@@ -57,7 +61,7 @@ export default function createSmartNumberFormatter(
     signed?: boolean;
     id?: string;
     label?: string;
-    commaUntilMillion?: boolean;
+    compactAfterThreshold?: number;
   } = {},
 ) {
   const {
@@ -65,14 +69,14 @@ export default function createSmartNumberFormatter(
     signed = false,
     id,
     label,
-    commaUntilMillion = false,
+    compactAfterThreshold,
   } = config;
   const getSign = signed ? (value: number) => (value > 0 ? '+' : '') : () => '';
 
   return new NumberFormatter({
     description,
     formatFunc: value =>
-      `${getSign(value)}${formatValue(value, commaUntilMillion)}`,
+      `${getSign(value)}${formatValue(value, compactAfterThreshold)}`,
     id:
       id ??
       (signed ? NumberFormats.SMART_NUMBER_SIGNED : NumberFormats.SMART_NUMBER),

@@ -75,7 +75,7 @@ export const PRIMARY_COLOR = { r: 0, g: 122, b: 135, a: 1 };
 // input choices & options
 export const D3_FORMAT_OPTIONS = [
   ['SMART_NUMBER', t('Adaptive formatting')],
-  ['SMART_NUMBER_COMMA_UNTIL_MILLION', t('Compact numbers after 1M')],
+  ['SMART_NUMBER_COMMA_UNTIL_MILLION', t('Compact numbers after 10M')],
   ['~g', t('Original value')],
   [',d', ',d (12345.432 => 12,345)'],
   ['.1s', '.1s (12345.432 => 10k)'],
