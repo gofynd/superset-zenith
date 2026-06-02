@@ -62,6 +62,7 @@ test('renders the legacy date filter when inline picker flag is disabled', () =>
   userEvent.click(screen.getByTestId(DateFilterTestKey.PopoverOverlay));
 
   expect(screen.getByText('RANGE TYPE')).toBeInTheDocument();
+  expect(screen.getByText('Actual time range')).toBeInTheDocument();
   expect(screen.queryByTestId('revamped-date-filter')).not.toBeInTheDocument();
 });
 
@@ -84,9 +85,7 @@ test('renders the revamped inline picker when feature flag is enabled', () => {
   expect(screen.queryByText('Current quarter')).not.toBeInTheDocument();
   expect(screen.queryByText('previous calendar week')).not.toBeInTheDocument();
   expect(screen.queryByText('RANGE TYPE')).not.toBeInTheDocument();
-
-  const dateFilterText =
-    screen.getByTestId('revamped-date-filter').textContent ?? '';
+  expect(screen.queryByText('Actual time range')).not.toBeInTheDocument();
 });
 
 test('keeps quick range values compatible with the legacy date filter', () => {

@@ -34,6 +34,8 @@ const formatDateEndpoint = (dttm: string, isStart?: boolean): string =>
 
 export const formatTimeRange = (
   timeRange: string,
+  // Kept for callers that still pass the legacy column placeholder.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   columnPlaceholder = 'col',
 ) => {
   const splitDateRange = timeRange.split(SEPARATOR);
@@ -43,7 +45,6 @@ export const formatTimeRange = (
     true,
   )} to ${formatDateEndpoint(splitDateRange[1])}`;
 };
-
 
 export const formatTimeRangeComparison = (
   initialTimeRange: string,
