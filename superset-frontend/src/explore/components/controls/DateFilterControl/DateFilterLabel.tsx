@@ -314,7 +314,6 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     overlayStyle = 'Popover',
     isOverflowingFilterBar = false,
   } = props;
-  const showActualTimeRangesLabel = false;
   const defaultTimeFilter = useDefaultTimeFilter();
 
   const value = props.value ?? defaultTimeFilter;
@@ -343,6 +342,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const useRevampedDateFilter = isFeatureEnabled(
     FeatureFlag.DateFilterInlinePicker,
   );
+  const showActualTimeRangesLabel = !useRevampedDateFilter;
 
   const applyFormattedTimeRange = useCallback(
     (formattedADR: string, displayFrame: FrameType, displayValue: string) => {

@@ -19,6 +19,7 @@
 import { ActiveTabs, ChartsState, DashboardLayout } from 'src/dashboard/types';
 import { CHART_TYPE, TABS_TYPE } from 'src/dashboard/util/componentTypes';
 import { DASHBOARD_ROOT_ID } from 'src/dashboard/util/constants';
+import { postEmbeddedDashboardStatus } from 'src/utils/embeddedUtils';
 
 export type DashboardStatus = 'loading' | 'ready' | 'failed';
 
@@ -28,13 +29,18 @@ export type DashboardStatusError = {
   statusText?: string;
 } | null;
 
+export type FailedChartDetail = {
+  chartId: number;
+  error?: string;
+};
+
 export type DashboardReadinessStatus = {
   status: DashboardStatus;
   settled: boolean;
   totalCharts: number;
   pendingCharts: number;
   renderedCharts: number;
-  failedCharts: number;
+  failedCharts: FailedChartDetail[];
   error: DashboardStatusError;
 };
 
@@ -138,6 +144,7 @@ export function getCurrentViewChartIds(
   activeTabs: ActiveTabs = [],
 ) {
   if (!dashboardLayout) return [];
+  const layout = dashboardLayout;
 
   const chartIds = new Set<number>();
   const visitedComponentIds = new Set<string>();
@@ -146,7 +153,7 @@ export function getCurrentViewChartIds(
     if (!componentId || visitedComponentIds.has(componentId)) return;
 
     visitedComponentIds.add(componentId);
-    const component = dashboardLayout[componentId];
+    const component = layout[componentId];
     if (!component) return;
 
     if (component.type === CHART_TYPE) {
@@ -194,7 +201,7 @@ export function buildDashboardReadinessStatus({
       totalCharts: chartIds.length,
       pendingCharts: 0,
       renderedCharts: 0,
-      failedCharts: 0,
+      failedCharts: [],
       error: normalizeDashboardStatusError(error),
     };
   }
@@ -206,25 +213,34 @@ export function buildDashboardReadinessStatus({
       totalCharts: chartIds.length,
       pendingCharts: chartIds.length,
       renderedCharts: 0,
-      failedCharts: 0,
+      failedCharts: [],
       error: null,
     };
   }
 
   let pendingCharts = 0;
   let renderedCharts = 0;
-  let failedCharts = 0;
+  const failedChartDetails: FailedChartDetail[] = [];
 
   chartIds.forEach(chartId => {
-    const readiness = getChartReadiness(chartQueries[chartId]);
+    const chart = chartQueries[chartId];
+    const readiness = getChartReadiness(chart);
     if (readiness === 'pending') pendingCharts += 1;
     if (readiness === 'rendered') renderedCharts += 1;
-    if (readiness === 'failed') failedCharts += 1;
+    if (readiness === 'failed') {
+      // Accumulate every failed chart with its error — SDK applies its own logic.
+      failedChartDetails.push({
+        chartId,
+        error: chart?.chartAlert ?? undefined,
+      });
+    }
   });
 
   const settled = pendingCharts === 0;
   const allChartsFailed =
-    settled && chartIds.length > 0 && failedCharts === chartIds.length;
+    settled &&
+    chartIds.length > 0 &&
+    failedChartDetails.length === chartIds.length;
 
   return {
     status: allChartsFailed ? 'failed' : settled ? 'ready' : 'loading',
@@ -232,7 +248,7 @@ export function buildDashboardReadinessStatus({
     totalCharts: chartIds.length,
     pendingCharts,
     renderedCharts,
-    failedCharts,
+    failedCharts: failedChartDetails,
     error: null,
   };
 }
@@ -245,4 +261,7 @@ export function syncDashboardStatusWindowState(
   /* eslint-disable no-underscore-dangle */
   dashboardWindow.__SUPERSET_DASHBOARD_STATUS__ = dashboardStatus;
   /* eslint-enable no-underscore-dangle */
+
+  // Always broadcast — Superset is a dumb emitter, SDK decides what to act on.
+  postEmbeddedDashboardStatus(dashboardStatus);
 }

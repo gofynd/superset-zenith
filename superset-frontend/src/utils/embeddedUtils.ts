@@ -17,6 +17,16 @@
  * under the License.
  */
 
+// Broadcasts the full dashboard status to the parent frame on every Redux update.
+// No filtering, no guards — Superset is a dumb emitter; the SDK decides what to do.
+export function postEmbeddedDashboardStatus(dashboardStatus: object): void {
+  if (!isEmbeddedMode()) return;
+  window.parent.postMessage(
+    { type: '__superset_dashboard_status__', dashboardStatus },
+    '*',
+  );
+}
+
 export interface EmbeddedDetectionResult {
   isEmbedded: boolean;
   reason: string;
