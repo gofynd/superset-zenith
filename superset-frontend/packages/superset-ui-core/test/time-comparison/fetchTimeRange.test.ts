@@ -40,18 +40,14 @@ test('generates proper time range string', () => {
 test('generates a readable time range', () => {
   expect(formatTimeRange('Last 7 days')).toBe('Last 7 days');
   expect(formatTimeRange('No filter')).toBe('No filter');
-  expect(formatTimeRange('Yesterday : Tomorrow')).toBe(
-    'Yesterday ≤ col < Tomorrow',
-  );
+  expect(formatTimeRange('Yesterday : Tomorrow')).toBe('Yesterday to Tomorrow');
   expect(formatTimeRange('2010-07-30T00:00:00 : 2020-07-30T00:00:00')).toBe(
-    '2010-07-30 ≤ col < 2020-07-30',
+    '2010-07-30 to 2020-07-30',
   );
   expect(formatTimeRange('2010-07-30T01:00:00 : ')).toBe(
-    '2010-07-30T01:00:00 ≤ col < ∞',
+    '2010-07-30T01:00:00 to ∞',
   );
-  expect(formatTimeRange(' : 2020-07-30T00:00:00')).toBe(
-    '-∞ ≤ col < 2020-07-30',
-  );
+  expect(formatTimeRange(' : 2020-07-30T00:00:00')).toBe('-∞ to 2020-07-30');
   expect(formatTimeRange('')).toBe('');
 });
 
@@ -68,7 +64,7 @@ test('returns a formatted time range from response', async () => {
 
   const timeRange = await fetchTimeRange('Last day', 'temporal_col');
   expect(timeRange).toEqual({
-    value: '2021-04-13 ≤ temporal_col < 2021-04-14',
+    value: '2021-04-13 to 2021-04-14',
   });
 });
 
@@ -79,7 +75,7 @@ test('returns a formatted time range from empty response', async () => {
 
   const timeRange = await fetchTimeRange('Last day');
   expect(timeRange).toEqual({
-    value: '-∞ ≤ col < ∞',
+    value: '-∞ to ∞',
   });
 });
 

@@ -144,6 +144,7 @@ export function getCurrentViewChartIds(
   activeTabs: ActiveTabs = [],
 ) {
   if (!dashboardLayout) return [];
+  const layout = dashboardLayout;
 
   const chartIds = new Set<number>();
   const visitedComponentIds = new Set<string>();
@@ -152,7 +153,7 @@ export function getCurrentViewChartIds(
     if (!componentId || visitedComponentIds.has(componentId)) return;
 
     visitedComponentIds.add(componentId);
-    const component = dashboardLayout[componentId];
+    const component = layout[componentId];
     if (!component) return;
 
     if (component.type === CHART_TYPE) {
@@ -228,13 +229,18 @@ export function buildDashboardReadinessStatus({
     if (readiness === 'rendered') renderedCharts += 1;
     if (readiness === 'failed') {
       // Accumulate every failed chart with its error — SDK applies its own logic.
-      failedChartDetails.push({ chartId, error: chart?.chartAlert ?? undefined });
+      failedChartDetails.push({
+        chartId,
+        error: chart?.chartAlert ?? undefined,
+      });
     }
   });
 
   const settled = pendingCharts === 0;
   const allChartsFailed =
-    settled && chartIds.length > 0 && failedChartDetails.length === chartIds.length;
+    settled &&
+    chartIds.length > 0 &&
+    failedChartDetails.length === chartIds.length;
 
   return {
     status: allChartsFailed ? 'failed' : settled ? 'ready' : 'loading',

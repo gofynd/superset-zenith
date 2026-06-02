@@ -173,7 +173,7 @@ test('buildDashboardReadinessStatus returns ready when visible charts settle wit
     children: [],
     parents: [DASHBOARD_ROOT_ID, DASHBOARD_GRID_ID, 'TABS-1', 'TAB-1', 'ROW-1'],
     meta: { chartId: 3 },
-  } as DashboardLayout[string];
+  } as unknown as DashboardLayout[string];
 
   const status = buildDashboardReadinessStatus({
     activeTabs: ['TAB-1'],

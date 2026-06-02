@@ -26,6 +26,7 @@ export * from './dynamic-plugins';
 export * from './query';
 export * from './number-format';
 export * from './time-format';
+export { formatTimeRange } from './time-format';
 export * from './dimension';
 export * from './color';
 export * from './style';
