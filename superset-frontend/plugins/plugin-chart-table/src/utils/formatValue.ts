@@ -22,10 +22,14 @@ import {
   GenericDataType,
   getNumberFormatter,
   isProbablyHTML,
+  NumberFormats,
   sanitizeHtml,
 } from '@superset-ui/core';
 import { DataColumnMeta } from '../types';
 import DateWithFormatter from './DateWithFormatter';
+
+const DEFAULT_TABLE_NUMBER_FORMAT =
+  NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION;
 
 /**
  * Format text for cell value.
@@ -60,11 +64,21 @@ export function formatColumnValue(
   column: DataColumnMeta,
   value: DataRecordValue,
 ) {
-  const { dataType, formatter, config = {} } = column;
+  const { dataType, formatter, config = {}, isPercentMetric } = column;
   const isNumber = dataType === GenericDataType.Numeric;
+  const defaultNumberFormatter =
+    isNumber && !isPercentMetric && typeof value === 'number'
+      ? config.currencyFormat?.symbol
+        ? new CurrencyFormatter({
+            d3Format: DEFAULT_TABLE_NUMBER_FORMAT,
+            currency: config.currencyFormat,
+          })
+        : getNumberFormatter(DEFAULT_TABLE_NUMBER_FORMAT)
+      : undefined;
+  const primaryFormatter = formatter ?? defaultNumberFormatter;
   const smallNumberFormatter =
     config.d3SmallNumberFormat === undefined
-      ? formatter
+      ? primaryFormatter
       : config.currencyFormat
         ? new CurrencyFormatter({
             d3Format: config.d3SmallNumberFormat,
@@ -74,7 +88,7 @@ export function formatColumnValue(
   return formatValue(
     isNumber && typeof value === 'number' && Math.abs(value) < 1
       ? smallNumberFormatter
-      : formatter,
+      : primaryFormatter,
     value,
   );
 }

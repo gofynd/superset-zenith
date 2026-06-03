@@ -51,6 +51,23 @@ export function getCurrentTimezone(): string {
 }
 
 /**
+ * Get timezone display name for UI
+ */
+export function getTimezoneDisplayName(timezone?: string): string {
+  const tz = timezone || getCurrentTimezone();
+  const offset = moment.tz(tz).format('Z');
+  return `${tz} (UTC${offset})`;
+}
+
+/**
+ * Get short timezone abbreviation, e.g. "IST", "PST", "+04"
+ */
+export function getTimezoneAbbr(timezone?: string): string {
+  const tz = timezone || getCurrentTimezone();
+  return moment.tz(tz).zoneAbbr();
+}
+
+/**
  * Format a date in the current timezone
  */
 export function formatDate(
@@ -98,15 +115,6 @@ export function parseAndConvertToTimezone(
     return moment.tz(dateString, inputFormat, tz);
   }
   return moment.tz(dateString, tz);
-}
-
-/**
- * Get timezone display name for UI
- */
-export function getTimezoneDisplayName(timezone?: string): string {
-  const tz = timezone || getCurrentTimezone();
-  const offset = moment.tz(tz).format('Z');
-  return `${tz} (UTC${offset})`;
 }
 
 /**

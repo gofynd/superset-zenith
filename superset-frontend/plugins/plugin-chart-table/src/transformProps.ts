@@ -57,6 +57,8 @@ import {
 
 const { PERCENT_3_POINT } = NumberFormats;
 const { DATABASE_DATETIME } = TimeFormats;
+const DEFAULT_TABLE_NUMBER_FORMAT =
+  NumberFormats.SMART_NUMBER_COMMA_UNTIL_MILLION;
 
 function isNumeric(key: string, data: DataRecord[] = []) {
   return data.every(
@@ -270,10 +272,12 @@ const processColumns = memoizeOne(function processColumns(
       } else if (isMetric || (isNumber && (numberFormat || currency))) {
         formatter = currency
           ? new CurrencyFormatter({
-              d3Format: numberFormat,
+              d3Format: numberFormat || DEFAULT_TABLE_NUMBER_FORMAT,
               currency,
             })
-          : getNumberFormatter(numberFormat);
+          : numberFormat
+            ? getNumberFormatter(numberFormat)
+            : undefined;
       }
       return {
         key,

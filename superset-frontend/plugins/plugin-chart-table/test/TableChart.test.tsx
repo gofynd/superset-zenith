@@ -22,6 +22,7 @@ import '@testing-library/jest-dom';
 import TableChart from '../src/TableChart';
 import transformProps from '../src/transformProps';
 import DateWithFormatter from '../src/utils/DateWithFormatter';
+import { formatColumnValue } from '../src/utils/formatValue';
 import testData from './testData';
 import { mount, ProviderWrapper } from './enzyme';
 
@@ -65,6 +66,26 @@ describe('plugin-chart-table', () => {
       expect(String(parsedDate)).toBe('2020-01-01 12:34:56');
       expect(parsedDate.getTime()).toBe(1577882096000);
     });
+
+    it('should use compact number formatting after 10M for unconfigured metric columns', () => {
+      const props = transformProps({
+        ...testData.advanced,
+        rawFormData: {
+          ...testData.advanced.rawFormData,
+          column_config: {},
+        },
+      });
+      const metricColumn = props.columns.find(
+        column => column.key === 'sum__num',
+      );
+      if (!metricColumn) {
+        throw new Error('Expected sum__num metric column');
+      }
+
+      expect(formatColumnValue(metricColumn, 2467063)[1]).toBe('2,467,063');
+      expect(formatColumnValue(metricColumn, 10000000)[1]).toBe('10,000,000');
+      expect(formatColumnValue(metricColumn, 12342000)[1]).toBe('12.3M');
+    });
   });
 
   describe('TableChart', () => {
@@ -81,12 +102,10 @@ describe('plugin-chart-table', () => {
       expect(cells).toHaveLength(12);
       expect(cells.eq(0).text()).toEqual('2020-01-01 12:34:56');
       expect(cells.eq(1).text()).toEqual('Michael');
-      // number is not in `metrics` list, so it should output raw value
-      // (in real world Superset, this would mean the column is used in GROUP BY)
-      expect(cells.eq(2).text()).toEqual('2467063');
+      expect(cells.eq(2).text()).toEqual('2,467,063');
       // should not render column with `.` in name as `undefined`
       expect(cells.eq(3).text()).toEqual('foo');
-      expect(cells.eq(6).text()).toEqual('2467');
+      expect(cells.eq(6).text()).toEqual('2,467');
       expect(cells.eq(8).text()).toEqual('N/A');
     });
 
@@ -126,7 +145,20 @@ describe('plugin-chart-table', () => {
     it('render raw data', () => {
       const props = transformProps({
         ...testData.raw,
-        rawFormData: { ...testData.raw.rawFormData },
+        rawFormData: {
+          ...testData.raw.rawFormData,
+        },
+        queriesData: [
+          {
+            ...testData.raw.queriesData[0],
+            data: [
+              { num: 1234 },
+              { num: 10000 },
+              { num: 12342000 },
+              { num: 0 },
+            ],
+          },
+        ],
       });
       render(
         ProviderWrapper({
@@ -135,9 +167,39 @@ describe('plugin-chart-table', () => {
       );
       const cells = document.querySelectorAll('td');
       expect(document.querySelectorAll('th')[0]).toHaveTextContent('num');
-      expect(cells[0]).toHaveTextContent('1234');
-      expect(cells[1]).toHaveTextContent('10000');
-      expect(cells[1]).toHaveTextContent('0');
+      expect(cells[0]).toHaveTextContent('1,234');
+      expect(cells[1]).toHaveTextContent('10,000');
+      expect(cells[2]).toHaveTextContent('12.3M');
+      expect(cells[2]).toHaveAttribute('title', '12342000');
+      expect(cells[3]).toHaveTextContent('0');
+    });
+
+    it('respects explicit number formatting for raw numeric columns', () => {
+      const props = transformProps({
+        ...testData.raw,
+        rawFormData: {
+          ...testData.raw.rawFormData,
+          column_config: {
+            num: {
+              d3NumberFormat: ',d',
+            },
+          },
+        },
+        queriesData: [
+          {
+            ...testData.raw.queriesData[0],
+            data: [{ num: 12342000 }],
+          },
+        ],
+      });
+      render(
+        ProviderWrapper({
+          children: <TableChart {...props} sticky={false} />,
+        }),
+      );
+      const cells = document.querySelectorAll('td');
+
+      expect(cells[0]).toHaveTextContent('12,342,000');
     });
 
     it('render raw data with currencies', () => {
@@ -151,6 +213,17 @@ describe('plugin-chart-table', () => {
             },
           },
         },
+        queriesData: [
+          {
+            ...testData.raw.queriesData[0],
+            data: [
+              { num: 1234 },
+              { num: 10000 },
+              { num: 12342000 },
+              { num: 0 },
+            ],
+          },
+        ],
       });
       render(
         ProviderWrapper({
@@ -160,9 +233,11 @@ describe('plugin-chart-table', () => {
       const cells = document.querySelectorAll('td');
 
       expect(document.querySelectorAll('th')[0]).toHaveTextContent('num');
-      expect(cells[0]).toHaveTextContent('$ 1.23k');
-      expect(cells[1]).toHaveTextContent('$ 10k');
-      expect(cells[2]).toHaveTextContent('$ 0');
+      expect(cells[0]).toHaveTextContent('$ 1,234');
+      expect(cells[1]).toHaveTextContent('$ 10,000');
+      expect(cells[2]).toHaveTextContent('$ 12.3M');
+      expect(cells[2]).toHaveAttribute('title', '12342000');
+      expect(cells[3]).toHaveTextContent('$ 0');
     });
 
     it('render small formatted data with currencies', () => {
@@ -202,7 +277,7 @@ describe('plugin-chart-table', () => {
       const cells = document.querySelectorAll('td');
 
       expect(document.querySelectorAll('th')[0]).toHaveTextContent('num');
-      expect(cells[0]).toHaveTextContent('$ 1.23k');
+      expect(cells[0]).toHaveTextContent('$ 1,234');
       expect(cells[1]).toHaveTextContent('$ 0.50');
       expect(cells[2]).toHaveTextContent('$ 0.61');
     });

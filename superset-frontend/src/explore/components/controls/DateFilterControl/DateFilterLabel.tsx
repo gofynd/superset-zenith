@@ -38,7 +38,7 @@ import Icons from 'src/components/Icons';
 import Select from 'src/components/Select/Select';
 import { Tooltip } from 'src/components/Tooltip';
 import { useDebouncedEffect } from 'src/explore/exploreUtils';
-import { SLOW_DEBOUNCE } from 'src/constants';
+import { SLOW_DEBOUNCE, URL_PARAMS } from 'src/constants';
 import { noOp } from 'src/utils/common';
 import { getCurrentTimezone } from 'src/utils/dateUtils';
 import { resolveRelativeTimeRange } from 'src/utils/timezoneApiUtils';
@@ -64,32 +64,19 @@ const StyledRangeType = styled(Select)`
   width: 272px;
 `;
 
-const TimezoneChip = styled.div`
-  ${({ theme }) => css`
-    display: inline-flex;
-    align-items: center;
-    padding: ${theme.gridUnit * 0.75}px ${theme.gridUnit * 1.5}px;
-    background-color: ${theme.colors.grayscale.light4};
-    border: 1px solid ${theme.colors.grayscale.light2};
-    border-radius: 4px;
-    font-size: ${theme.typography.sizes.xs}px;
-    font-weight: ${theme.typography.weights.normal};
-    color: ${theme.colors.grayscale.base};
-    white-space: nowrap;
-    line-height: 1.2;
-  `}
-`;
-
-const TimezoneChipContainer = styled.div`
-  ${({ theme }) => css`
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    height: ${theme.gridUnit * 8}px;
-  `}
+const TimezoneChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: default;
+  background: var(--fds-navi-20, #e6f4ff);
+  color: var(--fds-navi-50, #0958d9);
+  margin-bottom: 8px;
 `;
 
 const ContentStyleWrapper = styled.div`
@@ -190,8 +177,15 @@ const getTooltipTitle = (
  * We convert backend-evaluated UTC ranges into this timezone for display.
  */
 
-// Use centralized timezone utility for consistency
-const getTimezoneFromUrl = getCurrentTimezone;
+const getTimezoneUrlParam = () => {
+  try {
+    return new URL(window.location.href).searchParams.get(
+      URL_PARAMS.timezone.name,
+    );
+  } catch (_e) {
+    return null;
+  }
+};
 
 export type DateTimeSourceZone = 'utc' | 'target';
 
@@ -331,18 +325,26 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   const [labelRef, labelIsTruncated] = useCSSTextTruncation<HTMLSpanElement>();
 
   // Backend evaluates to UTC; we convert to the URL tz or default 'Asia/Kolkata' for display.
-  const urlTZ = getTimezoneFromUrl();
-  const DISABLE_TIMEZONE_CHIP = true;
-
-  // Get timezone for chip display (only show if not UTC)
   const timezone = getCurrentTimezone();
-  const showTimezone = DISABLE_TIMEZONE_CHIP
-    ? false
-    : timezone && timezone !== 'UTC' && timezone !== 'Etc/UTC';
+  // Show chip only when the URL param is present and valid (getCurrentTimezone validates it).
+  const timezoneUrlParam = getTimezoneUrlParam();
+  const showTimezoneChip = !!timezoneUrlParam && timezoneUrlParam === timezone;
+
+
   const useRevampedDateFilter = isFeatureEnabled(
     FeatureFlag.DateFilterInlinePicker,
   );
   const showActualTimeRangesLabel = !useRevampedDateFilter;
+
+  const finalTooltipTitle = useMemo(() => {
+    if (!showTimezoneChip || !tooltipTitle) return tooltipTitle;
+    return (
+      <div>
+        <div>{tooltipTitle}</div>
+        <div>Timezone: {timezone}</div>
+      </div>
+    );
+  }, [showTimezoneChip, tooltipTitle, timezone]);
 
   const applyFormattedTimeRange = useCallback(
     (formattedADR: string, displayFrame: FrameType, displayValue: string) => {
@@ -396,11 +398,11 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       setValidTimeRange(true);
       return;
     }
-    const timezoneAwareRange = getTimezoneAwareDisplayRange(value, urlTZ);
+    const timezoneAwareRange = getTimezoneAwareDisplayRange(value, timezone);
     if (timezoneAwareRange) {
       const formattedADR = formatDateTimeForDisplay(
         timezoneAwareRange,
-        urlTZ,
+        timezone,
         guessedFrame === 'Custom',
         'target',
       );
@@ -417,7 +419,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
         const convertedADR = actualRange
           ? formatDateTimeForDisplay(
               actualRange,
-              urlTZ,
+              timezone,
               guessedFrame === 'Custom',
               'utc',
             )
@@ -439,7 +441,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       }
       setLastFetchedTimeRange(value);
     });
-  }, [applyFormattedTimeRange, guessedFrame, labelRef, value, urlTZ]);
+  }, [applyFormattedTimeRange, guessedFrame, labelRef, value, timezone]);
 
   useDebouncedEffect(
     () => {
@@ -452,13 +454,13 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       if (lastFetchedTimeRange !== timeRangeValue) {
         const timezoneAwareRange = getTimezoneAwareDisplayRange(
           timeRangeValue,
-          urlTZ,
+          timezone,
         );
         if (timezoneAwareRange) {
           setEvalResponse(
             formatDateTimeForDisplay(
               timezoneAwareRange,
-              urlTZ,
+              timezone,
               frame === 'Custom',
               'target',
             ),
@@ -476,7 +478,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
               const previewADR = actualRange
                 ? formatDateTimeForDisplay(
                     actualRange,
-                    urlTZ,
+                    timezone,
                     frame === 'Custom',
                     'utc',
                   )
@@ -490,7 +492,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
       }
     },
     SLOW_DEBOUNCE,
-    [timeRangeValue, lastFetchedTimeRange, urlTZ, frame],
+    [timeRangeValue, lastFetchedTimeRange, timezone, frame],
   );
 
   function onSave() {
@@ -526,12 +528,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
   }
 
   const overlayContent = (
-    <ContentStyleWrapper style={{ position: 'relative' }}>
-      {showTimezone && (
-        <TimezoneChipContainer>
-          <TimezoneChip>{timezone}</TimezoneChip>
-        </TimezoneChipContainer>
-      )}
+    <ContentStyleWrapper>
       {useRevampedDateFilter ? (
         <RevampedDateFilter
           frame={frame}
@@ -573,7 +570,20 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
         <>
           <Divider />
           <div>
-            <div className="section-title">{t('Actual time range')}</div>
+            <div
+              css={(theme: SupersetTheme) => css`
+                display: flex;
+                align-items: center;
+                gap: ${theme.gridUnit * 2}px;
+              `}
+            >
+              <div className="section-title">{t('Actual time range')}</div>
+              {showTimezoneChip ? (
+                <TimezoneChip className="timezone-chip" data-test="date-filter-timezone-chip">
+                  {timezone}
+                </TimezoneChip>
+              ) : null}
+            </div>
             {validTimeRange && <div>{evalResponse}</div>}
             {!validTimeRange && (
               <IconWrapper className="warning">
@@ -637,7 +647,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     >
       <Tooltip
         placement="top"
-        title={tooltipTitle}
+        title={finalTooltipTitle}
         getPopupContainer={trigger => trigger.parentElement as HTMLElement}
       >
         <DateLabel
@@ -655,7 +665,7 @@ export default function DateFilterLabel(props: DateFilterControlProps) {
     <>
       <Tooltip
         placement="top"
-        title={tooltipTitle}
+        title={finalTooltipTitle}
         getPopupContainer={trigger => trigger.parentElement as HTMLElement}
       >
         <DateLabel
