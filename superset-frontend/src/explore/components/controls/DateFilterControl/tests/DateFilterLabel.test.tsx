@@ -35,6 +35,7 @@ const defaultProps = {
   onClosePopover: jest.fn(),
   onOpenPopover: jest.fn(),
 };
+const originalUrl = window.location.href;
 
 function setup(
   props: Omit<DateFilterControlProps, 'name'> = defaultProps,
@@ -47,6 +48,10 @@ function setup(
   );
 }
 
+afterEach(() => {
+  window.history.pushState({}, '', originalUrl);
+});
+
 test('DateFilter with default props', () => {
   render(setup());
   // label
@@ -57,6 +62,31 @@ test('DateFilter with default props', () => {
   expect(
     screen.getByTestId(DateFilterTestKey.PopoverOverlay),
   ).toBeInTheDocument();
+});
+
+test('DateFilter shows timezone chip when timezone URL param is present', () => {
+  window.history.pushState(
+    {},
+    '',
+    '/superset/dashboard/1/?timezone=Asia/Kolkata',
+  );
+
+  render(setup());
+  userEvent.click(screen.getByText(NO_TIME_RANGE));
+
+  expect(screen.getByTestId('date-filter-timezone-chip')).toHaveTextContent(
+    'Asia/Kolkata',
+  );
+});
+
+test('DateFilter does not show timezone chip without timezone URL param', () => {
+  window.history.pushState({}, '', '/superset/dashboard/1/');
+
+  render(setup());
+
+  expect(
+    screen.queryByTestId('date-filter-timezone-chip'),
+  ).not.toBeInTheDocument();
 });
 
 test('DateFilter should be applied the overlayStyle props', () => {
