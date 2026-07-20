@@ -24,6 +24,7 @@ import {
   ensureIsArray,
   extractTimegrain,
   GenericDataType,
+  getColumnLabel,
   getMetricLabel,
   getNumberFormatter,
   getTimeFormatter,
@@ -51,6 +52,7 @@ import {
   BasicColorFormatterType,
   ColorSchemeEnum,
   DataColumnMeta,
+  HierarchyConfig,
   TableChartProps,
   TableChartTransformedProps,
 } from './types';
@@ -409,10 +411,22 @@ const transformProps = (
     comparison_color_scheme: comparisonColorScheme = ColorSchemeEnum.Green,
     comparison_type,
     hyperlink_configs: hyperlinkConfigs = { enabled: false, configs: [] },
+    enable_hierarchy: enableHierarchy = false,
+    default_hierarchy_level: defaultHierarchyLevel = 1,
+    hierarchy_indent: hierarchyIndent = 20,
+    show_hierarchy_icons: showHierarchyIcons = true,
+    bold_hierarchy_parent_rows: boldHierarchyParentRows = true,
+    show_hierarchy_lines: showHierarchyLines = false,
   } = formData;
+  const effectiveQueryMode =
+    queryMode === QueryMode.Aggregate || queryMode === QueryMode.Raw
+      ? queryMode
+      : ensureIsArray(formData.all_columns).length
+        ? QueryMode.Raw
+        : QueryMode.Aggregate;
   const isUsingTimeComparison =
     !isEmpty(time_compare) &&
-    queryMode === QueryMode.Aggregate &&
+    effectiveQueryMode === QueryMode.Aggregate &&
     comparison_type === ComparisonType.Values;
 
   const calculateBasicStyle = (
@@ -573,6 +587,20 @@ const transformProps = (
     );
   }
 
+  const hierarchyDimensionKeys = ensureIsArray(formData.groupby)
+    .map(getColumnLabel)
+    .filter(key => columns.some(column => column.key === key))
+    .slice(0, 6);
+  const isHierarchyEnabled =
+    Boolean(enableHierarchy) &&
+    effectiveQueryMode === QueryMode.Aggregate &&
+    !serverPagination &&
+    !isUsingTimeComparison &&
+    hierarchyDimensionKeys.length >= 2;
+  const hierarchyQueryCount = isHierarchyEnabled
+    ? hierarchyDimensionKeys.length - 1
+    : 0;
+
   let baseQuery;
   let countQuery;
   let totalQuery;
@@ -581,7 +609,8 @@ const transformProps = (
     [baseQuery, countQuery, totalQuery] = queriesData;
     rowCount = (countQuery?.data?.[0]?.rowcount as number) ?? 0;
   } else {
-    [baseQuery, totalQuery] = queriesData;
+    [baseQuery] = queriesData;
+    totalQuery = queriesData[1 + hierarchyQueryCount];
     rowCount = baseQuery?.rowcount ?? 0;
   }
   const data = processDataRecords(baseQuery?.data, columns);
@@ -591,7 +620,7 @@ const transformProps = (
     comparisonSuffix,
   );
   const totals =
-    showTotals && queryMode === QueryMode.Aggregate
+    showTotals && effectiveQueryMode === QueryMode.Aggregate
       ? isUsingTimeComparison
         ? processComparisonTotals(comparisonSuffix, totalQuery?.data)
         : totalQuery?.data[0]
@@ -613,10 +642,39 @@ const transformProps = (
   );
 
   const startDateOffset = chartProps.rawFormData?.start_date_offset;
+
+  const hierarchyLevelQueries = isHierarchyEnabled
+    ? queriesData.slice(1, 1 + hierarchyQueryCount)
+    : [];
+  const hierarchyLevelData =
+    hierarchyLevelQueries.length === hierarchyQueryCount
+      ? [
+          ...hierarchyLevelQueries.map(query =>
+            processDataRecords(query?.data, columns),
+          ),
+          data,
+        ]
+      : undefined;
+  const selectedHierarchyLevel = Number(defaultHierarchyLevel) || 1;
+  const hierarchy: HierarchyConfig | undefined = isHierarchyEnabled
+    ? {
+        dimensionKeys: hierarchyDimensionKeys,
+        defaultLevel: Math.max(
+          1,
+          Math.min(selectedHierarchyLevel, hierarchyDimensionKeys.length),
+        ),
+        indentSize: Number(hierarchyIndent) || 20,
+        showExpandIcons: showHierarchyIcons,
+        boldParentRows: boldHierarchyParentRows,
+        showHierarchyLines,
+        levelData: hierarchyLevelData,
+      }
+    : undefined;
+
   return {
     height,
     width,
-    isRawRecords: queryMode === QueryMode.Raw,
+    isRawRecords: effectiveQueryMode === QueryMode.Raw,
     data: passedData,
     totals,
     columns: passedColumns,
@@ -649,6 +707,7 @@ const transformProps = (
     startDateOffset,
     basicColorColumnFormatters,
     hyperlinkConfigs,
+    hierarchy,
   };
 };
 

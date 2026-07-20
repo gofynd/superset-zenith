@@ -157,5 +157,34 @@ describe('plugin-chart-table', () => {
       expect(queries[1].extras?.time_grain_sqla).toBeUndefined();
       expect(queries[1].extras?.where).toEqual("(status IN ('In Process'))");
     });
+    it('should add hierarchy prefix queries after the full-depth query', () => {
+      const { queries } = buildQuery({
+        ...basicFormData,
+        query_mode: QueryMode.Aggregate,
+        groupby: ['year', 'month', 'week'],
+        metrics: ['sales'],
+        enable_hierarchy: true,
+      });
+
+      expect(queries).toHaveLength(3);
+      expect(queries[0].columns).toEqual(['year', 'month', 'week']);
+      expect(queries[1].columns).toEqual(['year']);
+      expect(queries[2].columns).toEqual(['year', 'month']);
+    });
+    it('should place the summary query after hierarchy prefix queries', () => {
+      const { queries } = buildQuery({
+        ...basicFormData,
+        query_mode: QueryMode.Aggregate,
+        groupby: ['year', 'month'],
+        metrics: ['sales'],
+        enable_hierarchy: true,
+        show_totals: true,
+      });
+
+      expect(queries).toHaveLength(3);
+      expect(queries[0].columns).toEqual(['year', 'month']);
+      expect(queries[1].columns).toEqual(['year']);
+      expect(queries[2].columns).toEqual([]);
+    });
   });
 });
