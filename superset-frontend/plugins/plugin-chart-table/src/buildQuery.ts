@@ -219,6 +219,17 @@ const buildQuery: BuildQuery<TableChartFormData> = (
       extras.time_grain_sqla = undefined;
     }
 
+    const hierarchyDimensionCount = Math.min(
+      ensureIsArray(formData.groupby).length,
+      MAX_HIERARCHY_DIMENSIONS,
+    );
+    const isHierarchyQueryEnabled =
+      formData.enable_hierarchy &&
+      queryMode === QueryMode.Aggregate &&
+      !formData.server_pagination &&
+      hierarchyDimensionCount >= 2 &&
+      columns.length >= hierarchyDimensionCount;
+
     let queryObject = {
       ...baseQueryObject,
       columns,
@@ -229,6 +240,15 @@ const buildQuery: BuildQuery<TableChartFormData> = (
       time_offsets: timeOffsets,
       ...moreProps,
     };
+
+    if (isHierarchyQueryEnabled) {
+      // Avoid parent totals coming from a wider aggregate than truncated child rows.
+      queryObject = {
+        ...queryObject,
+        row_limit: 0,
+        row_offset: 0,
+      };
+    }
 
     if (
       formData.server_pagination &&
@@ -249,15 +269,8 @@ const buildQuery: BuildQuery<TableChartFormData> = (
     });
 
     const hierarchyQueries: QueryObject[] = [];
-    const hierarchyDimensionCount = Math.min(
-      ensureIsArray(formData.groupby).length,
-      MAX_HIERARCHY_DIMENSIONS,
-    );
     if (
-      formData.enable_hierarchy &&
-      queryMode === QueryMode.Aggregate &&
-      !formData.server_pagination &&
-      hierarchyDimensionCount >= 2 &&
+      isHierarchyQueryEnabled &&
       queryObject.columns &&
       queryObject.columns.length >= hierarchyDimensionCount
     ) {
@@ -269,6 +282,7 @@ const buildQuery: BuildQuery<TableChartFormData> = (
         hierarchyQueries.push({
           ...queryObject,
           columns: hierarchyColumns.slice(0, index + 1),
+          row_limit: 0,
           row_offset: 0,
         });
       });

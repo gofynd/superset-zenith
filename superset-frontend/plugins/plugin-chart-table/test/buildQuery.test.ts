@@ -164,12 +164,16 @@ describe('plugin-chart-table', () => {
         groupby: ['year', 'month', 'week'],
         metrics: ['sales'],
         enable_hierarchy: true,
+        row_limit: 3,
       });
 
       expect(queries).toHaveLength(3);
       expect(queries[0].columns).toEqual(['year', 'month', 'week']);
+      expect(queries[0].row_limit).toBe(0);
       expect(queries[1].columns).toEqual(['year']);
+      expect(queries[1].row_limit).toBe(0);
       expect(queries[2].columns).toEqual(['year', 'month']);
+      expect(queries[2].row_limit).toBe(0);
     });
     it('should place the summary query after hierarchy prefix queries', () => {
       const { queries } = buildQuery({
