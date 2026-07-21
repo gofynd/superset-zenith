@@ -454,52 +454,50 @@ describe('plugin-chart-table', () => {
 
     props.columns[0].isMetric = true;
 
-    render(
+    let view = render(
       ProviderWrapper({
         children: <TableChart {...props} sticky={false} />,
       }),
     );
-    let cells = document.querySelectorAll('div.cell-bar');
+    let cells = view.container.querySelectorAll('div.cell-bar');
+    expect(cells.length).toBeGreaterThan(0);
     cells.forEach(cell => {
       expect(cell).toHaveClass('positive');
     });
     props.columns[0].isMetric = false;
     props.columns[0].isPercentMetric = true;
 
-    render(
+    view.unmount();
+    view = render(
       ProviderWrapper({
         children: <TableChart {...props} sticky={false} />,
       }),
     );
-    cells = document.querySelectorAll('div.cell-bar');
+    cells = view.container.querySelectorAll('div.cell-bar');
+    expect(cells.length).toBeGreaterThan(0);
     cells.forEach(cell => {
       expect(cell).toHaveClass('positive');
     });
 
     props.showCellBars = false;
 
-    render(
+    view.unmount();
+    view = render(
       ProviderWrapper({
         children: <TableChart {...props} sticky={false} />,
       }),
     );
-    cells = document.querySelectorAll('td');
-
-    cells.forEach(cell => {
-      expect(cell).toHaveClass('test-c7w8t3');
-    });
+    expect(view.container.querySelectorAll('div.cell-bar')).toHaveLength(0);
 
     props.columns[0].isPercentMetric = false;
     props.columns[0].isMetric = true;
 
-    render(
+    view.unmount();
+    view = render(
       ProviderWrapper({
         children: <TableChart {...props} sticky={false} />,
       }),
     );
-    cells = document.querySelectorAll('td');
-    cells.forEach(cell => {
-      expect(cell).toHaveClass('test-c7w8t3');
-    });
+    expect(view.container.querySelectorAll('div.cell-bar')).toHaveLength(0);
   });
 });
