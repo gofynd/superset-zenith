@@ -17,14 +17,65 @@
  * under the License.
  */
 import { CommonWrapper } from 'enzyme';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { GenericDataType, QueryMode } from '@superset-ui/core';
 import TableChart from '../src/TableChart';
 import transformProps from '../src/transformProps';
 import DateWithFormatter from '../src/utils/DateWithFormatter';
 import { formatColumnValue } from '../src/utils/formatValue';
 import testData from './testData';
 import { mount, ProviderWrapper } from './enzyme';
+
+const getHierarchyChartProps = () =>
+  transformProps({
+    ...testData.advanced,
+    datasource: {
+      ...testData.advanced.datasource,
+      verboseMap: {
+        year: 'Year',
+        month: 'Month',
+        sales: 'Sales',
+      },
+    },
+    rawFormData: {
+      ...testData.advanced.rawFormData,
+      query_mode: QueryMode.Aggregate,
+      groupby: ['year', 'month'],
+      metrics: ['sales'],
+      percent_metrics: [],
+      enable_hierarchy: true,
+      default_hierarchy_level: 2,
+      hierarchy_indent: 20,
+    },
+    queriesData: [
+      {
+        ...testData.advanced.queriesData[0],
+        colnames: ['year', 'month', 'sales'],
+        coltypes: [
+          GenericDataType.String,
+          GenericDataType.String,
+          GenericDataType.Numeric,
+        ],
+        rowcount: 3,
+        data: [
+          { year: '2025', month: 'Jan', sales: 10 },
+          { year: '2025', month: 'Feb', sales: 12 },
+          { year: '2026', month: 'Jan', sales: 14 },
+        ],
+      },
+      {
+        ...testData.advanced.queriesData[0],
+        colnames: ['year', 'sales'],
+        coltypes: [GenericDataType.String, GenericDataType.Numeric],
+        rowcount: 2,
+        data: [
+          { year: '2025', sales: 22 },
+          { year: '2026', sales: 14 },
+        ],
+      },
+    ],
+  });
 
 describe('plugin-chart-table', () => {
   describe('transformProps', () => {
@@ -86,6 +137,18 @@ describe('plugin-chart-table', () => {
       expect(formatColumnValue(metricColumn, 10000000)[1]).toBe('10,000,000');
       expect(formatColumnValue(metricColumn, 12342000)[1]).toBe('12.3M');
     });
+
+    it('should normalize hierarchy settings from form data', () => {
+      const props = getHierarchyChartProps();
+
+      expect(props.hierarchy).toMatchObject({
+        dimensionKeys: ['year', 'month'],
+        defaultLevel: 2,
+        indentSize: 20,
+        showExpandIcons: true,
+      });
+      expect(props.hierarchy?.levelData).toHaveLength(2);
+    });
   });
 
   describe('TableChart', () => {
@@ -140,6 +203,28 @@ describe('plugin-chart-table', () => {
       expect(cells[0]).toHaveTextContent('Michael');
       expect(cells[2]).toHaveTextContent('12.346%');
       expect(cells[4]).toHaveTextContent('$ 2.47k');
+    });
+
+    it('renders expandable hierarchy rows', async () => {
+      render(
+        ProviderWrapper({
+          children: <TableChart {...getHierarchyChartProps()} sticky={false} />,
+        }),
+      );
+
+      expect(document.querySelectorAll('th')[0]).toHaveTextContent(
+        'Dimensions',
+      );
+      expect(await screen.findAllByText('Jan')).toHaveLength(2);
+      expect(screen.getByText('Feb')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByText('Collapse all'));
+      expect(screen.queryByText('Jan')).not.toBeInTheDocument();
+      expect(screen.queryByText('Feb')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByLabelText('Expand 2025'));
+      expect(await screen.findByText('Jan')).toBeInTheDocument();
+      expect(screen.getByText('Feb')).toBeInTheDocument();
     });
 
     it('render raw data', () => {
