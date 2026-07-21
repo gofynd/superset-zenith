@@ -36,8 +36,11 @@ import SliceHeaderControls, {
 import FiltersBadge from 'src/dashboard/components/FiltersBadge';
 import Icons from 'src/components/Icons';
 import { RootState } from 'src/dashboard/types';
+import type { Datasource } from 'src/dashboard/types';
 import { getSliceHeaderTooltip } from 'src/dashboard/util/getSliceHeaderTooltip';
 import { DashboardPageIdContext } from 'src/dashboard/containers/DashboardPage';
+import OptionalMetricSelector from 'src/dashboard/components/OptionalMetricSelector';
+import type { QueryFormMetric } from '@superset-ui/core';
 
 // Inline type definition to avoid import issues
 interface BigNumberComparisonData {
@@ -58,7 +61,13 @@ type SliceHeaderProps = SliceHeaderControlsProps & {
   sliceName?: string;
   filters: object;
   handleToggleFullSize: () => void;
-  formData: object;
+  formData: Record<string, any>;
+  datasource?: Datasource;
+  activeMetrics?: QueryFormMetric[];
+  onActiveMetricsChange?: (metrics: QueryFormMetric[]) => void;
+  onActiveMetricsReset?: () => void;
+  isOptionalMetricSelectorOpen?: boolean;
+  onOptionalMetricSelectorVisibilityChange?: (visible: boolean) => void;
   width: number;
   height: number;
   bigNumberComparisonData?: BigNumberComparisonData | null;
@@ -71,6 +80,16 @@ const CrossFilterIcon = styled(Icons.ApartmentOutlined)`
     cursor: default;
     color: ${theme.colors.primary.base};
     line-height: 1.8;
+  `}
+`;
+
+const DescriptionInfoIcon = styled(Icons.InfoCircleOutlined)`
+  ${({ theme }) => css`
+    color: ${theme.colors.grayscale.base};
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: ${theme.typography.sizes.s}px;
+    line-height: 0 !important;
   `}
 `;
 
@@ -104,7 +123,7 @@ const ComparisonIndicator = styled.div<{
       border-radius: ${borderRadius} !important;
       margin: 0 !important;
       border: 0 !important;
-      background-color: ${bgColor ? bgColor : 'rgba(0, 0, 0, 0)'} !important;
+      background-color: ${bgColor || 'rgba(0, 0, 0, 0)'} !important;
       padding: ${padding} !important;
       box-shadow: none !important;
       outline: none !important;
@@ -142,7 +161,11 @@ const TrendIconContainer = styled.span<{
       max-height: ${iconSize}px !important;
       width: auto !important;
       min-width: ${iconSize}px !important;
-      ${bgColor !== 'transparent' ? `background-color: ${bgColor} !important;` : ''}
+      ${
+        bgColor !== 'transparent'
+          ? `background-color: ${bgColor} !important;`
+          : ''
+      }
       border-radius: ${borderRadius} !important;
       padding: 0 !important;
       margin-right: ${iconSize * 0.25}px !important;
@@ -175,7 +198,7 @@ const ChartIconContainer = styled.div<{
     } else if (iconShape === 'rounded') {
       borderRadius = '8px';
     }
-    
+
     return `
       width: ${iconSize}px !important;
       height: ${iconSize}px !important;
@@ -319,6 +342,12 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   isFullSize,
   chartStatus,
   formData,
+  datasource,
+  activeMetrics = [],
+  onActiveMetricsChange = () => ({}),
+  onActiveMetricsReset = () => ({}),
+  isOptionalMetricSelectorOpen = false,
+  onOptionalMetricSelectorVisibilityChange = () => ({}),
   width,
   height,
   bigNumberComparisonData,
@@ -373,7 +402,10 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     }
 
     // Check trend comparison position - only render in slice header if position is 'top'
-    const trendComparisonPosition = formData?.trend_comparison_position ?? formData?.trendComparisonPosition ?? 'top';
+    const trendComparisonPosition =
+      formData?.trend_comparison_position ??
+      formData?.trendComparisonPosition ??
+      'top';
     if (trendComparisonPosition !== 'top') {
       return null; // Don't render in slice header if position is 'middle'
     }
@@ -390,7 +422,9 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     );
 
     const showNeutralTrendChip =
-      formData?.show_neutral_trend_chip ?? formData?.showNeutralTrendChip ?? true;
+      formData?.show_neutral_trend_chip ??
+      formData?.showNeutralTrendChip ??
+      true;
     if (comparisonIndicator === 'neutral' && !showNeutralTrendChip) {
       return null;
     }
@@ -398,18 +432,34 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     // Extract uptrend/downtrend icon properties from formData
     const isUptrend = comparisonIndicator === 'positive';
     const isNeutral = comparisonIndicator === 'neutral';
-    const uptrendIconType = formData?.uptrend_icon_type ?? formData?.uptrendIconType;
-    const uptrendIconUrl = formData?.uptrend_icon_url ?? formData?.uptrendIconUrl;
-    const uptrendIconBackgroundColorRaw = formData?.uptrend_icon_background_color ?? formData?.uptrendIconBackgroundColor;
-    const uptrendIconTextColorRaw = formData?.uptrend_icon_text_color ?? formData?.uptrendIconTextColor;
-    const uptrendIconShape = formData?.uptrend_icon_shape ?? formData?.uptrendIconShape ?? 'circle';
-    const downtrendIconType = formData?.downtrend_icon_type ?? formData?.downtrendIconType;
-    const downtrendIconUrl = formData?.downtrend_icon_url ?? formData?.downtrendIconUrl;
-    const downtrendIconBackgroundColorRaw = formData?.downtrend_icon_background_color ?? formData?.downtrendIconBackgroundColor;
-    const downtrendIconTextColorRaw = formData?.downtrend_icon_text_color ?? formData?.downtrendIconTextColor;
-    const downtrendIconShape = formData?.downtrend_icon_shape ?? formData?.downtrendIconShape ?? 'circle';
-    const neutralIconType = formData?.neutral_icon_type ?? formData?.neutralIconType;
-    const neutralIconUrl = formData?.neutral_icon_url ?? formData?.neutralIconUrl;
+    const uptrendIconType =
+      formData?.uptrend_icon_type ?? formData?.uptrendIconType;
+    const uptrendIconUrl =
+      formData?.uptrend_icon_url ?? formData?.uptrendIconUrl;
+    const uptrendIconBackgroundColorRaw =
+      formData?.uptrend_icon_background_color ??
+      formData?.uptrendIconBackgroundColor;
+    const uptrendIconTextColorRaw =
+      formData?.uptrend_icon_text_color ?? formData?.uptrendIconTextColor;
+    const uptrendIconShape =
+      formData?.uptrend_icon_shape ?? formData?.uptrendIconShape ?? 'circle';
+    const downtrendIconType =
+      formData?.downtrend_icon_type ?? formData?.downtrendIconType;
+    const downtrendIconUrl =
+      formData?.downtrend_icon_url ?? formData?.downtrendIconUrl;
+    const downtrendIconBackgroundColorRaw =
+      formData?.downtrend_icon_background_color ??
+      formData?.downtrendIconBackgroundColor;
+    const downtrendIconTextColorRaw =
+      formData?.downtrend_icon_text_color ?? formData?.downtrendIconTextColor;
+    const downtrendIconShape =
+      formData?.downtrend_icon_shape ??
+      formData?.downtrendIconShape ??
+      'circle';
+    const neutralIconType =
+      formData?.neutral_icon_type ?? formData?.neutralIconType;
+    const neutralIconUrl =
+      formData?.neutral_icon_url ?? formData?.neutralIconUrl;
     const neutralIconBackgroundColorRaw =
       formData?.neutral_icon_background_color ??
       formData?.neutralIconBackgroundColor ??
@@ -418,9 +468,16 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       formData?.neutral_icon_text_color ??
       formData?.neutralIconTextColor ??
       '#F06D0F';
-    const neutralIconShape = formData?.neutral_icon_shape ?? formData?.neutralIconShape ?? 'circle';
-    const trendComparisonShape = formData?.trend_comparison_shape ?? formData?.trendComparisonShape ?? 'pill';
-    const trendComparisonSize = formData?.trend_comparison_size ?? formData?.trendComparisonSize ?? 'large';
+    const neutralIconShape =
+      formData?.neutral_icon_shape ?? formData?.neutralIconShape ?? 'circle';
+    const trendComparisonShape =
+      formData?.trend_comparison_shape ??
+      formData?.trendComparisonShape ??
+      'pill';
+    const trendComparisonSize =
+      formData?.trend_comparison_size ??
+      formData?.trendComparisonSize ??
+      'large';
 
     // Convert color object to CSS string if needed
     const convertColorToString = (color: any): string | null => {
@@ -428,26 +485,40 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       if (typeof color === 'string') {
         return color;
       }
-      if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+      if (
+        color &&
+        typeof color === 'object' &&
+        'r' in color &&
+        'g' in color &&
+        'b' in color
+      ) {
         const { r, g, b, a = 0 } = color; // Default to transparent (a = 0)
         return `rgba(${r}, ${g}, ${b}, ${a})`;
       }
       return null;
     };
 
-    const uptrendIconBackgroundColor = convertColorToString(uptrendIconBackgroundColorRaw);
-    const downtrendIconBackgroundColor = convertColorToString(downtrendIconBackgroundColorRaw);
-    const neutralIconBackgroundColor = convertColorToString(neutralIconBackgroundColorRaw);
+    const uptrendIconBackgroundColor = convertColorToString(
+      uptrendIconBackgroundColorRaw,
+    );
+    const downtrendIconBackgroundColor = convertColorToString(
+      downtrendIconBackgroundColorRaw,
+    );
+    const neutralIconBackgroundColor = convertColorToString(
+      neutralIconBackgroundColorRaw,
+    );
     const uptrendIconTextColor = convertColorToString(uptrendIconTextColorRaw);
-    const downtrendIconTextColor = convertColorToString(downtrendIconTextColorRaw);
+    const downtrendIconTextColor = convertColorToString(
+      downtrendIconTextColorRaw,
+    );
     const neutralIconTextColor = convertColorToString(neutralIconTextColorRaw);
 
     // Check if custom icon is provided
     const hasCustomIcon = isUptrend
-      ? (uptrendIconUrl && uptrendIconType)
+      ? uptrendIconUrl && uptrendIconType
       : isNeutral
-        ? (neutralIconType !== 'never' && neutralIconUrl && neutralIconType)
-        : (downtrendIconUrl && downtrendIconType);
+        ? neutralIconType !== 'never' && neutralIconUrl && neutralIconType
+        : downtrendIconUrl && downtrendIconType;
     const hideNeutralIcon = isNeutral && neutralIconType === 'never';
 
     // Get background color for the trend component (not just the icon)
@@ -457,7 +528,10 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       : isNeutral
         ? neutralIconBackgroundColor
         : downtrendIconBackgroundColor;
-    const hasTrendBgColor = trendBgColor !== null && trendBgColor !== undefined && (typeof trendBgColor === 'string' ? trendBgColor.trim() !== '' : true);
+    const hasTrendBgColor =
+      trendBgColor !== null &&
+      trendBgColor !== undefined &&
+      (typeof trendBgColor === 'string' ? trendBgColor.trim() !== '' : true);
 
     // Get text color for the trend component - use custom if provided, otherwise use default
     let indicatorColor: string;
@@ -527,13 +601,27 @@ const SliceHeader: FC<SliceHeaderProps> = ({
           {hasCustomIcon ? (
             <TrendIconContainer
               bgColor="transparent" // Icon container should be transparent since bg is on parent
-              iconShape={isUptrend ? uptrendIconShape : isNeutral ? neutralIconShape : downtrendIconShape}
+              iconShape={
+                isUptrend
+                  ? uptrendIconShape
+                  : isNeutral
+                    ? neutralIconShape
+                    : downtrendIconShape
+              }
               iconSize={iconSize} // Adjust icon size based on trend comparison size
             >
               <img
-                src={isUptrend ? uptrendIconUrl : isNeutral ? neutralIconUrl : downtrendIconUrl}
-                alt={isUptrend ? 'Uptrend' : isNeutral ? 'Neutral' : 'Downtrend'}
-                onError={(e) => {
+                src={
+                  isUptrend
+                    ? uptrendIconUrl
+                    : isNeutral
+                      ? neutralIconUrl
+                      : downtrendIconUrl
+                }
+                alt={
+                  isUptrend ? 'Uptrend' : isNeutral ? 'Neutral' : 'Downtrend'
+                }
+                onError={e => {
                   const target = e.target as HTMLImageElement;
                   const container = target.parentElement;
                   if (container) {
@@ -551,13 +639,13 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     );
   };
 
-  if (chartStatus === 'loading') {
+  if (chartStatus === 'loading' && !isOptionalMetricSelectorOpen) {
     return (
       <>
         <ChartHeaderStyles data-test="slice-header" ref={innerRef}>
           <div className="header-title" ref={headerRef}>
             <div
-              css={theme => css`
+              css={css`
                 width: 60%;
                 min-width: 160px;
               `}
@@ -571,32 +659,49 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     );
   }
   // Extract icon settings from formData for BigNumber charts
-  const isBigNumberChart = slice?.viz_type?.toLowerCase().includes('big_number');
+  const isBigNumberChart = slice?.viz_type
+    ?.toLowerCase()
+    .includes('big_number');
   const showIcon = formData?.show_icon ?? formData?.showIcon;
   const iconUrl = formData?.icon_url ?? formData?.iconUrl;
   const iconSize = formData?.icon_size ?? formData?.iconSize ?? 'medium';
-  const iconBackgroundColorRaw = formData?.icon_background_color ?? formData?.iconBackgroundColor ?? '#e8eaf6';
+  const iconBackgroundColorRaw =
+    formData?.icon_background_color ??
+    formData?.iconBackgroundColor ??
+    '#e8eaf6';
   const iconShape = formData?.icon_shape ?? formData?.iconShape ?? 'circle';
-  const iconPosition = formData?.icon_position ?? formData?.iconPosition ?? 'top-left';
-  
+  const iconPosition =
+    formData?.icon_position ?? formData?.iconPosition ?? 'top-left';
+
   // Convert color object to CSS string if needed
   const convertColorToString = (color: any): string => {
     if (typeof color === 'string') {
       return color;
     }
-    if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+    if (
+      color &&
+      typeof color === 'object' &&
+      'r' in color &&
+      'g' in color &&
+      'b' in color
+    ) {
       const { r, g, b, a = 1 } = color;
       return `rgba(${r}, ${g}, ${b}, ${a})`;
     }
     return '#e8eaf6'; // fallback
   };
-  
+
   const iconBackgroundColor = convertColorToString(iconBackgroundColorRaw);
 
   // Render icon for BigNumber charts - only render top-left in title
   const renderChartIcon = () => {
     // Only render icon in title if it's top-left position
-    if (!isBigNumberChart || !showIcon || !iconUrl || iconPosition !== 'top-left') {
+    if (
+      !isBigNumberChart ||
+      !showIcon ||
+      !iconUrl ||
+      iconPosition !== 'top-left'
+    ) {
       return null;
     }
 
@@ -607,7 +712,8 @@ const SliceHeader: FC<SliceHeaderProps> = ({
       large: 40,
       xlarge: 48,
     };
-    const iconSizePx = sizeMap[iconSize as keyof typeof sizeMap] ?? sizeMap.medium;
+    const iconSizePx =
+      sizeMap[iconSize as keyof typeof sizeMap] ?? sizeMap.medium;
 
     return (
       <ChartIconContainer
@@ -619,7 +725,7 @@ const SliceHeader: FC<SliceHeaderProps> = ({
         <img
           src={iconUrl}
           alt="Chart Icon"
-          onError={(e) => {
+          onError={e => {
             const target = e.target as HTMLImageElement;
             const container = target.parentElement;
             if (container) {
@@ -677,15 +783,7 @@ const SliceHeader: FC<SliceHeaderProps> = ({
           >
             {slice.description?.trim() && (
               <Tooltip title={slice.description}>
-                <Icons.InfoCircleOutlined
-                  style={{
-                    fontSize: '14px',
-                    color: '#999',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    lineHeight: '0 !important',
-                  }}
-                />
+                <DescriptionInfoIcon />
               </Tooltip>
             )}
           </h3>
@@ -736,6 +834,20 @@ const SliceHeader: FC<SliceHeaderProps> = ({
               >
                 <CrossFilterIcon iconSize="m" />
               </Tooltip>
+            )}
+            {!uiConfig.hideChartControls && (
+              <OptionalMetricSelector
+                activeMetrics={activeMetrics}
+                addDangerToast={addDangerToast}
+                dashboardId={dashboardId}
+                datasource={datasource}
+                formData={formData}
+                logEvent={logEvent}
+                onChange={onActiveMetricsChange}
+                onReset={onActiveMetricsReset}
+                onVisibleChange={onOptionalMetricSelectorVisibilityChange}
+                sliceId={slice.slice_id}
+              />
             )}
             {!uiConfig.hideChartControls && (
               <FiltersBadge chartId={slice.slice_id} />

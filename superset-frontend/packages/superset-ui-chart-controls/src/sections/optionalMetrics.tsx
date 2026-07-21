@@ -16,12 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { t } from '@superset-ui/core';
+import { ControlPanelSectionConfig } from '../types';
 
-export * from './sections';
-export * from './advancedAnalytics';
-export * from './annotationsAndLayers';
-export * from './forecastInterval';
-export * from './chartTitle';
-export * from './echartsTimeSeriesQuery';
-export * from './optionalMetrics';
-export * from './timeComparison';
+export const viewerMetricSelection: ControlPanelSectionConfig = {
+  label: t('Viewer metric selection'),
+  expanded: false,
+  tabOverride: 'data',
+  controlSetRows: [
+    ['enable_optional_metrics'],
+    ['optional_metrics'],
+    ['optional_metric_selection_mode'],
+    ['optional_metric_allow_default_deselection'],
+    ['optional_metric_min_active', 'optional_metric_max_active'],
+  ],
+};

@@ -379,6 +379,7 @@ const config: ControlPanelConfig = {
         ],
       ],
     },
+    sections.viewerMetricSelection,
     {
       label: t('Options'),
       expanded: true,
