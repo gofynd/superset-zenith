@@ -54,6 +54,10 @@ case "${1}" in
     echo "Starting web app..."
     /usr/bin/run-server.sh
     ;;
+  mcp)
+    echo "Starting MCP service..."
+    superset mcp run --host 0.0.0.0 --port 5008
+    ;;
   *)
     echo "Unknown Operation!!!"
     ;;
