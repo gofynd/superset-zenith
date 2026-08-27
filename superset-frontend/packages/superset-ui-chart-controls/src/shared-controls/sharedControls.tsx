@@ -245,7 +245,7 @@ const order_desc: SharedControlConfig<'CheckboxControl'> = {
   visibility: ({ controls }) =>
     Boolean(
       controls?.timeseries_limit_metric.value &&
-        !isEmpty(controls?.timeseries_limit_metric.value),
+      !isEmpty(controls?.timeseries_limit_metric.value),
     ),
 };
 
@@ -551,6 +551,68 @@ const optional_metric_max_active: SharedControlConfig<'TextControl'> = {
   renderTrigger: true,
 };
 
+const enable_replace_attribute: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable attribute replacement'),
+  default: false,
+  description: t(
+    'Allow dashboard viewers to temporarily replace the chart dimension with author-approved attributes.',
+  ),
+  renderTrigger: true,
+};
+
+const replace_attribute_target: typeof dndGroupByControl = {
+  ...dndGroupByControl,
+  label: t('Default attribute'),
+  multi: false,
+  default: null,
+  description: t(
+    'The saved chart dimension that dashboard viewers are allowed to replace.',
+  ),
+};
+
+const replace_attribute_attributes: typeof dndGroupByControl = {
+  ...dndGroupByControl,
+  label: t('Replacement attributes'),
+  default: [],
+  description: t(
+    'Dataset attributes dashboard viewers can use instead of the default attribute.',
+  ),
+};
+
+const replace_attribute_label: SharedControlConfig<'TextControl'> = {
+  type: 'TextControl',
+  label: t('Viewer control label'),
+  default: 'View by',
+  description: t('The label shown to dashboard viewers for this selector.'),
+  renderTrigger: true,
+};
+
+const replace_attribute_persistence: SharedControlConfig<'SelectControl'> = {
+  type: 'SelectControl',
+  label: t('Remember selection'),
+  default: 'session',
+  clearable: false,
+  choices: [
+    ['session', t('Dashboard session')],
+    ['none', t('Do not remember')],
+  ],
+  description: t(
+    'Choose whether a viewer selection should persist for the current dashboard session.',
+  ),
+  renderTrigger: true,
+};
+
+const replace_attribute_config_json: SharedControlConfig<'TextAreaControl'> = {
+  type: 'TextAreaControl',
+  label: t('Advanced replacement metadata'),
+  default: '',
+  description: t(
+    'Optional JSON configuration for display labels, groups, descriptions, and per-attribute limits.',
+  ),
+  renderTrigger: true,
+};
+
 export default {
   metrics: dndAdhocMetricsControl,
   metric: dndAdhocMetricControl,
@@ -560,6 +622,12 @@ export default {
   optional_metric_allow_default_deselection,
   optional_metric_min_active,
   optional_metric_max_active,
+  enable_replace_attribute,
+  replace_attribute_target,
+  replace_attribute_attributes,
+  replace_attribute_label,
+  replace_attribute_persistence,
+  replace_attribute_config_json,
   datasource: datasourceControl,
   viz_type,
   color_picker,

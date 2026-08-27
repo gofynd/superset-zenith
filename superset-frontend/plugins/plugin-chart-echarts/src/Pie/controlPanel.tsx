@@ -26,6 +26,7 @@ import {
   D3_FORMAT_OPTIONS,
   D3_TIME_FORMAT_OPTIONS,
   getStandardizedControls,
+  sections,
   sharedControls,
 } from '@superset-ui/chart-controls';
 import { DEFAULT_FORM_DATA } from './types';
@@ -64,6 +65,7 @@ const config: ControlPanelConfig = {
         ],
       ],
     },
+    sections.viewerAttributeReplacement,
     {
       label: t('Chart Options'),
       expanded: true,

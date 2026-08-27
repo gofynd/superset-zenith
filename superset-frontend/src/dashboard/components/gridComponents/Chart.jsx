@@ -40,6 +40,14 @@ import {
   getDefaultMetrics,
   getOptionalMetricConfigSignature,
 } from 'src/dashboard/util/optionalMetrics';
+import {
+  applyActiveAttributeToFormData,
+  getReplaceAttributeConfigSignature,
+  getReplaceAttributeSettings,
+  getReplaceAttributeStorageKey,
+  isValidReplaceAttribute,
+  renderViewerTitleTemplate,
+} from 'src/dashboard/util/replaceAttributes';
 
 import SliceHeader from '../SliceHeader';
 import MissingChart from '../MissingChart';
@@ -184,7 +192,9 @@ class Chart extends Component {
       height: props.height,
       descriptionHeight: 0,
       activeMetrics: null,
+      activeAttribute: this.getInitialViewerAttribute(props),
       isOptionalMetricSelectorOpen: false,
+      isReplaceAttributeSelectorOpen: false,
     };
 
     this.changeFilter = this.changeFilter.bind(this);
@@ -205,6 +215,12 @@ class Chart extends Component {
     this.handleViewerMetricsReset = this.handleViewerMetricsReset.bind(this);
     this.handleViewerMetricSelectorVisibilityChange =
       this.handleViewerMetricSelectorVisibilityChange.bind(this);
+    this.handleViewerAttributeChange =
+      this.handleViewerAttributeChange.bind(this);
+    this.handleViewerAttributeReset =
+      this.handleViewerAttributeReset.bind(this);
+    this.handleViewerAttributeSelectorVisibilityChange =
+      this.handleViewerAttributeSelectorVisibilityChange.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -216,8 +232,11 @@ class Chart extends Component {
       nextState.height !== this.state.height ||
       nextState.descriptionHeight !== this.state.descriptionHeight ||
       nextState.activeMetrics !== this.state.activeMetrics ||
+      nextState.activeAttribute !== this.state.activeAttribute ||
       nextState.isOptionalMetricSelectorOpen !==
         this.state.isOptionalMetricSelectorOpen ||
+      nextState.isReplaceAttributeSelectorOpen !==
+        this.state.isReplaceAttributeSelectorOpen ||
       !isEqual(nextProps.datasource, this.props.datasource)
     ) {
       return true;
@@ -308,6 +327,82 @@ class Chart extends Component {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({ activeMetrics: null });
     }
+    if (
+      this.state.activeAttribute &&
+      (getReplaceAttributeConfigSignature(prevProps.formData) !==
+        getReplaceAttributeConfigSignature(this.props.formData) ||
+        !isValidReplaceAttribute(
+          this.props.formData,
+          this.state.activeAttribute,
+          this.props.datasource,
+        ))
+    ) {
+      this.clearPersistedViewerAttribute();
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ activeAttribute: null });
+    }
+  }
+
+  getViewerAttributeStorageKey(props = this.props) {
+    return getReplaceAttributeStorageKey(
+      props.dashboardId,
+      props.slice?.slice_id,
+    );
+  }
+
+  getInitialViewerAttribute(props) {
+    if (getReplaceAttributeSettings(props.formData).persistence === 'none') {
+      return null;
+    }
+    const storageKey = this.getViewerAttributeStorageKey(props);
+    if (!storageKey || typeof window === 'undefined') {
+      return null;
+    }
+    try {
+      const persistedAttribute = window.sessionStorage.getItem(storageKey);
+      if (!persistedAttribute) {
+        return null;
+      }
+      const parsedAttribute = JSON.parse(persistedAttribute);
+      return isValidReplaceAttribute(
+        props.formData,
+        parsedAttribute,
+        props.datasource,
+      )
+        ? parsedAttribute
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  persistViewerAttribute(activeAttribute) {
+    const storageKey = this.getViewerAttributeStorageKey();
+    if (!storageKey || typeof window === 'undefined') {
+      return;
+    }
+    try {
+      if (
+        getReplaceAttributeSettings(this.props.formData).persistence === 'none'
+      ) {
+        window.sessionStorage.removeItem(storageKey);
+        return;
+      }
+      if (activeAttribute) {
+        window.sessionStorage.setItem(
+          storageKey,
+          JSON.stringify(activeAttribute),
+        );
+      } else {
+        window.sessionStorage.removeItem(storageKey);
+      }
+    } catch {
+      // Ignore storage failures; the in-memory viewer state still works.
+    }
+  }
+
+  clearPersistedViewerAttribute() {
+    this.persistViewerAttribute(null);
   }
 
   getDescriptionHeight() {
@@ -382,11 +477,23 @@ class Chart extends Component {
     return this.state.activeMetrics || getDefaultMetrics(this.props.formData);
   }
 
-  getViewerFormData(activeMetrics = this.getViewerActiveMetrics()) {
-    if (!this.state.activeMetrics) {
-      return this.props.formData;
+  getViewerFormData(
+    activeMetrics = this.getViewerActiveMetrics(),
+    activeAttribute = this.state.activeAttribute,
+  ) {
+    let viewerFormData = this.state.activeMetrics
+      ? applyActiveMetricsToFormData(this.props.formData, activeMetrics)
+      : this.props.formData;
+
+    if (activeAttribute) {
+      viewerFormData = applyActiveAttributeToFormData(
+        viewerFormData,
+        activeAttribute,
+        this.props.datasource,
+      );
     }
-    return applyActiveMetricsToFormData(this.props.formData, activeMetrics);
+
+    return viewerFormData;
   }
 
   handleViewerMetricsChange(activeMetrics) {
@@ -422,6 +529,44 @@ class Chart extends Component {
 
   handleViewerMetricSelectorVisibilityChange(isOptionalMetricSelectorOpen) {
     this.setState({ isOptionalMetricSelectorOpen });
+  }
+
+  handleViewerAttributeChange(activeAttribute) {
+    const viewerFormData = this.getViewerFormData(
+      this.getViewerActiveMetrics(),
+      activeAttribute,
+    );
+    this.persistViewerAttribute(activeAttribute);
+    this.setState({ activeAttribute }, () => {
+      this.props.refreshChart(
+        this.props.chart.id,
+        false,
+        this.props.dashboardId,
+        viewerFormData,
+      );
+    });
+  }
+
+  handleViewerAttributeReset() {
+    const viewerFormData = this.getViewerFormData(
+      this.getViewerActiveMetrics(),
+      null,
+    );
+    this.clearPersistedViewerAttribute();
+    this.setState({ activeAttribute: null }, () => {
+      this.props.refreshChart(
+        this.props.chart.id,
+        false,
+        this.props.dashboardId,
+        viewerFormData,
+      );
+    });
+  }
+
+  handleViewerAttributeSelectorVisibilityChange(
+    isReplaceAttributeSelectorOpen,
+  ) {
+    this.setState({ isReplaceAttributeSelectorOpen });
   }
 
   onExploreChart = async clickEvent => {
@@ -545,7 +690,20 @@ class Chart extends Component {
 
     const { width } = this.state;
     const viewerActiveMetrics = this.getViewerActiveMetrics();
-    const viewerFormData = this.getViewerFormData(viewerActiveMetrics);
+    const viewerActiveAttribute = this.state.activeAttribute;
+    const viewerFormData = this.getViewerFormData(
+      viewerActiveMetrics,
+      viewerActiveAttribute,
+    );
+    const viewerSliceName = editMode
+      ? sliceName
+      : renderViewerTitleTemplate({
+          title: sliceName,
+          formData,
+          datasource,
+          activeAttribute: viewerActiveAttribute,
+          activeMetrics: viewerActiveMetrics,
+        });
     // this prevents throwing in the case that a gridComponent
     // references a chart that is not associated with the dashboard
     if (!chart || !slice) {
@@ -700,7 +858,7 @@ class Chart extends Component {
           exportFullCSV={this.exportFullCSV}
           exportFullXLSX={this.exportFullXLSX}
           updateSliceName={updateSliceName}
-          sliceName={sliceName}
+          sliceName={viewerSliceName}
           supersetCanExplore={supersetCanExplore}
           supersetCanShare={supersetCanShare}
           supersetCanCSV={supersetCanCSV}
@@ -720,6 +878,15 @@ class Chart extends Component {
           onActiveMetricsReset={this.handleViewerMetricsReset}
           onOptionalMetricSelectorVisibilityChange={
             this.handleViewerMetricSelectorVisibilityChange
+          }
+          activeAttribute={viewerActiveAttribute}
+          isReplaceAttributeSelectorOpen={
+            this.state.isReplaceAttributeSelectorOpen
+          }
+          onActiveAttributeChange={this.handleViewerAttributeChange}
+          onActiveAttributeReset={this.handleViewerAttributeReset}
+          onReplaceAttributeSelectorVisibilityChange={
+            this.handleViewerAttributeSelectorVisibilityChange
           }
           width={width}
           height={this.getHeaderHeight()}
@@ -784,7 +951,7 @@ class Chart extends Component {
             isInView={isInView}
             emitCrossFilters={emitCrossFilters}
             description={slice.description}
-            title={slice.slice_name}
+            title={viewerSliceName}
           />
         </ChartWrapper>
 

@@ -40,7 +40,9 @@ import type { Datasource } from 'src/dashboard/types';
 import { getSliceHeaderTooltip } from 'src/dashboard/util/getSliceHeaderTooltip';
 import { DashboardPageIdContext } from 'src/dashboard/containers/DashboardPage';
 import OptionalMetricSelector from 'src/dashboard/components/OptionalMetricSelector';
-import type { QueryFormMetric } from '@superset-ui/core';
+import ReplaceAttributeSelector from 'src/dashboard/components/ReplaceAttributeSelector';
+import { hasReplaceAttributes } from 'src/dashboard/util/replaceAttributes';
+import type { QueryFormColumn, QueryFormMetric } from '@superset-ui/core';
 
 // Inline type definition to avoid import issues
 interface BigNumberComparisonData {
@@ -68,6 +70,11 @@ type SliceHeaderProps = SliceHeaderControlsProps & {
   onActiveMetricsReset?: () => void;
   isOptionalMetricSelectorOpen?: boolean;
   onOptionalMetricSelectorVisibilityChange?: (visible: boolean) => void;
+  activeAttribute?: QueryFormColumn | null;
+  onActiveAttributeChange?: (attribute: QueryFormColumn) => void;
+  onActiveAttributeReset?: () => void;
+  isReplaceAttributeSelectorOpen?: boolean;
+  onReplaceAttributeSelectorVisibilityChange?: (visible: boolean) => void;
   width: number;
   height: number;
   bigNumberComparisonData?: BigNumberComparisonData | null;
@@ -272,7 +279,7 @@ const ChartHeaderStyles = styled.div`
     & > .header-controls {
       display: flex;
       align-items: center;
-      height: 24px;
+      min-height: 24px;
 
       & > * {
         margin-left: ${theme.gridUnit * 2}px;
@@ -348,6 +355,11 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   onActiveMetricsReset = () => ({}),
   isOptionalMetricSelectorOpen = false,
   onOptionalMetricSelectorVisibilityChange = () => ({}),
+  activeAttribute = null,
+  onActiveAttributeChange = () => ({}),
+  onActiveAttributeReset = () => ({}),
+  isReplaceAttributeSelectorOpen = false,
+  onReplaceAttributeSelectorVisibilityChange = () => ({}),
   width,
   height,
   bigNumberComparisonData,
@@ -363,6 +375,10 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   );
   const isCrossFiltersEnabled = useSelector<RootState, boolean>(
     ({ dashboardInfo }) => dashboardInfo.crossFiltersEnabled,
+  );
+  const hasReplaceAttributeControls = hasReplaceAttributes(
+    formData,
+    datasource,
   );
 
   const canExplore = !editMode && supersetCanExplore;
@@ -639,7 +655,12 @@ const SliceHeader: FC<SliceHeaderProps> = ({
     );
   };
 
-  if (chartStatus === 'loading' && !isOptionalMetricSelectorOpen) {
+  if (
+    chartStatus === 'loading' &&
+    !isOptionalMetricSelectorOpen &&
+    !isReplaceAttributeSelectorOpen &&
+    !hasReplaceAttributeControls
+  ) {
     return (
       <>
         <ChartHeaderStyles data-test="slice-header" ref={innerRef}>
@@ -834,6 +855,20 @@ const SliceHeader: FC<SliceHeaderProps> = ({
               >
                 <CrossFilterIcon iconSize="m" />
               </Tooltip>
+            )}
+            {!uiConfig.hideChartControls && (
+              <ReplaceAttributeSelector
+                activeAttribute={activeAttribute}
+                chartWidth={width}
+                dashboardId={dashboardId}
+                datasource={datasource}
+                formData={formData}
+                logEvent={logEvent}
+                onChange={onActiveAttributeChange}
+                onReset={onActiveAttributeReset}
+                onVisibleChange={onReplaceAttributeSelectorVisibilityChange}
+                sliceId={slice.slice_id}
+              />
             )}
             {!uiConfig.hideChartControls && (
               <OptionalMetricSelector

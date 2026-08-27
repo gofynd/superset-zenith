@@ -279,6 +279,7 @@ function createAxisControl(axis: 'x' | 'y'): ControlSetRow[] {
 const config: ControlPanelConfig = {
   controlPanelSections: [
     sections.echartsTimeSeriesQueryWithXAxisSort,
+    sections.viewerAttributeReplacement,
     sections.viewerMetricSelection,
     sections.advancedAnalyticsControls,
     sections.annotationsAndLayersControls,

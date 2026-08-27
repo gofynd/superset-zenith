@@ -60,8 +60,7 @@ function getQueryMode(controls: ControlStateMapping): QueryMode {
     return mode as QueryMode;
   }
   const rawColumns = controls?.all_columns?.value as
-    | QueryFormColumn[]
-    | undefined;
+    QueryFormColumn[] | undefined;
   const hasRawColumns = rawColumns && rawColumns.length > 0;
   return hasRawColumns ? QueryMode.Raw : QueryMode.Aggregate;
 }
@@ -483,6 +482,7 @@ const config: ControlPanelConfig = {
         ],
       ],
     },
+    sections.viewerAttributeReplacement,
     sections.viewerMetricSelection,
     {
       label: t('Options'),
@@ -574,8 +574,7 @@ const config: ControlPanelConfig = {
               mapStateToProps: (state: any) => ({
                 columns: state.datasource?.columns || [],
                 queryResponse: state.chart?.queriesResponse?.[0] as
-                  | ChartDataResponseResult
-                  | undefined,
+                  ChartDataResponseResult | undefined,
               }),
             },
           },
@@ -596,8 +595,7 @@ const config: ControlPanelConfig = {
               mapStateToProps(explore, _, chart) {
                 return {
                   queryResponse: chart?.queriesResponse?.[0] as
-                    | ChartDataResponseResult
-                    | undefined,
+                    ChartDataResponseResult | undefined,
                 };
               },
             },
@@ -791,7 +789,7 @@ const config: ControlPanelConfig = {
                   'verbose_map',
                 )
                   ? (explore?.datasource as Dataset)?.verbose_map
-                  : explore?.datasource?.columns ?? {};
+                  : (explore?.datasource?.columns ?? {});
                 const chartStatus = chart?.chartStatus;
                 const { colnames, coltypes } =
                   chart?.queriesResponse?.[0] ?? {};
