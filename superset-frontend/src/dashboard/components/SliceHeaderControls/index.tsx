@@ -839,6 +839,7 @@ const SliceHeaderControls = (props: SliceHeaderControlsPropsWithRouter) => {
                 isRequest
                 isVisible
                 canDownload={!!props.supersetCanCSV}
+                useTitleCase={true}
               />
             }
           />

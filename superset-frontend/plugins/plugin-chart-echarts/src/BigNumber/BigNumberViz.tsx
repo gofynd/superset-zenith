@@ -301,6 +301,7 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
 
   renderComparisonIndicator(fontSize?: number) {
     const {
+      bigNumber,
       percentageChange,
       comparisonIndicator,
       trendComparisonPosition = 'top',
@@ -329,10 +330,16 @@ class BigNumberVis extends PureComponent<BigNumberVizProps> {
       return null;
     }
 
+    // Hide trend section when bigNumber is null or 0
+    if (bigNumber === null || bigNumber === 0) {
+      return null;
+    }
+
     // Check if we have comparison data
     if (
       percentageChange === undefined ||
       percentageChange === null ||
+      percentageChange === 0 ||
       comparisonIndicator === undefined
     ) {
       return null;

@@ -165,11 +165,13 @@ const FormatPickerLabel = styled.span`
 
 const DataTableTemporalHeaderCell = ({
   columnName,
+  displayName,
   onTimeColumnChange,
   datasourceId,
   isOriginalTimeColumn,
 }: {
   columnName: string;
+  displayName?: string;
   onTimeColumnChange: (
     columnName: string,
     columnType: FormatPickerValue,
@@ -178,6 +180,7 @@ const DataTableTemporalHeaderCell = ({
   isOriginalTimeColumn: boolean;
 }) => {
   const theme = useTheme();
+  const displayColumnName = displayName || columnName;
 
   const onChange = (e: any) => {
     onTimeColumnChange(columnName, e.target.value);
@@ -225,10 +228,10 @@ const DataTableTemporalHeaderCell = ({
           onClick={e => e.stopPropagation()}
         />
       </Popover>
-      {columnName}
+      {displayColumnName}
     </span>
   ) : (
-    <span>{columnName}</span>
+    <span>{displayColumnName}</span>
   );
 };
 
@@ -260,6 +263,29 @@ export const useFilteredTableData = (
 
 const timeFormatter = getTimeFormatter(TimeFormats.DATABASE_DATETIME);
 
+/**
+ * Converts a string to title case
+ * Handles underscores, spaces, and other separators
+ * Example: "user_name" -> "User Name", "totalAmount" -> "Total Amount"
+ */
+const toTitleCase = (str: string): string => {
+  if (!str) return str;
+  
+  // Replace underscores and hyphens with spaces, then split by spaces
+  // Also handle camelCase by inserting spaces before capital letters
+  const spaced = str
+    .replace(/_/g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .trim();
+  
+  // Capitalize first letter of each word
+  return spaced
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 export const useTableColumns = (
   colnames?: string[],
   coltypes?: GenericDataType[],
@@ -268,6 +294,7 @@ export const useTableColumns = (
   isVisible?: boolean,
   moreConfigs?: { [key: string]: Partial<Column> },
   allowHTML?: boolean,
+  useTitleCase?: boolean,
 ) => {
   const [originalFormattedTimeColumns, setOriginalFormattedTimeColumns] =
     useState<string[]>(getTimeColumns(datasourceId));
@@ -318,21 +345,23 @@ export const useTableColumns = (
                   : -1;
               const isOriginalTimeColumn =
                 originalFormattedTimeColumns.includes(key);
+              const displayColumnName = useTitleCase ? toTitleCase(key) : key;
               return {
                 // react-table requires a non-empty id, therefore we introduce a fallback value in case the key is empty
                 id: key || index,
-                accessor: row => row[key],
+                accessor: (row: Record<string, any>) => row[key],
                 Header:
                   colType === GenericDataType.Temporal &&
                   typeof firstValue !== 'string' ? (
                     <DataTableTemporalHeaderCell
                       columnName={key}
+                      displayName={useTitleCase ? displayColumnName : undefined}
                       datasourceId={datasourceId}
                       onTimeColumnChange={onTimeColumnChange}
                       isOriginalTimeColumn={isOriginalTimeColumn}
                     />
                   ) : (
-                    key
+                    displayColumnName
                   ),
                 Cell: ({ value }) => {
                   if (value === true) {
@@ -356,7 +385,7 @@ export const useTableColumns = (
                   }
                   return String(value);
                 },
-                ...moreConfigs?.[key],
+                ...(moreConfigs?.[key] || {}),
               } as Column;
             })
         : [],
@@ -367,6 +396,7 @@ export const useTableColumns = (
       datasourceId,
       moreConfigs,
       originalFormattedTimeColumns,
+      useTitleCase,
     ],
   );
 };

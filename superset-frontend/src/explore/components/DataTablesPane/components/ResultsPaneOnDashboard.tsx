@@ -54,6 +54,7 @@ export const ResultsPaneOnDashboard = ({
   isVisible,
   dataSize = 50,
   canDownload,
+  useTitleCase = false,
 }: ResultsPaneProps) => {
   const resultsPanes = useResultsPane({
     errorMessage,
@@ -65,6 +66,7 @@ export const ResultsPaneOnDashboard = ({
     dataSize,
     isVisible,
     canDownload,
+    useTitleCase,
   });
 
   if (resultsPanes.length === 1) {

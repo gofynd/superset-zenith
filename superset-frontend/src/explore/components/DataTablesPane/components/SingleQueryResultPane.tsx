@@ -35,6 +35,7 @@ export const SingleQueryResultPane = ({
   dataSize = 50,
   isVisible,
   canDownload,
+  useTitleCase = false,
 }: SingleQueryResultPaneProp) => {
   const [filterText, setFilterText] = useState('');
 
@@ -48,6 +49,7 @@ export const SingleQueryResultPane = ({
     isVisible,
     {}, // moreConfig
     true, // allowHTML
+    useTitleCase, // useTitleCase - only enabled for "View as table" modal
   );
   const filteredData = useFilteredTableData(filterText, data);
 

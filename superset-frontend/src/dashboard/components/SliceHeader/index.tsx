@@ -677,15 +677,33 @@ const SliceHeader: FC<SliceHeaderProps> = ({
           >
             {slice.description?.trim() && (
               <Tooltip title={slice.description}>
-                <Icons.InfoCircleOutlined
-                  style={{
-                    fontSize: '14px',
-                    color: '#999',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    lineHeight: '0 !important',
-                  }}
-                />
+                {formData?.info_icon_url ? (
+                  <img
+                    src={formData.info_icon_url}
+                    alt="Info"
+                    style={{
+                      width: formData.info_icon_width ? `${formData.info_icon_width}px` : '14px',
+                      height: formData.info_icon_height ? `${formData.info_icon_height}px` : '14px',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      objectFit: 'contain',
+                    }}
+                    onError={(e) => {
+                      // Hide icon if it fails to load
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <Icons.InfoCircleOutlined
+                    style={{
+                      fontSize: '14px',
+                      color: '#999',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      lineHeight: '0 !important',
+                    }}
+                  />
+                )}
               </Tooltip>
             )}
           </h3>
