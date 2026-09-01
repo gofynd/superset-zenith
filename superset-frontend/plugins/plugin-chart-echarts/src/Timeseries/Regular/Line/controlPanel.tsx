@@ -59,6 +59,8 @@ const {
 const config: ControlPanelConfig = {
   controlPanelSections: [
     sections.echartsTimeSeriesQueryWithXAxisSort,
+    sections.viewerAttributeReplacement,
+    sections.viewerMetricSelection,
     sections.advancedAnalyticsControls,
     sections.annotationsAndLayersControls,
     sections.forecastIntervalControls,

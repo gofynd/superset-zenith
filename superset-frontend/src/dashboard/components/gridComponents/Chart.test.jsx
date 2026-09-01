@@ -104,6 +104,9 @@ test('should calculate the description height if it has one and isExpanded=true'
 });
 
 test('should call refreshChart when SliceHeader calls forceRefresh', () => {
+  global.featureFlags = {
+    [FeatureFlag.EnableChartForceRefresh]: true,
+  };
   const refreshChart = jest.fn();
   const { getByText, getByRole } = setup({ refreshChart });
   fireEvent.click(getByRole('button', { name: 'More Options' }));

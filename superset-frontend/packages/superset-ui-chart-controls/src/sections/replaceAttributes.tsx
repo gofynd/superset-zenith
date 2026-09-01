@@ -16,13 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { t } from '@superset-ui/core';
+import { ControlPanelSectionConfig } from '../types';
 
-export * from './sections';
-export * from './advancedAnalytics';
-export * from './annotationsAndLayers';
-export * from './forecastInterval';
-export * from './chartTitle';
-export * from './echartsTimeSeriesQuery';
-export * from './optionalMetrics';
-export * from './replaceAttributes';
-export * from './timeComparison';
+export const viewerAttributeReplacement: ControlPanelSectionConfig = {
+  label: t('Viewer attribute replacement'),
+  expanded: false,
+  tabOverride: 'data',
+  controlSetRows: [
+    ['enable_replace_attribute'],
+    ['replace_attribute_target'],
+    ['replace_attribute_attributes'],
+    ['replace_attribute_label', 'replace_attribute_persistence'],
+    ['replace_attribute_config_json'],
+  ],
+};
