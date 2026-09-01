@@ -71,6 +71,7 @@ export interface DataTableProps<D extends object> extends TableOptions<D> {
   onColumnOrderChange: () => void;
   renderGroupingHeaders?: () => JSX.Element;
   renderTimeComparisonDropdown?: () => JSX.Element;
+  renderHierarchyControls?: () => JSX.Element | undefined;
 }
 
 export interface RenderHTMLCellProps extends HTMLProps<HTMLTableCellElement> {
@@ -105,6 +106,7 @@ export default typedMemo(function DataTable<D extends object>({
   onColumnOrderChange,
   renderGroupingHeaders,
   renderTimeComparisonDropdown,
+  renderHierarchyControls,
   ...moreUseTableOptions
 }: DataTableProps<D>): JSX.Element {
   const tableHooks: PluginHook<D>[] = [
@@ -122,7 +124,10 @@ export default typedMemo(function DataTable<D extends object>({
   const pageSizeRef = useRef([initialPageSize, resultsSize]);
   const hasPagination = initialPageSize > 0 && resultsSize > 0; // pageSize == 0 means no pagination
   const hasGlobalControl =
-    hasPagination || !!searchInput || renderTimeComparisonDropdown;
+    hasPagination ||
+    !!searchInput ||
+    Boolean(renderTimeComparisonDropdown) ||
+    Boolean(renderHierarchyControls);
   const initialState = {
     ...initialState_,
     // zero length means all pages, the `usePagination` plugin does not
@@ -362,6 +367,7 @@ export default typedMemo(function DataTable<D extends object>({
     >
       {hasGlobalControl ? (
         <div ref={globalControlRef} className="form-inline dt-controls">
+          {renderHierarchyControls ? renderHierarchyControls() : null}
           <div className="row">
             <div
               className={renderTimeComparisonDropdown ? 'col-sm-5' : 'col-sm-6'}

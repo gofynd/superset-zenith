@@ -21,6 +21,7 @@ import {
   ChartDataResponseResult,
   ensureIsArray,
   GenericDataType,
+  getColumnLabel,
   isAdhocColumn,
   isPhysicalColumn,
   QueryFormColumn,
@@ -50,6 +51,8 @@ import { isEmpty } from 'lodash';
 import { PAGE_SIZE_OPTIONS } from './consts';
 import { ColorSchemeEnum } from './types';
 import HyperlinkConfigControl from './controls/HyperlinkConfigControl';
+
+const MAX_HIERARCHY_DIMENSIONS = 6;
 
 function getQueryMode(controls: ControlStateMapping): QueryMode {
   const mode = controls?.query_mode?.value;
@@ -82,6 +85,17 @@ const validateAggControlValues = (
   return areControlsEmpty && isAggMode({ controls })
     ? [t('Group By, Metrics or Percentage Metrics must have a value')]
     : [];
+};
+
+const getDimensionLabel = (
+  column: QueryFormColumn,
+  datasource?: Dataset | null,
+) => {
+  const columnLabel = getColumnLabel(column);
+  const physicalColumn = datasource?.columns?.find(
+    datasourceColumn => datasourceColumn.column_name === columnLabel,
+  );
+  return physicalColumn?.verbose_name || columnLabel;
 };
 
 const queryMode: ControlConfig<'RadioButtonControl'> = {
@@ -189,6 +203,10 @@ const config: ControlPanelConfig = {
           {
             name: 'groupby',
             override: {
+              label: t('Dimensions'),
+              description: t(
+                'Dimensions to group by. When hierarchical rows are enabled, the selected order defines the parent-child drill sequence.',
+              ),
               visibility: isAggMode,
               resetOnHide: false,
               mapStateToProps: (
@@ -212,6 +230,92 @@ const config: ControlPanelConfig = {
                 return newState;
               },
               rerender: ['metrics', 'percent_metrics'],
+            },
+          },
+        ],
+        [
+          {
+            name: 'enable_hierarchy',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Enable hierarchical rows'),
+              renderTrigger: true,
+              default: false,
+              description: t(
+                'Render the selected dimensions as expandable rows. The dimension order defines the hierarchy.',
+              ),
+              visibility: ({ controls }) =>
+                isAggMode({ controls }) &&
+                !controls?.server_pagination?.value &&
+                isEmpty(controls?.time_compare?.value),
+              mapStateToProps: ({ controls }, controlState) => {
+                const dimensions = ensureIsArray(controls.groupby?.value);
+                const externalValidationErrors = [];
+                if (controlState.value && dimensions.length < 2) {
+                  externalValidationErrors.push(
+                    t(
+                      'Add at least two dimensions to enable hierarchical rows.',
+                    ),
+                  );
+                }
+                if (
+                  controlState.value &&
+                  dimensions.length > MAX_HIERARCHY_DIMENSIONS
+                ) {
+                  externalValidationErrors.push(
+                    t(
+                      'Hierarchical rows support up to %s dimensions.',
+                      MAX_HIERARCHY_DIMENSIONS,
+                    ),
+                  );
+                }
+                return {
+                  externalValidationErrors,
+                };
+              },
+              rerender: ['groupby', 'server_pagination', 'time_compare'],
+            },
+          },
+          {
+            name: 'default_hierarchy_level',
+            config: {
+              type: 'SelectControl',
+              label: t('Default drill-down level'),
+              renderTrigger: true,
+              clearable: false,
+              default: 1,
+              choices: [],
+              description: t(
+                'Initial hierarchy depth visible to dashboard viewers.',
+              ),
+              visibility: ({ controls }) =>
+                isAggMode({ controls }) &&
+                Boolean(controls?.enable_hierarchy?.value) &&
+                ensureIsArray(controls?.groupby?.value).length >= 2 &&
+                !controls?.server_pagination?.value &&
+                isEmpty(controls?.time_compare?.value),
+              mapStateToProps: (
+                { controls, datasource }: ControlPanelState,
+                controlState: ControlState,
+              ) => {
+                const dimensions = ensureIsArray(controls.groupby?.value).slice(
+                  0,
+                  MAX_HIERARCHY_DIMENSIONS,
+                );
+                const choices = dimensions.map((column, index) => [
+                  index + 1,
+                  getDimensionLabel(column as QueryFormColumn, datasource),
+                ]);
+                const selectedLevel = Number(controlState.value) || 1;
+                return {
+                  choices,
+                  value: Math.max(
+                    1,
+                    Math.min(selectedLevel, choices.length || 1),
+                  ),
+                };
+              },
+              rerender: ['groupby', 'enable_hierarchy'],
             },
           },
         ],
@@ -379,6 +483,7 @@ const config: ControlPanelConfig = {
         ],
       ],
     },
+    sections.viewerMetricSelection,
     {
       label: t('Options'),
       expanded: true,
@@ -495,6 +600,78 @@ const config: ControlPanelConfig = {
                     | undefined,
                 };
               },
+            },
+          },
+        ],
+      ],
+    },
+    {
+      label: t('Hierarchy'),
+      expanded: true,
+      controlSetRows: [
+        [
+          {
+            name: 'hierarchy_indent',
+            config: {
+              type: 'SelectControl',
+              freeForm: true,
+              label: t('Indentation'),
+              renderTrigger: true,
+              default: 20,
+              choices: [
+                [12, '12 px'],
+                [16, '16 px'],
+                [20, '20 px'],
+                [24, '24 px'],
+                [32, '32 px'],
+              ],
+              description: t('Indentation for each child hierarchy level.'),
+              visibility: ({ controls }) =>
+                isAggMode({ controls }) &&
+                Boolean(controls?.enable_hierarchy?.value),
+            },
+          },
+        ],
+        [
+          {
+            name: 'show_hierarchy_icons',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Show expand icons'),
+              renderTrigger: true,
+              default: true,
+              description: t('Show expand and collapse icons for parent rows.'),
+              visibility: ({ controls }) =>
+                isAggMode({ controls }) &&
+                Boolean(controls?.enable_hierarchy?.value),
+            },
+          },
+          {
+            name: 'bold_hierarchy_parent_rows',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Bold parent rows'),
+              renderTrigger: true,
+              default: true,
+              description: t('Use bold text for expandable parent rows.'),
+              visibility: ({ controls }) =>
+                isAggMode({ controls }) &&
+                Boolean(controls?.enable_hierarchy?.value),
+            },
+          },
+        ],
+        [
+          {
+            name: 'show_hierarchy_lines',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Show hierarchy lines'),
+              renderTrigger: true,
+              default: false,
+              description: t('Show a guide line before child hierarchy rows.'),
+              visibility: ({ controls }) =>
+                isAggMode({ controls }) &&
+                Boolean(controls?.enable_hierarchy?.value),
             },
           },
         ],

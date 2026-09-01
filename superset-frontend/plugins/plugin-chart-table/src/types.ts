@@ -91,6 +91,16 @@ export interface DataColumnMeta {
   config?: TableColumnConfig;
 }
 
+export interface HierarchyConfig {
+  dimensionKeys: string[];
+  defaultLevel: number;
+  indentSize: number;
+  showExpandIcons: boolean;
+  boldParentRows: boolean;
+  showHierarchyLines: boolean;
+  levelData?: DataRecord[][];
+}
+
 export interface TableChartData {
   records: DataRecord[];
   columns: string[];
@@ -115,6 +125,12 @@ export type TableChartFormData = QueryFormData & {
   column_config?: Record<string, TableColumnConfig>;
   allow_rearrange_columns?: boolean;
   hyperlink_configs?: HyperlinkConfigs;
+  enable_hierarchy?: boolean;
+  default_hierarchy_level?: number;
+  hierarchy_indent?: number;
+  show_hierarchy_icons?: boolean;
+  bold_hierarchy_parent_rows?: boolean;
+  show_hierarchy_lines?: boolean;
 };
 
 export interface TableChartProps extends ChartProps {
@@ -171,6 +187,7 @@ export interface TableChartTransformedProps<D extends DataRecord = DataRecord> {
   basicColorColumnFormatters?: { [Key: string]: BasicColorFormatterType }[];
   startDateOffset?: string;
   hyperlinkConfigs?: HyperlinkConfigs;
+  hierarchy?: HierarchyConfig;
 }
 
 export enum ColorSchemeEnum {

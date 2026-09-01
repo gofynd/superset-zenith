@@ -19,7 +19,7 @@
 import cx from 'classnames';
 import { Component } from 'react';
 import PropTypes from 'prop-types';
-import { styled, t, logging } from '@superset-ui/core';
+import { css, getMetricLabel, logging, styled, t } from '@superset-ui/core';
 import { debounce, isEqual } from 'lodash';
 import { withRouter } from 'react-router-dom';
 
@@ -35,12 +35,15 @@ import {
 import { areObjectsEqual } from 'src/reduxUtils';
 import { postFormData } from 'src/explore/exploreUtils/formData';
 import { URL_PARAMS } from 'src/constants';
+import {
+  applyActiveMetricsToFormData,
+  getDefaultMetrics,
+  getOptionalMetricConfigSignature,
+} from 'src/dashboard/util/optionalMetrics';
 
 import SliceHeader from '../SliceHeader';
 import MissingChart from '../MissingChart';
 import { slicePropShape, chartPropShape } from '../../util/propShapes';
-import { getMetricLabel } from '@superset-ui/core';
-import { css } from '@superset-ui/core';
 // import { getBigNumberComparisonData } from '../../util/getBigNumberComparisonData';
 
 const propTypes = {
@@ -141,7 +144,7 @@ const ChartIconContainer = styled.div`
     } else if (iconShape === 'rounded') {
       borderRadius = '8px';
     }
-    
+
     return css`
       position: absolute !important;
       top: 50% !important;
@@ -162,7 +165,7 @@ const ChartIconContainer = styled.div`
       overflow: hidden !important;
       box-sizing: border-box !important;
       z-index: 99 !important;
-      
+
       img {
         width: 100% !important;
         height: 100% !important;
@@ -180,6 +183,8 @@ class Chart extends Component {
       width: props.width,
       height: props.height,
       descriptionHeight: 0,
+      activeMetrics: null,
+      isOptionalMetricSelectorOpen: false,
     };
 
     this.changeFilter = this.changeFilter.bind(this);
@@ -196,6 +201,10 @@ class Chart extends Component {
     this.setHeaderRef = this.setHeaderRef.bind(this);
     this.getChartHeight = this.getChartHeight.bind(this);
     this.getDescriptionHeight = this.getDescriptionHeight.bind(this);
+    this.handleViewerMetricsChange = this.handleViewerMetricsChange.bind(this);
+    this.handleViewerMetricsReset = this.handleViewerMetricsReset.bind(this);
+    this.handleViewerMetricSelectorVisibilityChange =
+      this.handleViewerMetricSelectorVisibilityChange.bind(this);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -206,6 +215,9 @@ class Chart extends Component {
       nextState.width !== this.state.width ||
       nextState.height !== this.state.height ||
       nextState.descriptionHeight !== this.state.descriptionHeight ||
+      nextState.activeMetrics !== this.state.activeMetrics ||
+      nextState.isOptionalMetricSelectorOpen !==
+        this.state.isOptionalMetricSelectorOpen ||
       !isEqual(nextProps.datasource, this.props.datasource)
     ) {
       return true;
@@ -288,6 +300,14 @@ class Chart extends Component {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({ descriptionHeight });
     }
+    if (
+      this.state.activeMetrics &&
+      getOptionalMetricConfigSignature(prevProps.formData) !==
+        getOptionalMetricConfigSignature(this.props.formData)
+    ) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ activeMetrics: null });
+    }
   }
 
   getDescriptionHeight() {
@@ -301,7 +321,10 @@ class Chart extends Component {
     // Add small buffer (4px) to prevent content cutoff due to rounding or minor spacing issues
     const heightBuffer = 4;
     return Math.max(
-      this.state.height - headerHeight - this.state.descriptionHeight - heightBuffer,
+      this.state.height -
+        headerHeight -
+        this.state.descriptionHeight -
+        heightBuffer,
       20,
     );
   }
@@ -355,6 +378,52 @@ class Chart extends Component {
     });
   };
 
+  getViewerActiveMetrics() {
+    return this.state.activeMetrics || getDefaultMetrics(this.props.formData);
+  }
+
+  getViewerFormData(activeMetrics = this.getViewerActiveMetrics()) {
+    if (!this.state.activeMetrics) {
+      return this.props.formData;
+    }
+    return applyActiveMetricsToFormData(this.props.formData, activeMetrics);
+  }
+
+  handleViewerMetricsChange(activeMetrics) {
+    const viewerFormData = applyActiveMetricsToFormData(
+      this.props.formData,
+      activeMetrics,
+    );
+    this.setState({ activeMetrics }, () => {
+      this.props.refreshChart(
+        this.props.chart.id,
+        false,
+        this.props.dashboardId,
+        viewerFormData,
+      );
+    });
+  }
+
+  handleViewerMetricsReset() {
+    const activeMetrics = getDefaultMetrics(this.props.formData);
+    const viewerFormData = applyActiveMetricsToFormData(
+      this.props.formData,
+      activeMetrics,
+    );
+    this.setState({ activeMetrics: null }, () => {
+      this.props.refreshChart(
+        this.props.chart.id,
+        false,
+        this.props.dashboardId,
+        viewerFormData,
+      );
+    });
+  }
+
+  handleViewerMetricSelectorVisibilityChange(isOptionalMetricSelectorOpen) {
+    this.setState({ isOptionalMetricSelectorOpen });
+  }
+
   onExploreChart = async clickEvent => {
     const isOpenInNewTab =
       clickEvent.shiftKey || clickEvent.ctrlKey || clickEvent.metaKey;
@@ -366,7 +435,7 @@ class Chart extends Component {
       const key = await postFormData(
         this.props.datasource.id,
         this.props.datasource.type,
-        this.props.formData,
+        this.getViewerFormData(),
         this.props.slice.slice_id,
         nextTabId,
       );
@@ -414,10 +483,11 @@ class Chart extends Component {
       slice_id: this.props.slice.slice_id,
       is_cached: this.props.isCached,
     });
+    const viewerFormData = this.getViewerFormData();
     exportChart({
       formData: isFullCSV
-        ? { ...this.props.formData, row_limit: this.props.maxRows }
-        : this.props.formData,
+        ? { ...viewerFormData, row_limit: this.props.maxRows }
+        : viewerFormData,
       resultType: isPivot ? 'post_processed' : 'full',
       resultFormat: format,
       force: true,
@@ -434,6 +504,7 @@ class Chart extends Component {
       this.props.chart.id,
       true,
       this.props.dashboardId,
+      this.getViewerFormData(),
     );
   }
 
@@ -473,6 +544,8 @@ class Chart extends Component {
     } = this.props;
 
     const { width } = this.state;
+    const viewerActiveMetrics = this.getViewerActiveMetrics();
+    const viewerFormData = this.getViewerFormData(viewerActiveMetrics);
     // this prevents throwing in the case that a gridComponent
     // references a chart that is not associated with the dashboard
     if (!chart || !slice) {
@@ -492,72 +565,102 @@ class Chart extends Component {
     let bigNumberComparisonData = null;
 
     // Simplified inline comparison data extraction
-    if (queriesResponse && queriesResponse.length > 0 && formData && queriesResponse[0]) {
+    if (
+      queriesResponse &&
+      queriesResponse.length > 0 &&
+      viewerFormData &&
+      queriesResponse[0]
+    ) {
       const queryResult = queriesResponse[0];
       const { data = [], colnames = [] } = queryResult;
-      const vizType = formData?.viz_type;
-      
-      if (data && data.length > 0 && vizType && vizType.includes('big_number')) {
+      const vizType = viewerFormData?.viz_type;
+
+      if (
+        data &&
+        data.length > 0 &&
+        vizType &&
+        vizType.includes('big_number')
+      ) {
         // Check for time offset columns
-        const hasTimeOffsetColumns = colnames && colnames.length > 0 && colnames.some(
-          (col) => col.includes('__') && col !== formData.metric
-        );
-        
+        const hasTimeOffsetColumns =
+          colnames &&
+          colnames.length > 0 &&
+          colnames.some(
+            col => col.includes('__') && col !== viewerFormData.metric,
+          );
+
         if (hasTimeOffsetColumns) {
           // Use EXACT same logic as BigNumber transformProps
-          const metric = formData.metric || 'value';
+          const metric = viewerFormData.metric || 'value';
           const metricName = getMetricLabel(metric);
-          
+
           // Use parseMetricValue like BigNumber transformProps does
-          const parseMetricValue = (metricValue) => {
+          const parseMetricValue = metricValue => {
             if (typeof metricValue === 'string') {
               // Handle string dates/numbers
               const parsed = parseFloat(metricValue);
-              return isNaN(parsed) ? null : parsed;
+              return Number.isNaN(parsed) ? null : parsed;
             }
             return metricValue;
           };
-          
+
           // Extract current value EXACTLY like BigNumber transformProps (line 64)
-          const currentValue = (!data || data.length === 0 || !data[0]) 
-            ? null 
-            : parseMetricValue(data[0][metricName]);
-          
+          const currentValue =
+            !data || data.length === 0 || !data[0]
+              ? null
+              : parseMetricValue(data[0][metricName]);
+
           // Find previous period value EXACTLY like BigNumber transformProps does
           let previousPeriodValue = null;
           if (data[0]) {
-            for (const col of colnames) {
-              if (col.includes('__') && col !== metricName) {
-                const rawValue = data[0][col];
-                if (rawValue !== null && rawValue !== undefined) {
-                  // Use parseMetricValue like BigNumber transformProps does (line 236)
-                  previousPeriodValue = parseMetricValue(rawValue);
-                  break;
-                }
-              }
+            const previousPeriodColumn = colnames.find(col => {
+              const rawValue = data[0][col];
+              return (
+                col.includes('__') &&
+                col !== metricName &&
+                rawValue !== null &&
+                rawValue !== undefined
+              );
+            });
+            if (previousPeriodColumn) {
+              // Use parseMetricValue like BigNumber transformProps does (line 236)
+              previousPeriodValue = parseMetricValue(
+                data[0][previousPeriodColumn],
+              );
             }
           }
-          
-          if (previousPeriodValue !== null && !isNaN(previousPeriodValue)) {
+
+          if (
+            previousPeriodValue !== null &&
+            !Number.isNaN(previousPeriodValue)
+          ) {
             let percentageChange = 0;
             let comparisonIndicator = 'neutral';
-            
+
             if (previousPeriodValue === 0) {
               if (currentValue === null || currentValue === 0) {
                 percentageChange = 0;
                 comparisonIndicator = 'neutral';
               } else {
                 percentageChange = currentValue > 0 ? 1 : -1;
-                comparisonIndicator = currentValue > 0 ? 'positive' : 'negative';
+                comparisonIndicator =
+                  currentValue > 0 ? 'positive' : 'negative';
               }
             } else if (currentValue === null || currentValue === 0) {
               percentageChange = -1; // -100% change (complete loss)
               comparisonIndicator = 'negative';
-            } else if (!isNaN(currentValue)) {
-              percentageChange = (currentValue - previousPeriodValue) / Math.abs(previousPeriodValue);
-              comparisonIndicator = percentageChange > 0 ? 'positive' : percentageChange < 0 ? 'negative' : 'neutral';
+            } else if (!Number.isNaN(currentValue)) {
+              percentageChange =
+                (currentValue - previousPeriodValue) /
+                Math.abs(previousPeriodValue);
+              comparisonIndicator =
+                percentageChange > 0
+                  ? 'positive'
+                  : percentageChange < 0
+                    ? 'negative'
+                    : 'neutral';
             }
-            
+
             bigNumberComparisonData = {
               percentageChange,
               comparisonIndicator,
@@ -610,6 +713,14 @@ class Chart extends Component {
           isFullSize={isFullSize}
           chartStatus={chart.chartStatus}
           formData={formData}
+          datasource={datasource}
+          activeMetrics={viewerActiveMetrics}
+          isOptionalMetricSelectorOpen={this.state.isOptionalMetricSelectorOpen}
+          onActiveMetricsChange={this.handleViewerMetricsChange}
+          onActiveMetricsReset={this.handleViewerMetricsReset}
+          onOptionalMetricSelectorVisibilityChange={
+            this.handleViewerMetricSelectorVisibilityChange
+          }
           width={width}
           height={this.getHeaderHeight()}
           bigNumberComparisonData={bigNumberComparisonData}
@@ -658,7 +769,7 @@ class Chart extends Component {
             datasource={datasource}
             dashboardId={dashboardId}
             initialValues={initialValues}
-            formData={formData}
+            formData={viewerFormData}
             labelsColor={labelsColor}
             labelsColorMap={labelsColorMap}
             ownState={ownState}
@@ -684,47 +795,69 @@ class Chart extends Component {
 
   renderMiddleRightIcon(chartStatus, isLoading) {
     const { slice, formData, chart } = this.props;
-    
+
     // Only render icon when chart is ready (same conditions as chart content)
     // Check if chart exists, is not loading, and has data
-    if (!chart || isLoading || chartStatus === 'loading' || chartStatus === 'error') {
+    if (
+      !chart ||
+      isLoading ||
+      chartStatus === 'loading' ||
+      chartStatus === 'error'
+    ) {
       return null;
     }
-    
+
     // Check if queriesResponse exists and has data (same as chart content rendering)
     const { queriesResponse } = chart;
     if (!queriesResponse || queriesResponse.length === 0) {
       return null;
     }
-    
+
     // Extract icon settings from formData for BigNumber charts
-    const isBigNumberChart = slice?.viz_type?.toLowerCase().includes('big_number');
+    const isBigNumberChart = slice?.viz_type
+      ?.toLowerCase()
+      .includes('big_number');
     const showIcon = formData?.show_icon ?? formData?.showIcon;
     const iconUrl = formData?.icon_url ?? formData?.iconUrl;
     const iconSize = formData?.icon_size ?? formData?.iconSize ?? 'medium';
-    const iconBackgroundColorRaw = formData?.icon_background_color ?? formData?.iconBackgroundColor ?? '#e8eaf6';
+    const iconBackgroundColorRaw =
+      formData?.icon_background_color ??
+      formData?.iconBackgroundColor ??
+      '#e8eaf6';
     const iconShape = formData?.icon_shape ?? formData?.iconShape ?? 'circle';
-    const iconPosition = formData?.icon_position ?? formData?.iconPosition ?? 'top-left';
-    
+    const iconPosition =
+      formData?.icon_position ?? formData?.iconPosition ?? 'top-left';
+
     // Only render middle-right icon here (top-left is handled in SliceHeader)
-    if (!isBigNumberChart || !showIcon || !iconUrl || iconPosition !== 'middle-right') {
+    if (
+      !isBigNumberChart ||
+      !showIcon ||
+      !iconUrl ||
+      iconPosition !== 'middle-right'
+    ) {
       return null;
     }
-    
+
     // Convert color object to CSS string if needed
-    const convertColorToString = (color) => {
+    const convertColorToString = color => {
       if (typeof color === 'string') {
         return color;
       }
-      if (color && typeof color === 'object' && 'r' in color && 'g' in color && 'b' in color) {
+      if (
+        color &&
+        typeof color === 'object' &&
+        'r' in color &&
+        'g' in color &&
+        'b' in color
+      ) {
         const { r, g, b, a = 1 } = color;
         return `rgba(${r}, ${g}, ${b}, ${a})`;
       }
       return '#e8eaf6'; // fallback
     };
-    
+
     const iconBackgroundColor = convertColorToString(iconBackgroundColorRaw);
-    
+
     // Size mapping - matches SliceHeader ChartIconContainer
     const sizeMap = {
       small: 24,
@@ -733,7 +866,7 @@ class Chart extends Component {
       xlarge: 48,
     };
     const iconSizePx = sizeMap[iconSize] ?? sizeMap.medium;
-    
+
     return (
       <ChartIconContainer
         iconSize={iconSizePx}
@@ -744,8 +877,8 @@ class Chart extends Component {
         <img
           src={iconUrl}
           alt="Chart Icon"
-          onError={(e) => {
-            const target = e.target;
+          onError={e => {
+            const { target } = e;
             const container = target.parentElement;
             if (container) {
               container.style.display = 'none';

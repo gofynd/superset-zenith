@@ -483,9 +483,83 @@ const sort_by_metric: SharedControlConfig<'CheckboxControl'> = {
   ),
 };
 
+const enable_optional_metrics: SharedControlConfig<'CheckboxControl'> = {
+  type: 'CheckboxControl',
+  label: t('Enable optional metrics'),
+  default: true,
+  description: t(
+    'Allow dashboard viewers to add or remove author-approved metrics from this chart.',
+  ),
+  renderTrigger: true,
+};
+
+const optional_metrics: typeof dndAdhocMetricsControl = {
+  ...dndAdhocMetricsControl,
+  label: t('Optional metrics'),
+  default: [],
+  validators: [],
+  description: t(
+    'Metrics dashboard viewers can temporarily add to this chart without editing the saved chart.',
+  ),
+};
+
+const optional_metric_selection_mode: SharedControlConfig<'SelectControl'> = {
+  type: 'SelectControl',
+  label: t('Selection mode'),
+  default: 'multi',
+  clearable: false,
+  choices: [
+    ['multi', t('Multiple metrics')],
+    ['single', t('Single replacement metric')],
+  ],
+  description: t(
+    'Choose whether viewers can display several metrics together or replace the default metric with one metric at a time.',
+  ),
+  renderTrigger: true,
+};
+
+const optional_metric_allow_default_deselection: SharedControlConfig<'CheckboxControl'> =
+  {
+    type: 'CheckboxControl',
+    label: t('Allow default metric removal'),
+    default: false,
+    description: t(
+      'Allow dashboard viewers to deselect default metrics while respecting the minimum active metric count.',
+    ),
+    renderTrigger: true,
+  };
+
+const optional_metric_min_active: SharedControlConfig<'TextControl'> = {
+  type: 'TextControl',
+  label: t('Minimum active metrics'),
+  default: '1',
+  isInt: true,
+  description: t(
+    'Minimum number of metrics that must remain visible after viewer changes.',
+  ),
+  renderTrigger: true,
+};
+
+const optional_metric_max_active: SharedControlConfig<'TextControl'> = {
+  type: 'TextControl',
+  label: t('Maximum active metrics'),
+  default: '4',
+  isInt: true,
+  description: t(
+    'Maximum number of metrics a viewer can display at the same time.',
+  ),
+  renderTrigger: true,
+};
+
 export default {
   metrics: dndAdhocMetricsControl,
   metric: dndAdhocMetricControl,
+  enable_optional_metrics,
+  optional_metrics,
+  optional_metric_selection_mode,
+  optional_metric_allow_default_deselection,
+  optional_metric_min_active,
+  optional_metric_max_active,
   datasource: datasourceControl,
   viz_type,
   color_picker,
