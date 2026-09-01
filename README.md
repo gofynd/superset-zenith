@@ -44,6 +44,23 @@ under the License.
 
 A modern, enterprise-ready business intelligence web application.
 
+## Fynd Intelligence / Zenith fork
+
+This repository is Fynd Intelligence's customized Apache Superset fork. Start
+with the code-backed documentation below before changing or reviewing Zenith
+behavior:
+
+- [Customization documentation index](docs/zenith-customizations/README.md)
+- [Fork lineage and upstream baseline](docs/zenith-customizations/fork-lineage.md)
+- [Major and minor feature inventory](docs/zenith-customizations/feature-inventory.md)
+- [Runtime architecture and integrations](docs/zenith-customizations/runtime-integrations.md)
+- [Testing and coverage baseline](docs/zenith-customizations/testing-and-coverage.md)
+- [Maintenance and contribution guide](docs/zenith-customizations/maintenance-guide.md)
+
+The documentation above describes Fynd-specific behavior. The remaining README
+content and the general `docs/` tree primarily describe upstream Apache
+Superset.
+
 [**Why Superset?**](#why-superset) |
 [**Supported Databases**](#supported-databases) |
 [**Installation and Configuration**](#installation-and-configuration) |
