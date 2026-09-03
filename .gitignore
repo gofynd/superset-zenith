@@ -123,3 +123,6 @@ docker/*local*
 
 # Jest test report
 test-report.html
+
+
+sid*
