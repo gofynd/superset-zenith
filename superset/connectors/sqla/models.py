@@ -1599,6 +1599,20 @@ class SqlaTable(
                     if not col_desc:
                         raise SupersetGenericDBErrorException("Column not found")
                     is_dttm = col_desc[0]["is_dttm"]  # type: ignore
+                    # Rebuild the column with the type detected by the probe so
+                    # that time-grain expressions relying on the ``{func}``
+                    # placeholder (e.g. ``DATE_TRUNC`` for DATE columns) can be
+                    # resolved. Without a type, ``literal_column`` defaults to
+                    # ``NullType`` and ``{func}`` is left unresolved in the
+                    # compiled query.
+                    if is_dttm and has_timegrain:
+                        column_spec = self.db_engine_spec.get_column_spec(
+                            col_desc[0]["type"]  # type: ignore
+                        )
+                        if column_spec:
+                            sqla_column = literal_column(
+                                expression, type_=column_spec.sqla_type
+                            )
                 except SupersetGenericDBErrorException as ex:
                     raise ColumnNotFoundException(message=str(ex)) from ex
 

@@ -287,3 +287,56 @@ def test_normalize_prequery_result_type_custom_sql() -> None:
         sqla_table._normalize_prequery_result_type(row, dimension, columns_by_name)
         == "Car"
     )
+def test_adhoc_column_to_sqla_with_date_func_and_time_grain(
+    mocker: MockerFixture,
+) -> None:
+    """
+    Applying a time grain to an adhoc x-axis column that already wraps the
+    column in a date function (e.g. ``DATE(created_on)``) must resolve the
+    ``{func}`` placeholder in the engine's time-grain expression instead of
+    leaking it into the compiled SQL.
+
+    Regression test for the BigQuery "Invalid braced constructor element"
+    error: since the adhoc expression is not found in the dataset metadata,
+    it was rendered via an untyped ``literal_column`` (``NullType``), so
+    ``{func}`` was never substituted for ``DATE_TRUNC``.
+    """
+    database = mocker.MagicMock()
+    database.db_engine_spec = BigQueryEngineSpec
+
+    sqla_table = SqlaTable(
+        table_name="my_sqla_table",
+        columns=[],
+        metrics=[],
+        database=database,
+    )
+
+    # The adhoc expression is not a physical/metadata column.
+    mocker.patch.object(sqla_table, "get_column", return_value=None)
+    mocker.patch.object(sqla_table, "_process_sql_expression", side_effect=lambda **kw: kw["expression"])
+    mocker.patch.object(sqla_table, "get_from_clause", return_value=(mocker.MagicMock(), None))
+    database.compile_sqla_query.return_value = "SELECT DATE(created_on) FROM t"
+    # Keep the returned column unlabelled so we can compile it directly.
+    mocker.patch.object(
+        sqla_table, "make_sqla_column_compatible", side_effect=lambda col, label=None: col
+    )
+
+    # Probe reports the adhoc column as a DATE-typed temporal column.
+    mocker.patch(
+        "superset.connectors.sqla.models.get_columns_description",
+        return_value=[{"column_name": "created_on", "type": "DATE", "is_dttm": True}],
+    )
+
+    result = sqla_table.adhoc_column_to_sqla(
+        {
+            "label": "created_on",
+            "sqlExpression": "DATE(created_on)",
+            "columnType": "BASE_AXIS",
+            "timeGrain": "P1D",
+            "expressionType": "SQL",
+        }
+    )
+
+    compiled = str(result)
+    assert "{func}" not in compiled
+    assert "DATE_TRUNC(DATE(created_on), DAY)" in compiled
