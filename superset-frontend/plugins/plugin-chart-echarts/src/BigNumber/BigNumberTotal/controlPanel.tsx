@@ -119,6 +119,7 @@ export default {
       expanded: true,
       controlSetRows: [['metric'], ['adhoc_filters']],
     },
+    sections.viewerMetricSelection,
     sections.timeComparisonControls({ multi: false }),
     {
       label: t('Display settings'),

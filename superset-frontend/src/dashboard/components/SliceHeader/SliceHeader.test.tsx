@@ -440,6 +440,30 @@ test('Correct props to "SliceHeaderControls"', () => {
   );
 });
 
+test('Keeps optional metric selector visible while chart refreshes from selector changes', () => {
+  const props = createProps({
+    chartStatus: 'loading',
+    isOptionalMetricSelectorOpen: true,
+    activeMetrics: ['count'],
+    formData: {
+      enable_optional_metrics: true,
+      metrics: ['count'],
+      optional_metrics: ['sum__num'],
+      viz_type: 'table',
+    },
+  });
+
+  render(<SliceHeader {...props} />, { useRedux: true, useRouter: true });
+
+  expect(
+    screen.getByTestId('optional-metric-selector-trigger'),
+  ).toBeInTheDocument();
+  expect(screen.getByTestId('SliceHeaderControls')).toHaveAttribute(
+    'data-chart-status',
+    'loading',
+  );
+});
+
 test('Correct actions to "SliceHeaderControls"', () => {
   const props = createProps();
   render(<SliceHeader {...props} />, { useRedux: true, useRouter: true });

@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from typing import Any, TYPE_CHECKING
 
+from flask_babel import gettext as _
+
 from superset import app
 from superset.common.chart_data import ChartDataResultFormat, ChartDataResultType
 from superset.common.query_context import QueryContext
@@ -25,7 +27,9 @@ from superset.common.query_object import QueryObject
 from superset.common.query_object_factory import QueryObjectFactory
 from superset.daos.chart import ChartDAO
 from superset.daos.datasource import DatasourceDAO
+from superset.exceptions import QueryObjectValidationError
 from superset.models.slice import Slice
+from superset.utils import json
 from superset.utils.core import DatasourceDict, DatasourceType, is_adhoc_column
 
 if TYPE_CHECKING:
@@ -69,6 +73,7 @@ class QueryContextFactory:  # pylint: disable=too-few-public-methods
             self._process_query_object(
                 datasource_model_instance,
                 form_data,
+                slice_,
                 self._query_object_factory.create(
                     result_type, datasource=datasource, **query_obj
                 ),
@@ -106,11 +111,172 @@ class QueryContextFactory:  # pylint: disable=too-few-public-methods
         self,
         datasource: BaseDatasource,
         form_data: dict[str, Any] | None,
+        slice_: Slice | None,
         query_object: QueryObject,
     ) -> QueryObject:
         self._apply_granularity(query_object, form_data, datasource)
         self._apply_filters(query_object)
+        self._validate_replace_attribute_request(
+            datasource,
+            form_data,
+            slice_,
+            query_object,
+        )
         return query_object
+
+    @staticmethod
+    def _parse_json_config(value: Any) -> dict[str, Any]:
+        if isinstance(value, dict):
+            return value
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("{"):
+                try:
+                    parsed = json.loads(stripped)
+                    return parsed if isinstance(parsed, dict) else {}
+                except json.JSONDecodeError:
+                    return {}
+        return {}
+
+    def _get_replace_attribute_config(
+        self, form_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {
+            **self._parse_json_config(form_data.get("replace_attribute")),
+            **self._parse_json_config(form_data.get("replace_attribute_config_json")),
+        }
+
+    def _get_replace_attribute_entries(
+        self,
+        form_data: dict[str, Any],
+        config: dict[str, Any],
+    ) -> list[Any]:
+        entries: list[Any] = []
+        for value in (
+            config.get("attributes"),
+            config.get("replacements"),
+            config.get("options"),
+            form_data.get("replace_attribute_attributes"),
+            form_data.get("replace_attribute_options"),
+            form_data.get("replacement_attributes"),
+        ):
+            if isinstance(value, list):
+                entries.extend(value)
+            elif value:
+                entries.append(value)
+        return [
+            entry
+            for entry in entries
+            if not (isinstance(entry, dict) and entry.get("enabled") is False)
+        ]
+
+    def _normalize_replace_attribute_column(self, value: Any) -> str | None:
+        if isinstance(value, str):
+            return value
+        if isinstance(value, dict):
+            if value.get("column") is not None:
+                return self._normalize_replace_attribute_column(value["column"])
+            if value.get("column_name"):
+                return str(value["column_name"])
+            if value.get("label"):
+                return str(value["label"])
+            if value.get("sqlExpression"):
+                return str(value["sqlExpression"])
+        return None
+
+    def _infer_replace_attribute_target(
+        self, form_data: dict[str, Any]
+    ) -> str | None:
+        for field in ("groupby", "groupbyRows", "columns", "series_columns", "x_axis"):
+            value = form_data.get(field)
+            if isinstance(value, list) and value:
+                column = self._normalize_replace_attribute_column(value[0])
+            else:
+                column = self._normalize_replace_attribute_column(value)
+            if column:
+                return column
+        return None
+
+    def _validate_replace_attribute_request(
+        self,
+        datasource: BaseDatasource,
+        form_data: dict[str, Any] | None,
+        slice_: Slice | None,
+        query_object: QueryObject,
+    ) -> None:
+        if not form_data or not slice_:
+            return
+
+        active_config = self._parse_json_config(form_data.get("replace_attribute"))
+        active_attribute = self._normalize_replace_attribute_column(
+            active_config.get("active_attribute")
+        )
+        if not active_attribute:
+            return
+
+        saved_form_data = slice_.form_data
+        saved_config = self._get_replace_attribute_config(saved_form_data)
+        entries = self._get_replace_attribute_entries(saved_form_data, saved_config)
+        enabled = (
+            saved_form_data.get("enable_replace_attribute")
+            if saved_form_data.get("enable_replace_attribute") is not None
+            else saved_config.get("enabled", bool(entries))
+        )
+        if not enabled:
+            raise QueryObjectValidationError(
+                _("Attribute replacement is not enabled for this chart.")
+            )
+
+        target = (
+            self._normalize_replace_attribute_column(
+                saved_form_data.get("replace_attribute_target")
+            )
+            or self._normalize_replace_attribute_column(saved_config.get("target"))
+            or self._normalize_replace_attribute_column(
+                saved_config.get("default_attribute")
+            )
+            or self._infer_replace_attribute_target(saved_form_data)
+        )
+        allowed_attributes = {
+            column
+            for column in [
+                target,
+                *(
+                    self._normalize_replace_attribute_column(entry)
+                    for entry in entries
+                ),
+            ]
+            if column
+        }
+        if active_attribute not in allowed_attributes:
+            raise QueryObjectValidationError(
+                _(
+                    "Attribute replacement requested an attribute that is not "
+                    "approved for this chart."
+                )
+            )
+
+        datasource_columns = {
+            column["column_name"] if isinstance(column, dict) else column.column_name
+            for column in datasource.columns
+        }
+        if active_attribute not in datasource_columns:
+            raise QueryObjectValidationError(
+                _("Attribute replacement requested an unavailable attribute.")
+            )
+
+        requested_columns = {
+            column
+            for column in (
+                self._normalize_replace_attribute_column(column)
+                for column in query_object.columns
+            )
+            if column
+        }
+        if active_attribute not in requested_columns and target in requested_columns:
+            raise QueryObjectValidationError(
+                _("Attribute replacement did not update the chart query.")
+            )
 
     def _apply_granularity(
         self,

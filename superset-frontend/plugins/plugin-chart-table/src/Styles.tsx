@@ -58,6 +58,61 @@ export default styled.div`
     .dt-controls {
       padding-bottom: 0.65em;
     }
+    .dt-hierarchy-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: ${theme.gridUnit}px;
+      padding-bottom: ${theme.gridUnit * 2}px;
+    }
+    .dt-hierarchy-toolbar label {
+      display: inline-flex;
+      align-items: center;
+      gap: ${theme.gridUnit}px;
+      margin: 0;
+      color: ${theme.colors.grayscale.dark1};
+      font-size: ${theme.typography.sizes.s}px;
+      font-weight: ${theme.typography.weights.normal};
+    }
+    .dt-hierarchy-cell {
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      max-width: 100%;
+    }
+    .dt-hierarchy-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      margin: 0 ${theme.gridUnit}px 0 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: ${theme.colors.grayscale.dark1};
+      cursor: pointer;
+      line-height: 1;
+    }
+    .dt-hierarchy-toggle svg {
+      margin: 0;
+      color: inherit;
+    }
+    .dt-hierarchy-spacer {
+      display: inline-block;
+      width: 18px;
+      margin-right: ${theme.gridUnit}px;
+      flex: 0 0 18px;
+    }
+    .dt-hierarchy-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .dt-hierarchy-line {
+      border-left: 1px solid ${theme.colors.grayscale.light2};
+    }
     .dt-metric {
       text-align: right;
     }
@@ -125,23 +180,23 @@ export default styled.div`
     }
 
     /* Default hyperlink styles - only applied when no inline styles override them */
-    .dt-hyperlink:not([style*="color"]) {
+    .dt-hyperlink:not([style*='color']) {
       color: ${theme.colors.primary.base};
     }
 
-    .dt-hyperlink:not([style*="text-decoration"]) {
+    .dt-hyperlink:not([style*='text-decoration']) {
       text-decoration: underline;
     }
 
-    .dt-hyperlink:hover:not([style*="color"]) {
+    .dt-hyperlink:hover:not([style*='color']) {
       color: ${theme.colors.primary.dark1};
     }
 
-    .dt-hyperlink:hover:not([style*="text-decoration"]) {
+    .dt-hyperlink:hover:not([style*='text-decoration']) {
       text-decoration: underline;
     }
 
-    .dt-hyperlink:visited:not([style*="color"]) {
+    .dt-hyperlink:visited:not([style*='color']) {
       color: ${theme.colors.primary.light1};
     }
 
@@ -163,7 +218,7 @@ export default styled.div`
     /* Chip button hover effects in table context */
     .dt-cell-chip button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px ${theme.colors.grayscale.light1};
     }
 
     /* Ensure proper spacing in table cells with chip buttons */

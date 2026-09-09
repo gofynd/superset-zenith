@@ -39,6 +39,8 @@ import { isEmpty } from 'lodash';
 import { TableChartFormData } from './types';
 import { updateExternalFormData } from './DataTable/utils/externalAPIs';
 
+const MAX_HIERARCHY_DIMENSIONS = 6;
+
 /**
  * Infer query mode from form data. If `all_columns` is set, then raw records mode,
  * otherwise defaults to aggregation mode.
@@ -174,28 +176,31 @@ const buildQuery: BuildQuery<TableChartFormData> = (
       const temporalColumnsLookup = formData?.temporal_columns_lookup;
       // Filter out the column if needed and prepare the temporal column object
 
-      columns = columns.filter(col => {
-        const shouldBeAdded =
-          isPhysicalColumn(col) &&
-          time_grain_sqla &&
-          temporalColumnsLookup?.[col];
+      const preserveHierarchyOrder = Boolean(formData.enable_hierarchy);
+      columns = columns
+        .map(col => {
+          const shouldBeAdded =
+            isPhysicalColumn(col) &&
+            time_grain_sqla &&
+            temporalColumnsLookup?.[col];
 
-        if (shouldBeAdded && !temporalColumnAdded) {
-          temporalColumn = {
-            timeGrain: time_grain_sqla,
-            columnType: 'BASE_AXIS',
-            sqlExpression: col,
-            label: col,
-            expressionType: 'SQL',
-          } as AdhocColumn;
-          temporalColumnAdded = true;
-          return false; // Do not include this in the output; it's added separately
-        }
-        return true;
-      });
+          if (shouldBeAdded && !temporalColumnAdded) {
+            temporalColumn = {
+              timeGrain: time_grain_sqla,
+              columnType: 'BASE_AXIS',
+              sqlExpression: col,
+              label: col,
+              expressionType: 'SQL',
+            } as AdhocColumn;
+            temporalColumnAdded = true;
+            return preserveHierarchyOrder ? temporalColumn : null;
+          }
+          return col;
+        })
+        .filter((col): col is AdhocColumn | string => Boolean(col));
 
       // So we ensure the temporal column is added first
-      if (temporalColumn) {
+      if (temporalColumn && !preserveHierarchyOrder) {
         columns = [temporalColumn, ...columns];
       }
     }
@@ -214,6 +219,17 @@ const buildQuery: BuildQuery<TableChartFormData> = (
       extras.time_grain_sqla = undefined;
     }
 
+    const hierarchyDimensionCount = Math.min(
+      ensureIsArray(formData.groupby).length,
+      MAX_HIERARCHY_DIMENSIONS,
+    );
+    const isHierarchyQueryEnabled =
+      formData.enable_hierarchy &&
+      queryMode === QueryMode.Aggregate &&
+      !formData.server_pagination &&
+      hierarchyDimensionCount >= 2 &&
+      columns.length >= hierarchyDimensionCount;
+
     let queryObject = {
       ...baseQueryObject,
       columns,
@@ -224,6 +240,15 @@ const buildQuery: BuildQuery<TableChartFormData> = (
       time_offsets: timeOffsets,
       ...moreProps,
     };
+
+    if (isHierarchyQueryEnabled) {
+      // Avoid parent totals coming from a wider aggregate than truncated child rows.
+      queryObject = {
+        ...queryObject,
+        row_limit: 0,
+        row_offset: 0,
+      };
+    }
 
     if (
       formData.server_pagination &&
@@ -242,6 +267,26 @@ const buildQuery: BuildQuery<TableChartFormData> = (
     options?.hooks?.setCachedChanges({
       [formData.slice_id]: queryObject.filters,
     });
+
+    const hierarchyQueries: QueryObject[] = [];
+    if (
+      isHierarchyQueryEnabled &&
+      queryObject.columns &&
+      queryObject.columns.length >= hierarchyDimensionCount
+    ) {
+      const hierarchyColumns = queryObject.columns.slice(
+        0,
+        hierarchyDimensionCount,
+      );
+      hierarchyColumns.slice(0, -1).forEach((_, index) => {
+        hierarchyQueries.push({
+          ...queryObject,
+          columns: hierarchyColumns.slice(0, index + 1),
+          row_limit: 0,
+          row_offset: 0,
+        });
+      });
+    }
 
     const extraQueries: QueryObject[] = [];
     if (
@@ -282,7 +327,7 @@ const buildQuery: BuildQuery<TableChartFormData> = (
       ];
     }
 
-    return [queryObject, ...extraQueries];
+    return [queryObject, ...hierarchyQueries, ...extraQueries];
   });
 };
 

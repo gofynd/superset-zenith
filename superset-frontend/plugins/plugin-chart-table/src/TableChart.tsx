@@ -19,6 +19,7 @@
 import {
   CSSProperties,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
@@ -55,6 +56,8 @@ import {
 import { Dropdown, Menu, Tooltip } from '@superset-ui/chart-controls';
 import {
   CheckOutlined,
+  CaretDownOutlined,
+  CaretRightOutlined,
   InfoCircleOutlined,
   DownOutlined,
   MinusCircleOutlined,
@@ -62,29 +65,12 @@ import {
   TableOutlined,
 } from '@ant-design/icons';
 import { isEmpty, isNumber } from 'lodash';
-// Inline SVG for newtab icon to avoid import issues
 import {
   ColorSchemeEnum,
   DataColumnMeta,
+  HierarchyConfig,
   TableChartTransformedProps,
 } from './types';
-
-// Inline NewTabIcon component
-const NewTabIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 48 48"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
-    <path d="M0 0h48v48H0z" fill="none"/>
-    <g>
-      <polygon points="44,30 40,30 40,38 8,38 8,10 20,10 20,6 4,6 4,42 44,42" fill="currentColor"/>
-      <polygon points="26,26.828 40,12.828 40,24 44,24 44,6 26,6 26,10 37.172,10 23.172,24" fill="currentColor"/>
-    </g>
-  </svg>
-);
 import DataTable, {
   DataTableProps,
   SearchInputProps,
@@ -103,6 +89,29 @@ import {
 } from './utils/urlUtils';
 import ChipButton from './components/ChipButton';
 
+// Inline NewTabIcon component
+const NewTabIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 48 48"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M0 0h48v48H0z" fill="none" />
+    <g>
+      <polygon
+        points="44,30 40,30 40,38 8,38 8,10 20,10 20,6 4,6 4,42 44,42"
+        fill="currentColor"
+      />
+      <polygon
+        points="26,26.828 40,12.828 40,24 44,24 44,6 26,6 26,10 37.172,10 23.172,24"
+        fill="currentColor"
+      />
+    </g>
+  </svg>
+);
+
 type ValueRange = [number, number];
 
 interface TableSize {
@@ -114,6 +123,167 @@ const ACTION_KEYS = {
   enter: 'Enter',
   spacebar: 'Spacebar',
   space: ' ',
+};
+
+const HIERARCHY_ROOT_PATH = '';
+const HIERARCHY_LEVEL_KEY = '__table_hierarchy_level';
+const HIERARCHY_PATH_KEY = '__table_hierarchy_path';
+const HIERARCHY_CAN_EXPAND_KEY = '__table_hierarchy_can_expand';
+const HIERARCHY_DIMENSION_KEY = '__table_hierarchy_dimension_key';
+
+type HierarchyModel<D extends DataRecord> = {
+  rows: D[];
+  expandablePaths: string[];
+  expandablePathsByLevel: Map<number, string[]>;
+};
+
+const getHierarchyPath = (values: DataRecordValue[]) =>
+  JSON.stringify(
+    values.map(value => (value instanceof Date ? value.toISOString() : value)),
+  );
+
+const getHierarchyLevelRowsFromLeaves = <D extends DataRecord>(
+  data: D[],
+  columns: DataColumnMeta[],
+  hierarchy: HierarchyConfig,
+) => {
+  const metricColumns = columns.filter(
+    column => !hierarchy.dimensionKeys.includes(column.key),
+  );
+  const rowsByLevel = hierarchy.dimensionKeys.map(() => new Map<string, D>());
+
+  data.forEach(sourceRow => {
+    hierarchy.dimensionKeys.forEach((_, level) => {
+      const pathValues = hierarchy.dimensionKeys
+        .slice(0, level + 1)
+        .map(key => sourceRow[key]);
+      const path = getHierarchyPath(pathValues);
+      const rowsForLevel = rowsByLevel[level]!;
+      let row = rowsForLevel.get(path);
+
+      if (!row) {
+        row = {} as D;
+        hierarchy.dimensionKeys.slice(0, level + 1).forEach(key => {
+          row![key] = sourceRow[key];
+        });
+        rowsForLevel.set(path, row!);
+      }
+
+      metricColumns.forEach(column => {
+        const value = sourceRow[column.key];
+        const currentValue = row![column.key];
+        if (typeof value === 'number') {
+          row![column.key] =
+            (typeof currentValue === 'number' ? currentValue : 0) + value;
+        } else if (currentValue === null || currentValue === undefined) {
+          row![column.key] = value;
+        }
+      });
+    });
+  });
+
+  return rowsByLevel.map(rows => Array.from(rows.values()));
+};
+
+const buildHierarchyModel = <D extends DataRecord>(
+  data: D[],
+  columns: DataColumnMeta[],
+  hierarchy: HierarchyConfig,
+  expandedPaths: Set<string>,
+): HierarchyModel<D> => {
+  const levelData =
+    hierarchy.levelData?.length === hierarchy.dimensionKeys.length
+      ? (hierarchy.levelData as D[][])
+      : getHierarchyLevelRowsFromLeaves(data, columns, hierarchy);
+  const nodes = new Map<string, D>();
+  const childrenByPath = new Map<string, string[]>();
+  const expandablePaths: string[] = [];
+  const expandablePathsByLevel = new Map<number, string[]>();
+
+  levelData.forEach((rows, level) => {
+    rows.forEach(sourceRow => {
+      const pathValues = hierarchy.dimensionKeys
+        .slice(0, level + 1)
+        .map(key => sourceRow[key]);
+
+      if (pathValues.some(value => value === undefined)) {
+        return;
+      }
+
+      const path = getHierarchyPath(pathValues);
+      const parentPath =
+        level === 0
+          ? HIERARCHY_ROOT_PATH
+          : getHierarchyPath(pathValues.slice(0, -1));
+      const children = childrenByPath.get(parentPath) || [];
+      if (!children.includes(path)) {
+        children.push(path);
+        childrenByPath.set(parentPath, children);
+      }
+
+      const dimensionKey = hierarchy.dimensionKeys[level];
+      nodes.set(path, {
+        ...sourceRow,
+        [hierarchy.dimensionKeys[0]]: sourceRow[dimensionKey],
+        [HIERARCHY_LEVEL_KEY]: level,
+        [HIERARCHY_PATH_KEY]: path,
+        [HIERARCHY_CAN_EXPAND_KEY]: false,
+        [HIERARCHY_DIMENSION_KEY]: dimensionKey,
+      });
+    });
+  });
+
+  nodes.forEach((node, path) => {
+    const level = Number(node[HIERARCHY_LEVEL_KEY]);
+    const canExpand =
+      level < hierarchy.dimensionKeys.length - 1 &&
+      Boolean(childrenByPath.get(path)?.length);
+    nodes.set(path, {
+      ...node,
+      [HIERARCHY_CAN_EXPAND_KEY]: canExpand,
+    });
+
+    if (canExpand) {
+      expandablePaths.push(path);
+      const pathsForLevel = expandablePathsByLevel.get(level) || [];
+      pathsForLevel.push(path);
+      expandablePathsByLevel.set(level, pathsForLevel);
+    }
+  });
+
+  const rows: D[] = [];
+  const appendRows = (parentPath: string) => {
+    (childrenByPath.get(parentPath) || []).forEach(path => {
+      const row = nodes.get(path);
+      if (!row) {
+        return;
+      }
+      rows.push(row);
+      if (row[HIERARCHY_CAN_EXPAND_KEY] && expandedPaths.has(path)) {
+        appendRows(path);
+      }
+    });
+  };
+  appendRows(HIERARCHY_ROOT_PATH);
+
+  return {
+    rows,
+    expandablePaths,
+    expandablePathsByLevel,
+  };
+};
+
+const getExpandedHierarchyPathsToLevel = <D extends DataRecord>(
+  model: HierarchyModel<D>,
+  level: number,
+) => {
+  const expandedPaths = new Set<string>();
+  model.expandablePathsByLevel.forEach((paths, nodeLevel) => {
+    if (nodeLevel + 1 < level) {
+      paths.forEach(path => expandedPaths.add(path));
+    }
+  });
+  return expandedPaths;
 };
 
 /**
@@ -288,6 +458,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     basicColorFormatters,
     basicColorColumnFormatters,
     hyperlinkConfigs = { enabled: false, configs: [] },
+    hierarchy,
   } = props;
 
   const comparisonColumns = [
@@ -311,20 +482,53 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     comparisonColumns[0].key,
   ]);
   const [hideComparisonKeys, setHideComparisonKeys] = useState<string[]>([]);
+  const [expandedHierarchyPaths, setExpandedHierarchyPaths] = useState<
+    Set<string>
+  >(new Set());
+  const [hierarchyLevelControlId] = useState(
+    () => `dt-hierarchy-expand-level-${Math.random().toString(36).slice(2)}`,
+  );
   const theme = useTheme();
+  const hierarchyDimensionKey = hierarchy?.dimensionKeys.join('\t') || '';
+
+  useEffect(() => {
+    if (!hierarchy) {
+      setExpandedHierarchyPaths(new Set());
+      return;
+    }
+
+    const model = buildHierarchyModel(data, columnsMeta, hierarchy, new Set());
+    setExpandedHierarchyPaths(
+      getExpandedHierarchyPathsToLevel(model, hierarchy.defaultLevel),
+    );
+  }, [columnsMeta, data, hierarchy, hierarchyDimensionKey]);
+
+  const hierarchyModel = useMemo(
+    () =>
+      hierarchy
+        ? buildHierarchyModel(
+            data,
+            columnsMeta,
+            hierarchy,
+            expandedHierarchyPaths,
+          )
+        : undefined,
+    [columnsMeta, data, expandedHierarchyPaths, hierarchy],
+  );
+  const tableData = hierarchyModel?.rows || data;
 
   // only take relevant page size options
   const pageSizeOptions = useMemo(() => {
     const getServerPagination = (n: number) => n <= rowCount;
     return PAGE_SIZE_OPTIONS.filter(([n]) =>
-      serverPagination ? getServerPagination(n) : n <= 2 * data.length,
+      serverPagination ? getServerPagination(n) : n <= 2 * tableData.length,
     ) as SizeOption[];
-  }, [data.length, rowCount, serverPagination]);
+  }, [rowCount, serverPagination, tableData.length]);
 
   const getValueRange = useCallback(
     function getValueRange(key: string, alignPositiveNegative: boolean) {
-      if (typeof data?.[0]?.[key] === 'number') {
-        const nums = data.map(row => row[key]) as number[];
+      if (typeof tableData?.[0]?.[key] === 'number') {
+        const nums = tableData.map(row => row[key]) as number[];
         return (
           alignPositiveNegative
             ? [0, d3Max(nums.map(Math.abs))]
@@ -333,7 +537,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       }
       return null;
     },
-    [data],
+    [tableData],
   );
 
   const isActiveFilterValue = useCallback(
@@ -449,6 +653,20 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       filtered = filtered.filter(column => !isUrlColumn(column.key));
     }
 
+    if (hierarchy) {
+      const [treeColumnKey, ...hiddenDimensionKeys] = hierarchy.dimensionKeys;
+      filtered = filtered
+        .filter(column => !hiddenDimensionKeys.includes(column.key))
+        .map(column =>
+          column.key === treeColumnKey
+            ? {
+                ...column,
+                label: t('Dimensions'),
+              }
+            : column,
+        );
+    }
+
     if (!isUsingTimeComparison) {
       return filtered;
     }
@@ -472,6 +690,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     });
   }, [
     columnsMeta,
+    hierarchy,
     hyperlinkConfigs.enabled,
     isUrlColumn,
     comparisonColumns,
@@ -911,6 +1130,77 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     [filteredColumnsMeta, isUsingTimeComparison],
   );
 
+  const toggleHierarchyPath = useCallback((path: string) => {
+    setExpandedHierarchyPaths(currentPaths => {
+      const nextPaths = new Set(currentPaths);
+      if (nextPaths.has(path)) {
+        nextPaths.delete(path);
+      } else {
+        nextPaths.add(path);
+      }
+      return nextPaths;
+    });
+  }, []);
+
+  const renderHierarchyControls = (): JSX.Element | undefined => {
+    if (!hierarchy || !hierarchyModel) {
+      return undefined;
+    }
+
+    const setExpandedLevel = (level: number) => {
+      setExpandedHierarchyPaths(
+        getExpandedHierarchyPathsToLevel(hierarchyModel, level),
+      );
+    };
+
+    return (
+      <div className="dt-hierarchy-toolbar">
+        <button
+          type="button"
+          className="btn btn-xs btn-default"
+          disabled={!hierarchyModel.expandablePaths.length}
+          onClick={() =>
+            setExpandedHierarchyPaths(new Set(hierarchyModel.expandablePaths))
+          }
+        >
+          {t('Expand all')}
+        </button>
+        <button
+          type="button"
+          className="btn btn-xs btn-default"
+          disabled={!hierarchyModel.expandablePaths.length}
+          onClick={() => setExpandedHierarchyPaths(new Set())}
+        >
+          {t('Collapse all')}
+        </button>
+        <label htmlFor={hierarchyLevelControlId}>
+          {t('Expand to level')}
+          <select
+            id={hierarchyLevelControlId}
+            aria-label={t('Expand to hierarchy level')}
+            className="form-control input-sm"
+            value=""
+            onChange={event => setExpandedLevel(Number(event.target.value))}
+          >
+            <option value="" disabled>
+              {t('Select')}
+            </option>
+            {hierarchy.dimensionKeys.map((dimensionKey, index) => {
+              const dimension = columnsMeta.find(
+                column => column.key === dimensionKey,
+              );
+              return (
+                <option key={dimensionKey} value={index + 1}>
+                  {dimension?.label || dimensionKey}
+                </option>
+              );
+            })}
+          </select>
+        </label>
+      </div>
+    );
+  };
+
   const getColumnConfigs = useCallback(
     (column: DataColumnMeta, i: number): ColumnWithLooseAccessor<D> => {
       const {
@@ -925,9 +1215,15 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       const columnWidth = Number.isNaN(Number(config.columnWidth))
         ? config.columnWidth
         : Number(config.columnWidth);
+      const isHierarchyColumn = Boolean(
+        hierarchy && hierarchy.dimensionKeys[0] === key,
+      );
 
       // inline style for both th and td cell
-      const sharedStyle: CSSProperties = getSharedStyle(column);
+      const sharedStyle: CSSProperties = {
+        ...getSharedStyle(column),
+        ...(isHierarchyColumn ? { textAlign: 'left' } : {}),
+      };
 
       const alignPositiveNegative =
         config.alignPositiveNegative === undefined
@@ -983,9 +1279,23 @@ export default function TableChart<D extends DataRecord = DataRecord>(
         Cell: ({ value, row }: { value: DataRecordValue; row: Row<D> }) => {
           const [isHtml, text] = formatColumnValue(column, value);
           const html = isHtml && allowRenderHtml ? { __html: text } : undefined;
+          const hierarchyLevel = Number(row.original[HIERARCHY_LEVEL_KEY] || 0);
+          const hierarchyPath = row.original[HIERARCHY_PATH_KEY] as
+            | string
+            | undefined;
+          const hierarchyCanExpand = Boolean(
+            row.original[HIERARCHY_CAN_EXPAND_KEY],
+          );
+          const filterKey =
+            isHierarchyColumn &&
+            typeof row.original[HIERARCHY_DIMENSION_KEY] === 'string'
+              ? (row.original[HIERARCHY_DIMENSION_KEY] as string)
+              : key;
 
           // Check if this column should be hyperlinked
-          const hyperlinkUrl = getHyperlinkUrl(key, row.original);
+          const hyperlinkUrl = isHierarchyColumn
+            ? null
+            : getHyperlinkUrl(key, row.original);
           const displayText = getHyperlinkDisplayText(value);
 
           let backgroundColor;
@@ -993,10 +1303,10 @@ export default function TableChart<D extends DataRecord = DataRecord>(
           const originKey = column.key.substring(column.label.length).trim();
           if (!hasColumnColorFormatters && hasBasicColorFormatters) {
             backgroundColor =
-              basicColorFormatters[row.index][originKey]?.backgroundColor;
+              basicColorFormatters[row.index]?.[originKey]?.backgroundColor;
             arrow =
               column.label === comparisonLabels[0]
-                ? basicColorFormatters[row.index][originKey]?.mainArrow
+                ? basicColorFormatters[row.index]?.[originKey]?.mainArrow
                 : '';
           }
 
@@ -1019,11 +1329,11 @@ export default function TableChart<D extends DataRecord = DataRecord>(
             basicColorColumnFormatters?.length > 0
           ) {
             backgroundColor =
-              basicColorColumnFormatters[row.index][column.key]
+              basicColorColumnFormatters[row.index]?.[column.key]
                 ?.backgroundColor || backgroundColor;
             arrow =
               column.label === comparisonLabels[0]
-                ? basicColorColumnFormatters[row.index][column.key]?.mainArrow
+                ? basicColorColumnFormatters[row.index]?.[column.key]?.mainArrow
                 : '';
           }
 
@@ -1032,6 +1342,9 @@ export default function TableChart<D extends DataRecord = DataRecord>(
             white-space: ${value instanceof Date ? 'nowrap' : undefined};
             position: relative;
             background: ${backgroundColor || undefined};
+            font-weight: ${hierarchy?.boldParentRows && hierarchyCanExpand
+              ? theme.typography.weights.bold
+              : undefined};
           `;
 
           const cellBarStyles = css`
@@ -1060,7 +1373,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
 
           let arrowStyles = css`
             color: ${basicColorFormatters &&
-            basicColorFormatters[row.index][originKey]?.arrowColor ===
+            basicColorFormatters[row.index]?.[originKey]?.arrowColor ===
               ColorSchemeEnum.Green
               ? theme.colors.success.base
               : theme.colors.error.base};
@@ -1072,7 +1385,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
             basicColorColumnFormatters?.length > 0
           ) {
             arrowStyles = css`
-              color: ${basicColorColumnFormatters[row.index][column.key]
+              color: ${basicColorColumnFormatters[row.index]?.[column.key]
                 ?.arrowColor === ColorSchemeEnum.Green
                 ? theme.colors.success.base
                 : theme.colors.error.base};
@@ -1090,7 +1403,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                 ? () => {
                     // allow selecting text in a cell
                     if (!getSelectedText()) {
-                      toggleFilter(key, value);
+                      toggleFilter(filterKey, value);
                     }
                   }
                 : undefined,
@@ -1100,7 +1413,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                 e.stopPropagation();
                 handleContextMenu(
                   row.original,
-                  { key, value, isMetric },
+                  { key: filterKey, value, isMetric },
                   e.nativeEvent.clientX,
                   e.nativeEvent.clientY,
                 );
@@ -1109,10 +1422,76 @@ export default function TableChart<D extends DataRecord = DataRecord>(
             className: [
               className,
               value == null ? 'dt-is-null' : '',
-              isActiveFilterValue(key, value) ? ' dt-is-active-filter' : '',
+              isActiveFilterValue(filterKey, value)
+                ? ' dt-is-active-filter'
+                : '',
+              isHierarchyColumn &&
+              hierarchy?.showHierarchyLines &&
+              hierarchyLevel > 0
+                ? ' dt-hierarchy-line'
+                : '',
             ].join(' '),
             tabIndex: 0,
           };
+          if (hierarchy && isHierarchyColumn) {
+            const isExpanded = Boolean(
+              hierarchyPath && expandedHierarchyPaths.has(hierarchyPath),
+            );
+            const labelContent = html ? (
+              // eslint-disable-next-line react/no-danger
+              <span dangerouslySetInnerHTML={html} />
+            ) : (
+              text
+            );
+
+            return (
+              <StyledCell {...cellProps}>
+                <span
+                  className="dt-hierarchy-cell"
+                  style={{
+                    paddingLeft: hierarchyLevel * hierarchy.indentSize,
+                  }}
+                >
+                  {hierarchy.showExpandIcons && hierarchyCanExpand ? (
+                    <button
+                      type="button"
+                      className="dt-hierarchy-toggle"
+                      aria-label={
+                        isExpanded
+                          ? t('Collapse %s', text)
+                          : t('Expand %s', text)
+                      }
+                      onClick={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (hierarchyPath) {
+                          toggleHierarchyPath(hierarchyPath);
+                        }
+                      }}
+                    >
+                      {isExpanded ? (
+                        <CaretDownOutlined />
+                      ) : (
+                        <CaretRightOutlined />
+                      )}
+                    </button>
+                  ) : hierarchy.showExpandIcons ? (
+                    <span className="dt-hierarchy-spacer" />
+                  ) : null}
+                  <span
+                    className={
+                      truncateLongCells
+                        ? 'dt-hierarchy-label dt-truncate-cell'
+                        : 'dt-hierarchy-label'
+                    }
+                    style={columnWidth ? { width: columnWidth } : undefined}
+                  >
+                    {labelContent}
+                  </span>
+                </span>
+              </StyledCell>
+            );
+          }
           if (html) {
             if (truncateLongCells) {
               // eslint-disable-next-line react/no-danger
@@ -1150,74 +1529,72 @@ export default function TableChart<D extends DataRecord = DataRecord>(
                   style={columnWidth ? { width: columnWidth } : undefined}
                 >
                   {arrow && <span css={arrowStyles}>{arrow}</span>}
-                  {hyperlinkUrl ? (
-                    (() => {
-                      const config = getHyperlinkConfig(key);
-                      if (config?.styles.showAsButton) {
-                        const chipLabel = config.styles.chipLabel || displayText;
+                  {hyperlinkUrl
+                    ? (() => {
+                        const config = getHyperlinkConfig(key);
+                        if (config?.styles.showAsButton) {
+                          const chipLabel =
+                            config.styles.chipLabel || displayText;
+                          return (
+                            <ChipButton
+                              href={hyperlinkUrl}
+                              label={chipLabel}
+                              color={config.styles.chipColor}
+                              showIcon={config.styles.redirectIcon}
+                              iconPosition={config.styles.iconPosition}
+                              onClick={e => e.stopPropagation()}
+                            />
+                          );
+                        }
                         return (
-                          <ChipButton
+                          <a
                             href={hyperlinkUrl}
-                            label={chipLabel}
-                            color={config.styles.chipColor}
-                            showIcon={config.styles.redirectIcon}
-                            iconPosition={config.styles.iconPosition}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dt-hyperlink"
                             onClick={e => e.stopPropagation()}
-                          />
+                            style={getHyperlinkStyles(key)}
+                          >
+                            {renderHyperlinkContent(key, displayText)}
+                          </a>
                         );
-                      }
-                      return (
-                        <a
-                          href={hyperlinkUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="dt-hyperlink"
-                          onClick={e => e.stopPropagation()}
-                          style={getHyperlinkStyles(key)}
-                        >
-                          {renderHyperlinkContent(key, displayText)}
-                        </a>
-                      );
-                    })()
-                  ) : (
-                    text
-                  )}
+                      })()
+                    : text}
                 </div>
               ) : (
                 <>
                   {arrow && <span css={arrowStyles}>{arrow}</span>}
-                  {hyperlinkUrl ? (
-                    (() => {
-                      const config = getHyperlinkConfig(key);
-                      if (config?.styles.showAsButton) {
-                        const chipLabel = config.styles.chipLabel || displayText;
+                  {hyperlinkUrl
+                    ? (() => {
+                        const config = getHyperlinkConfig(key);
+                        if (config?.styles.showAsButton) {
+                          const chipLabel =
+                            config.styles.chipLabel || displayText;
+                          return (
+                            <ChipButton
+                              href={hyperlinkUrl}
+                              label={chipLabel}
+                              color={config.styles.chipColor}
+                              showIcon={config.styles.redirectIcon}
+                              iconPosition={config.styles.iconPosition}
+                              onClick={e => e.stopPropagation()}
+                            />
+                          );
+                        }
                         return (
-                          <ChipButton
+                          <a
                             href={hyperlinkUrl}
-                            label={chipLabel}
-                            color={config.styles.chipColor}
-                            showIcon={config.styles.redirectIcon}
-                            iconPosition={config.styles.iconPosition}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dt-hyperlink"
                             onClick={e => e.stopPropagation()}
-                          />
+                            style={getHyperlinkStyles(key)}
+                          >
+                            {renderHyperlinkContent(key, displayText)}
+                          </a>
                         );
-                      }
-                      return (
-                        <a
-                          href={hyperlinkUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="dt-hyperlink"
-                          onClick={e => e.stopPropagation()}
-                          style={getHyperlinkStyles(key)}
-                        >
-                          {renderHyperlinkContent(key, displayText)}
-                        </a>
-                      );
-                    })()
-                  ) : (
-                    text
-                  )}
+                      })()
+                    : text}
                 </>
               )}
             </StyledCell>
@@ -1226,7 +1603,11 @@ export default function TableChart<D extends DataRecord = DataRecord>(
         Header: ({ column: col, onClick, style, onDragStart, onDrop }) => (
           <th
             id={`header-${column.key}`}
-            title={t('Shift + Click to sort by multiple columns')}
+            title={
+              hierarchy
+                ? t('Hierarchy order follows the selected dimensions')
+                : t('Shift + Click to sort by multiple columns')
+            }
             className={[className, col.isSorted ? 'is-sorted' : ''].join(' ')}
             style={{
               ...sharedStyle,
@@ -1234,7 +1615,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
             }}
             onKeyDown={(e: ReactKeyboardEvent<HTMLElement>) => {
               // programatically sort column on keypress
-              if (Object.values(ACTION_KEYS).includes(e.key)) {
+              if (!hierarchy && Object.values(ACTION_KEYS).includes(e.key)) {
                 col.toggleSortBy();
               }
             }}
@@ -1268,7 +1649,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
               }}
             >
               <span data-column-name={col.id}>{label}</span>
-              <SortIcon column={col} />
+              {hierarchy ? null : <SortIcon column={col} />}
             </div>
           </th>
         ),
@@ -1297,6 +1678,7 @@ export default function TableChart<D extends DataRecord = DataRecord>(
             </td>
           )
         ) : undefined,
+        disableSortBy: Boolean(hierarchy),
         sortDescFirst: sortDesc,
         sortType: getSortTypeByDataType(dataType),
       };
@@ -1314,8 +1696,12 @@ export default function TableChart<D extends DataRecord = DataRecord>(
       totals,
       columnColorFormatters,
       columnOrderToggle,
+      expandedHierarchyPaths,
+      getHyperlinkConfig,
       getHyperlinkStyles,
+      hierarchy,
       renderHyperlinkContent,
+      toggleHierarchyPath,
     ],
   );
 
@@ -1370,8 +1756,8 @@ export default function TableChart<D extends DataRecord = DataRecord>(
     <Styles>
       <DataTable<D>
         columns={columns}
-        data={data}
-        rowCount={rowCount}
+        data={tableData}
+        rowCount={hierarchy ? tableData.length : rowCount}
         tableClassName="table table-striped table-condensed"
         pageSize={pageSize}
         serverPaginationData={serverPaginationData}
@@ -1393,6 +1779,9 @@ export default function TableChart<D extends DataRecord = DataRecord>(
         }
         renderTimeComparisonDropdown={
           isUsingTimeComparison ? renderTimeComparisonDropdown : undefined
+        }
+        renderHierarchyControls={
+          hierarchy ? renderHierarchyControls : undefined
         }
       />
     </Styles>

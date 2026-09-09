@@ -43,7 +43,7 @@ import { allowCrossDomain as domainShardingEnabled } from 'src/utils/hostNamesCo
 import { updateDataMask } from 'src/dataMask/actions';
 import { waitForAsyncData } from 'src/middleware/asyncEvent';
 import { safeStringify } from 'src/utils/safeStringify';
-import { convertFormDataForAPI, convertAnnotationFormDataForAPI } from './timezoneChartActions';
+import { convertAnnotationFormDataForAPI } from './timezoneChartActions';
 
 export const CHART_UPDATE_STARTED = 'CHART_UPDATE_STARTED';
 export function chartUpdateStarted(queryController, latestQueryFormData, key) {
@@ -565,21 +565,22 @@ export function redirectSQLLab(formData, history) {
   };
 }
 
-export function refreshChart(chartKey, force, dashboardId) {
+export function refreshChart(chartKey, force, dashboardId, formDataOverride) {
   return (dispatch, getState) => {
     const chart = (getState().charts || {})[chartKey];
+    if (!chart) {
+      return;
+    }
     const timeout =
       getState().dashboardInfo.common.conf.SUPERSET_WEBSERVER_TIMEOUT;
+    const formData = formDataOverride || chart.latestQueryFormData;
 
-    if (
-      !chart.latestQueryFormData ||
-      Object.keys(chart.latestQueryFormData).length === 0
-    ) {
+    if (!formData || Object.keys(formData).length === 0) {
       return;
     }
     dispatch(
       postChartFormData(
-        chart.latestQueryFormData,
+        formData,
         force,
         timeout,
         chart.id,
