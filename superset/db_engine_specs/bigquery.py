@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import urllib
 from datetime import datetime
@@ -506,8 +507,16 @@ class BigQueryEngineSpec(BaseEngineSpec):  # pylint: disable=too-many-public-met
         catalog: str | None = None,
         schema: str | None = None,
     ) -> tuple[URL, dict[str, Any]]:
-        if catalog:
-            uri = uri.set(host=catalog, database="")
+        project_id = (
+            catalog or os.environ.get("SUPERSET_BIGQUERY_DEFAULT_PROJECT_ID") or uri.host
+        )
+        dataset_id = (
+            schema or os.environ.get("SUPERSET_BIGQUERY_DEFAULT_DATASET") or uri.database
+        )
+        uri = uri.set(host=project_id, database=dataset_id or "")
+
+        if default_location := os.environ.get("SUPERSET_BIGQUERY_DEFAULT_LOCATION"):
+            uri = uri.set(query={**uri.query, "location": default_location})
 
         return uri, connect_args
 
