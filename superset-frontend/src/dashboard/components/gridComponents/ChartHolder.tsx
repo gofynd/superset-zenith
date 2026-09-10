@@ -38,6 +38,8 @@ import {
   GRID_MIN_COLUMN_COUNT,
   GRID_MIN_ROW_UNITS,
 } from 'src/dashboard/util/constants';
+import getFormDataWithExtraFilters from 'src/dashboard/util/charts/getFormDataWithExtraFilters';
+import { getAppliedFilterValues } from 'src/dashboard/util/activeDashboardFilters';
 
 export const CHART_MARGIN = 32;
 
@@ -126,6 +128,10 @@ const ChartHolder: React.FC<ChartHolderProps> = ({
   const dashboardState = useSelector(
     (state: RootState) => state.dashboardState,
   );
+  const charts = useSelector((state: RootState) => state.charts);
+  const dashboardInfo = useSelector((state: RootState) => state.dashboardInfo);
+  const dataMask = useSelector((state: RootState) => state.dataMask);
+  const nativeFilters = useSelector((state: RootState) => state.nativeFilters);
   const [extraControls, setExtraControls] = useState<Record<string, unknown>>(
     {},
   );
@@ -260,6 +266,92 @@ const ChartHolder: React.FC<ChartHolderProps> = ({
     }));
   }, []);
 
+  // Clickable card support for BigNumber charts
+  const clickableCardConfig = useMemo(() => {
+    const chart = charts[chartId];
+    if (!chart) return { redirectUrl: undefined };
+    
+    const vizType = chart.form_data?.viz_type;
+    if (!['big_number', 'big_number_total', 'big_number_with_trendline', 'big_number_period_over_period'].includes(vizType)) {
+      return { redirectUrl: undefined };
+    }
+
+    // Get formData with extraControls merged
+    const chartPayload = chart as any;
+    const formData = getFormDataWithExtraFilters({
+      chart: chartPayload,
+      chartConfiguration: dashboardInfo?.metadata?.chart_configuration || {},
+      filters: getAppliedFilterValues(chartId.toString()),
+      colorNamespace: (dashboardState as any)?.colorNamespace,
+      colorScheme: dashboardState?.colorScheme,
+      ownColorScheme: chart.form_data?.color_scheme,
+      sliceId: chartId,
+      nativeFilters: nativeFilters?.filters || {},
+      allSliceIds: dashboardState?.sliceIds || [],
+      dataMask,
+      extraControls: extraControls as Record<string, string | boolean | null>,
+      labelsColor: dashboardInfo?.metadata?.label_colors || {},
+      labelsColorMap: dashboardInfo?.metadata?.map_label_colors || {},
+      sharedLabelsColors: [],
+    });
+
+    if (!formData?.enable_clickable_card || !chart.queriesResponse) {
+      return { redirectUrl: undefined };
+    }
+
+    // Extract redirectUrl
+    const queriesData = Array.isArray(chart.queriesResponse) ? chart.queriesResponse : [chart.queriesResponse];
+    const clickableCardUrl = formData.clickable_card_url as string | undefined;
+    const urlColumn = formData.url_column as string | undefined;
+    
+    let redirectUrl: string | undefined = clickableCardUrl;
+    if (!redirectUrl && urlColumn && queriesData[1]?.data?.[0]) {
+      redirectUrl = queriesData[1].data[0][urlColumn] || Object.values(queriesData[1].data[0])[0] as string;
+    }
+    if (!redirectUrl && urlColumn && queriesData[0]?.data?.[0]) {
+      const row = queriesData[0].data[0];
+      redirectUrl = row[urlColumn] || ['MAX', 'MIN', 'ANY_VALUE', 'FIRST', 'LAST']
+        .map(agg => row[`${agg}(${urlColumn})`])
+        .find(Boolean) as string | undefined;
+    }
+
+    return { redirectUrl: typeof redirectUrl === 'string' ? redirectUrl : undefined };
+  }, [charts, chartId, dashboardInfo, dashboardState, dataMask, nativeFilters, extraControls]);
+
+  const handleCardClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const currentTarget = e.currentTarget as HTMLElement;
+    
+    if (editMode || !clickableCardConfig.redirectUrl || e.button === 2 || e.ctrlKey || e.metaKey || e.shiftKey) {
+      return;
+    }
+    
+    // Allow clicks directly on the chart holder
+    if (target === currentTarget) {
+      if (clickableCardConfig.redirectUrl.match(/^https?:\/\//)) {
+        window.open(clickableCardConfig.redirectUrl, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
+    
+    // Check for interactive elements within the chart holder (but not the chart holder itself)
+    let element: HTMLElement | null = target;
+    while (element && element !== currentTarget && currentTarget.contains(element)) {
+      if (element.matches('a, button, input, select, textarea, [role="button"], [role="link"], [role="menuitem"], .slice-header-controls, .hover-menu, canvas, svg, .echarts-for-react, [class*="echarts"]')) {
+        return;
+      }
+      element = element.parentElement;
+    }
+    
+    if (e.defaultPrevented || (e.nativeEvent as any).dataTransfer?.effectAllowed) {
+      return;
+    }
+    
+    if (clickableCardConfig.redirectUrl.match(/^https?:\/\//)) {
+      window.open(clickableCardConfig.redirectUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [clickableCardConfig, editMode]);
+
   return (
     <Draggable
       component={component}
@@ -291,7 +383,10 @@ const ChartHolder: React.FC<ChartHolderProps> = ({
           <div
             ref={dragSourceRef}
             data-test="dashboard-component-chart-holder"
-            style={focusHighlightStyles}
+            style={{
+              ...focusHighlightStyles,
+              cursor: clickableCardConfig.redirectUrl ? 'pointer' : 'default',
+            }}
             css={isFullSize ? fullSizeStyle : undefined}
             className={cx(
               'dashboard-component',
@@ -299,7 +394,17 @@ const ChartHolder: React.FC<ChartHolderProps> = ({
               // The following class is added to support custom dashboard styling via the CSS editor
               `dashboard-chart-id-${chartId}`,
               outlinedComponentId ? 'fade-in' : 'fade-out',
+              clickableCardConfig.redirectUrl ? 'clickable-card' : '',
             )}
+            onClick={clickableCardConfig.redirectUrl && !editMode ? handleCardClick : undefined}
+            role={clickableCardConfig.redirectUrl ? 'button' : undefined}
+            tabIndex={clickableCardConfig.redirectUrl ? 0 : undefined}
+            onKeyDown={clickableCardConfig.redirectUrl && !editMode ? (e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && clickableCardConfig.redirectUrl?.match(/^https?:\/\//)) {
+                e.preventDefault();
+                window.open(clickableCardConfig.redirectUrl, '_blank', 'noopener,noreferrer');
+              }
+            } : undefined}
           >
             {!editMode && (
               <AnchorLink
